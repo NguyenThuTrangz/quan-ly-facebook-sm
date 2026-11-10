@@ -1,0 +1,2 @@
+- [Browser accounts](browser-accounts.md) — Chrome Profile 1 = Nguyễn Thái; Edge = Nguyễn Thu Trang; extension connection tips
+- [Facebook posting preferences](facebook-posting-preferences.md) — confirm account + audience before posting; never change defaults

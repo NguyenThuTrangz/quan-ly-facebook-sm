@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Set-Content *)",
+      "PowerShell(Start-Process \"C:\\\\claude remote\\\\SM02 - Chrome.lnk\")",
+      "PowerShell($xl = New-Object -ComObject Excel.Application; $wb = $xl.Workbooks.Open\\(\"C:\\\\Users\\\\admin\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--claude-remote\\\\3a007c8f-96ba-4ebb-9c0d-b9342713493a\\\\scratchpad\\\\test\\\\Quan-ly-Facebook-hang-ngay.xlsx\", 0, $true\\); $nk = $wb.Worksheets.Item\\(\"Nh\" + [char]0x1EAD + \"t k\" + [char]0x00FD\\); foreach \\($r in 1,12,13\\) { \\($\\(1..8 | ForEach-Object { \"\" + $nk.Cells.Item\\($r, $_\\).Text }\\) -join \" | \"\\) }; \"C13 formula: \" + $nk.Cells.Item\\(13,3\\).Formula; $wb.Close\\($false\\); $xl.Quit\\(\\))",
+      "PowerShell($xl = New-Object -ComObject Excel.Application; $wb = $xl.Workbooks.Open\\(\"C:\\\\claude remote\\\\Quan-ly-Facebook-hang-ngay.xlsx\", 0, $true\\); $s = $wb.Worksheets.Item\\(1\\); $r=1; while \\(\"\" + $s.Cells.Item\\($r,1\\).Text -ne \"\"\\) { \\($\\(1..8 | ForEach-Object { \"\" + $s.Cells.Item\\($r, $_\\).Text }\\) -join \" | \"\\); $r++ }; $wb.Close\\($false\\); $xl.Quit\\(\\))",
+      "PowerShell(Get-Process *)",
+      "PowerShell(& \"C:\\\\claude remote\\\\ghi-nhat-ky.ps1\" SM01 \"Lướt newsfeed\" \"Trang chủ\" \"Lướt newsfeed khoảng 1 phút, chỉ cuộn xem, không tương tác\" \"Xong\")",
+      "PowerShell(python --version; python -m pip --version)",
+      "PowerShell(py *)",
+      "PowerShell(New-Item *)"
+    ]
+  }
+}

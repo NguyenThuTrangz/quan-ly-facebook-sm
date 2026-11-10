@@ -1,0 +1,8 @@
+# Bo cai git portable
+/Git/
+# Anh dang bai (da co tren Google Drive)
+/anh-dang-bai/
+# File tam cua Excel / Claude
+~$*
+.claude/scheduled_tasks.lock
+test.txt

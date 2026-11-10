@@ -16,6 +16,9 @@ Máy: ADMIN, 3 tài khoản SM01–SM03. Cập nhật ngày 2026-10-21. Thông t
 ## Tiến độ
 Đọc **`tien-do.md`** trước khi lên lịch / chạy lịch: việc còn dở của hôm trước, content đã dùng, dòng Nhật Ký SM kế tiếp, nick đang bị hạn chế. Dừng ca thì cập nhật file này.
 
+## Dashboard Smock Radar (từ 2026-11-11)
+Mọi kết quả đo (comment, inbox, số đọc bài, kiểm tra hiển thị, sự cố nick, bài mới có mã Kxxx) đẩy vào https://claude.ai/artifact/4pxRJ5wv1URZUpsooZMjye theo skill **`day-du-lieu-radar`**. Gặp cảnh báo FB (can't use this feature, confirm identity, checkpoint, bài bị gỡ) thì ghi vào dashboard ngay, trước khi báo người dùng. Trước khi đăng group: chạy kiểm tra trước khi đăng + kiểm caption trên dashboard; bị chặn thì không đăng.
+
 ## Tiết kiệm token (người dùng yêu cầu 2026-11-10)
 - Chạy từng dòng Lịch SM: dùng skill **`chay-lich-sm`** (`.claude/skills/chay-lich-sm/SKILL.md`) — có sẵn các đoạn JS và thứ tự bước; ghi log bằng `tools\ghi-log.ps1` (Excel + clipboard 1 lệnh); cửa sổ thu nhỏ → `tools\cuaso.ps1 -Mo "<tiêu đề>"`.
 - **Trả lời cực ngắn**: mỗi việc xong 1 dòng ("✅ 17:04 SM01 chấp nhận 3 lời mời"); chỉ viết dài khi có sự cố hoặc cần người dùng quyết định.

@@ -13,8 +13,12 @@ Máy: ADMIN, 3 tài khoản SM01–SM03. Cập nhật ngày 2026-10-21. Thông t
 - File nhật ký của máy này: `Quan-ly-Facebook-hang-ngay.xlsx`.
 - Ghi nhật ký bằng **`ghi-nhat-ky.ps1`** (qua Excel 2016): `& "C:\claude remote\ghi-nhat-ky.ps1" <Mã TK> "<Loại việc>" "<Nơi thực hiện>" "<Nội dung>" "<Kết quả>" ["<Chế độ hiển thị>"]`. Máy đã có Python 3.15 (gọi bằng `py`, lệnh `python` không chạy) + openpyxl, nhưng **không dùng `ghi-nhat-ky.py`**: openpyxl xóa 2 dropdown (data validation mở rộng) ở sheet 2–3 mỗi lần lưu. `py` vẫn dùng được để đọc Excel.
 
+## Tiến độ
+Đọc **`tien-do.md`** trước khi lên lịch / chạy lịch: việc còn dở của hôm trước, content đã dùng, dòng Nhật Ký SM kế tiếp, nick đang bị hạn chế. Dừng ca thì cập nhật file này.
+
 ## Tiết kiệm token (người dùng yêu cầu 2026-11-10)
 - Chạy từng dòng Lịch SM: dùng skill **`chay-lich-sm`** (`.claude/skills/chay-lich-sm/SKILL.md`) — có sẵn các đoạn JS và thứ tự bước; ghi log bằng `tools\ghi-log.ps1` (Excel + clipboard 1 lệnh); cửa sổ thu nhỏ → `tools\cuaso.ps1 -Mo "<tiêu đề>"`.
+- **Trả lời cực ngắn**: mỗi việc xong 1 dòng ("✅ 17:04 SM01 chấp nhận 3 lời mời"); chỉ viết dài khi có sự cố hoặc cần người dùng quyết định.
 - Hạn chế screenshot (dùng JS/`find`, chụp scale 0.4–0.5 hoặc `zoom`), gộp thao tác vào `browser_batch`, mỗi ngày nên mở **session mới** (phiên dài thì mỗi lượt tốn nhiều token hơn).
 
 ## File trong thư mục

@@ -48,7 +48,12 @@ Có thể gửi 2–3 lệnh JS song song trong cùng 1 message (chạy tuần t
 2. Mở folder trên Edge, lấy id file: `[...document.querySelectorAll('[data-id]')].map(e=>e.getAttribute('data-id'))` (bỏ trùng).
 3. Tải: `Invoke-WebRequest "https://drive.usercontent.google.com/download?id=<id>&export=download" -OutFile "C:\claude remote\anh-dang-bai\CGnn\<i>.jpg"`.
 4. Group: đọc `/groups/<id>/about` bằng `get_page_text` **trước** — cấm promotion/business thì bỏ, chọn group khác nick đã join (ghi wholesale/for sale) và báo.
+   - gviz CSV **làm rơi chữ** ở cột lẫn kiểu (tab persona tưởng trống mà thật có caption) → xem trực tiếp trên sheet hoặc dùng `/export?format=csv&gid=`; link chip ảnh: chọn ô rồi hover chip, đọc `a[href*="drive.google.com"]`.
+   - Id Drive trả về bị chặn "Base64" → trả dạng tách 6 ký tự (`x.match(/.{1,6}/g).join(' ')`) rồi ghép lại cẩn thận (phân biệt hoa/thường).
+   - File HEIC (đầu file `ftypheic`) → tải bản JPG: `https://drive.google.com/thumbnail?id=<id>&sz=w2048`.
 5. Mở composer (`find` "Write something…"/"What's on your mind"), `find` file input ảnh → `file_upload` các file, dán caption bằng sự kiện paste (giữ emoji/xuống dòng), chọn Công khai (tường), bấm Post, lấy link bài.
+   - Chọn Công khai: bấm nút "Edit privacy" → **chụp màn hình rồi bấm Public theo tọa độ**, chụp lại xác nhận, rồi bấm Done theo tọa độ (bấm theo ref dễ trúng "Close friends" vì hộp thoại dịch chuyển). Kiểm tra `aria-label` "Sharing with Public." và ô "Set as default audience" **không tick**.
+   - Link bài: `find` timestamp của bài → `hover` → lấy `pfbid…` trong `a[href]` của bài (`/pfbid\w+/`).
 
 ## 2. Ghi log (3 nơi) — gộp tối đa
 1. Một lệnh PowerShell ghi Excel + đưa dòng Nhật Ký SM vào clipboard:
@@ -57,6 +62,7 @@ Có thể gửi 2–3 lệnh JS song song trong cùng 1 message (chạy tuần t
 2. Trên Edge, giữ 1 tab sheet chính `1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0` (`find` "Name box" lấy ref). Một `browser_batch`:
    Name box → `'Nhật Ký SM'!A<dòng trống kế tiếp>` → Enter → Ctrl+V → Name box → `'Lịch SM'!H<dòng>` → gõ `Done` → Enter (đăng bài: thêm I = link) → JS gviz đọc lại 2 ô để xác nhận.
    Gõ ô: Sheets hay tự điền (vd "kết bạn 16" → "kết bạn 16-20") → bấm `Delete` trước Enter.
+   **Luôn `navigate` lại tab sheet (URL không có `#`) trước khi ghi** — tab để lâu bị lỗi "Đã xảy ra lỗi", dán/gõ không ăn. Đọc lại thấy rỗng → tải lại, chạy lại `Set-Clipboard` rồi ghi lại.
 3. Không làm được: H để nguyên "Chờ", Nhật Ký SM ghi Không làm được, J = 0.
 
 Dòng Nhật Ký SM trống kế tiếp = dòng cuối + 1 (10/11: đã dùng tới 93).

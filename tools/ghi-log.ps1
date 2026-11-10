@@ -1,0 +1,22 @@
+# Ghi 1 viec da lam: dong Excel (qua ghi-nhat-ky.ps1) + dat dong TSV "Nhat Ky SM" (A..J) vao clipboard de dan len Google Sheet.
+# Cach dung: & "C:\claude remote\tools\ghi-log.ps1" SM01 "Tim story" "Story trang chu" "<noi dung>" "Xong" 2 ["<ket qua>"] ["<che do>"]
+#   LoaiViec: Tim story / Luot newfeed / Dang bai / Chap nhan ket ban / Tuong tac newsfeed / Join group / Tuong tac group / Ket ban
+#   TrangThai: Xong / Mot phan / Khong lam duoc / Bo qua ; SoLuong: so dem thuc te (0 neu khong lam duoc)
+param(
+    [Parameter(Mandatory)][string]$Ma,
+    [Parameter(Mandatory)][string]$Loai,
+    [Parameter(Mandatory)][string]$Noi,
+    [Parameter(Mandatory)][string]$NoiDung,
+    [Parameter(Mandatory)][string]$TrangThai,
+    [Parameter(Mandatory)][int]$SoLuong,
+    [string]$KetQua = "",
+    [string]$CheDo = ""
+)
+$ErrorActionPreference = "Stop"
+[Console]::OutputEncoding = [Text.Encoding]::UTF8
+$ten = @{ SM01 = "Sophie Embroidery"; SM02 = "Benita Ariem"; SM03 = "Rosie Smocking"; SM04 = "Jenny Smocking" }[$Ma]
+if (-not $KetQua) { $KetQua = $TrangThai }
+& (Join-Path (Split-Path $PSScriptRoot) "ghi-nhat-ky.ps1") $Ma $Loai $Noi $NoiDung $KetQua $CheDo
+$ngay = Get-Date -Format "yyyy-MM-dd"
+Set-Clipboard -Value (@($ngay, $Ma, $ten, $Loai, $Noi, $NoiDung, $CheDo, $KetQua, $TrangThai, $SoLuong) -join "`t")
+"Clipboard: dong Nhat Ky SM san sang"

@@ -9,7 +9,8 @@ Toàn bộ việc dở 10/11 (gồm SM02 — người dùng xác nhận SM02 **k
 - Nhật Ký SM dòng trống kế tiếp: **118**. Mã Radar kế tiếp: **K122**.
 - **10:30 lọc group trên Smock Radar**: chấm 30 group (tier A: 1, 2, 25, 43, 5; B: 10, 20, 32, 49, 27, 17, 50, 54, 15, 29, 30, 53, 12; còn lại Loại), đã ghi Tier/Điểm vào Join Group SM cột G–H. Engage/buyer đang ước lượng.
 - Lịch mới dòng 163–175 (join group A/B + tim story + lướt + tương tác group mới, chưa đăng bài vào group mới). Đã làm (Excel đã ghi; **Nhật Ký SM + cột H chưa dán**, hàng đợi ở `tools\hang-doi-log.tsv` → chạy `tools\dan-log.ps1` rồi dán từ A118): 163 SM03 tim story, 164 SM01 join 25+10, 166 SM01 tim story, 172 SM01 tương tác group 25, 169 SM01 lướt (~2 phút, chưa đủ 4).
-- Còn lại: 165 SM02 join 43/20/32, 167 SM02 tim story, 168 SM03 join 5, 170 SM03 lướt, 171 SM02 group 43, 173 SM03 group 5, 174–175 chấp nhận All; lọc list bạn bè (chân dung chủ boutique/smock) → Add Friend. Join Group SM chưa cập nhật SM01 cột D cho group 25, 10.
+- 14:05: đã dán log tới Nhật Ký SM dòng 122 (kế tiếp **123**), H163–175 cập nhật, Join Group SM D11/D26 = đã join. Hàng đợi trống. Hẹn giờ 155 (SM03 CG6→g27) và 162 (SM01 CG4→g5) trễ >30 phút, chưa làm.
+- Còn lại: 155, 162, 165 SM02 join 43/20/32, 167 SM02 tim story, 168 SM03 join 5, 170 SM03 lướt, 171 SM02 group 43, 173 SM03 group 5, 174–175 chấp nhận All; lọc list bạn bè (chân dung chủ boutique/smock) → Add Friend. Join Group SM chưa cập nhật SM01 cột D cho group 25, 10.
 
 Cập nhật mỗi khi dừng ca. Ngày mới "lên lịch hôm nay" thì **ưu tiên dồn các việc chưa làm dưới đây** trước.
 

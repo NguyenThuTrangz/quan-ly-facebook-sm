@@ -55,7 +55,20 @@ Có thể gửi 2–3 lệnh JS song song trong cùng 1 message (chạy tuần t
    - Chọn Công khai: bấm nút "Edit privacy" → **chụp màn hình rồi bấm Public theo tọa độ**, chụp lại xác nhận, rồi bấm Done theo tọa độ (bấm theo ref dễ trúng "Close friends" vì hộp thoại dịch chuyển). Kiểm tra `aria-label` "Sharing with Public." và ô "Set as default audience" **không tick**.
    - Link bài: `find` timestamp của bài → `hover` → lấy `pfbid…` trong `a[href]` của bài (`/pfbid\w+/`).
 
-## 2. Ghi log (3 nơi) — gộp tối đa
+## 2. Ghi log — CÁCH MỚI: 1 lệnh webhook (khi n8n L1-01 đã bật)
+Sau mỗi việc chạy **một** lệnh, xong. Webhook tự ghi Nhật Ký SM, ghi `Done`/`Lỗi` + URL vào Lịch SM dòng đó, và chống ghi trùng:
+`& "C:\claude remote\tools\ghi-log-webhook.ps1" SM01 "Tim story" "Story trang chủ" "story tim 2/3" "Xong" 2 -LichRow 121`
+(đăng bài thêm `-Url "<link bài>" -CheDo "Công khai"`). Kết quả:
+- `OK …` → sang việc kế. `(đã ghi trước đó…)` cũng là OK.
+- `WEBHOOK TỪ CHỐI: …` → sửa đúng tham số bị báo (sai loại việc, sai trạng thái, sai link) rồi chạy lại. Không ghi kiểu cũ.
+- `DỰ PHÒNG: …` → script đã tự ghi Excel kiểu cũ; làm tiếp bước 2–3 ở mục 2b cho dòng này, và báo người dùng "n8n không phản hồi" một lần trong ca.
+Không còn mở tab sheet để gõ ô. Số dòng Lịch SM (`-LichRow`) lấy từ lúc đọc lịch đầu ca (gviz, cột A–J, dòng = chỉ số + 2).
+
+**Đăng bài khi có gói sẵn (n8n L1-03):** Hành Động có mã `Kxxx` → mở `C:\claude remote\anh-dang-bai\Kxxx\`: `caption.txt` (đã có mã bài trong lời mời nhắn tin) + `01.jpg, 02.jpg…`. Không đọc workbook KE, không tải ảnh Drive. Thư mục thiếu/rỗng → `Bỏ qua`, báo người dùng (n8n L1-05 sẽ báo lúc 06:30 nếu gói chưa sẵn). Đăng xong: ghi log bằng webhook kèm `-Url`, rồi đăng ký bài vào Radar (`day-du-lieu-radar`, dùng đúng mã Kxxx).
+
+**Lướt newfeed N phút: một lệnh** thay vì gọi lại mỗi 38 giây — chạy JS không chờ (`setTimeout` lặp trong trang N phút), rồi gọi `computer wait` hoặc làm việc khác của cùng nick; chỉ kiểm lại một lần khi hết N phút.
+
+## 2b. Ghi log (3 nơi) — CÁCH CŨ, chỉ dùng khi webhook DỰ PHÒNG hoặc n8n chưa cài
 1. Một lệnh PowerShell ghi Excel + đưa dòng Nhật Ký SM vào clipboard:
    `& "C:\claude remote\tools\ghi-log.ps1" SM01 "Tim story" "Story trang chủ" "<chi tiết>" "Xong" 2`
    (tham số 7 = Kết quả nếu khác Trạng thái, tham số 8 = Chế độ hiển thị).

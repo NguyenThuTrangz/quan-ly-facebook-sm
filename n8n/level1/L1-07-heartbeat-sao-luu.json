@@ -1,0 +1,137 @@
+{
+  "name": "L1-07 Heartbeat + sao lưu",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/10 * * * *"
+            }
+          ]
+        }
+      },
+      "id": "4e45ea33-b942-4eaa-8673-18e286143cc8",
+      "name": "Mỗi 10 phút",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -600,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://hc-ping.com/YOUR-UUID",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "87d68c2a-397b-49df-9ecf-ae951be11570",
+      "name": "Ping healthchecks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -380,
+        160
+      ],
+      "continueOnFail": true,
+      "notes": "Tạo check miễn phí ở healthchecks.io (chu kỳ 10 phút, grace 20 phút), gửi cảnh báo email/Telegram khi n8n hoặc máy chết."
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "15 0 * * *"
+            }
+          ]
+        }
+      },
+      "id": "6b595c64-28c7-4ad5-b805-af6d4da064e0",
+      "name": "00:15 hằng ngày",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -600,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "command": "=n8n export:workflow --all --separate --output=\"C:/n8n-backup/{{ $now.toFormat('yyyy-MM-dd') }}\""
+      },
+      "id": "2c0a75d0-d596-430c-b60b-770b61fc4f9c",
+      "name": "Xuất toàn bộ workflow",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -380,
+        420
+      ],
+      "notes": "Bản npm: chạy được trực tiếp. Bản Docker: đổi thành 'docker exec n8n n8n export:workflow --all --separate --output=/backup/...' với /backup là volume ra ổ đĩa."
+    },
+    {
+      "parameters": {
+        "command": "powershell -NoProfile -Command \"Get-ChildItem 'C:/n8n-backup' -Directory | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-30) } | Remove-Item -Recurse -Force\""
+      },
+      "id": "f8d3416c-3569-444b-84b9-915f0a53ee6c",
+      "name": "Xoá bản sao lưu > 30 ngày",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        420
+      ]
+    }
+  ],
+  "connections": {
+    "Mỗi 10 phút": {
+      "main": [
+        [
+          {
+            "node": "Ping healthchecks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "00:15 hằng ngày": {
+      "main": [
+        [
+          {
+            "node": "Xuất toàn bộ workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Xuất toàn bộ workflow": {
+      "main": [
+        [
+          {
+            "node": "Xoá bản sao lưu > 30 ngày",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Ho_Chi_Minh",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "meta": {
+    "smockNotes": "Biết ngay khi n8n/máy chết; có bản sao lưu workflow mỗi đêm."
+  },
+  "tags": []
+}

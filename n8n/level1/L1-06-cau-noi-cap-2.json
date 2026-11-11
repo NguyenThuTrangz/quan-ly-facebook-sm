@@ -1,0 +1,435 @@
+{
+  "name": "L1-06 Cầu nối cấp 2 (inbox tối, outbox sáng)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "15 22 * * *"
+            }
+          ]
+        }
+      },
+      "id": "1d34fda1-9a9d-4471-9fae-72fcee7c968e",
+      "name": "22:15 đẩy việc sang cấp 2",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -900,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values/{{ encodeURIComponent(\"'Content Queue'!A2:K3000\") }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "5a4a27cc-0854-4c26-8a75-c2df3308efde",
+      "name": "Đọc Content Queue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -680,
+        160
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2 (tài khoản có quyền sửa sheet chính).",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values/{{ encodeURIComponent(\"'Group Score'!A2:R500\") }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "831ebd80-61cd-47f0-9db5-5a006930babe",
+      "name": "Đọc Group Score",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -460,
+        160
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2 (tài khoản có quyền sửa sheet chính).",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===== Cấu hình chung cấp 1 (sửa ở đây) =====\nconst CFG = {\n  SHEET_ID: '1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0',\n  TOKEN: 'DOI_TOKEN_O_DAY',                 // trùng biến SMOCK_LOG_TOKEN trên máy cấp 3\n  PACK_DIR: 'C:/claude remote/anh-dang-bai', // thư mục gói bài cấp 3 đọc\n  L2_REPO: 'C:/smock-level2-copilot',        // bản clone repo cấp 2 trên máy này\n  OFFICE_START: '08:30', OFFICE_END: '17:00',\n  LUNCH_START: '11:45', LUNCH_END: '13:15',\n  GROUP_POST_GAP_MIN: 60,\n};\n\nconst cq = ($('Đọc Content Queue').first().json.values || []), gs = ($('Đọc Group Score').first().json.values || []);\nconst stamp = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' }).slice(0, 10).replace(/-/g, '');\nlet n = 0; const files = [];\nconst id = p => `${p}-${stamp}-${String(++n).padStart(3, '0')}`;\ncq.forEach((r, i) => { if (r[5] === 'Cần phái sinh') files.push({ path: `inbox/captions/${id('CAP')}.json`, body: { task_id: null, kind: 'caption', sheet_row: i + 2, source_code: r[0], source_caption: r[3], variants: 3 } }); });\ngs.forEach((r, i) => { if (r[16] === 'Chờ chấm' && r[4]) files.push({ path: `inbox/groups/${id('GRP')}.json`, body: { task_id: null, kind: 'group', sheet_row: i + 2, stt: +r[0], name: r[1], url: r[2], text_file: r[4] } }); });\nif (new Date().getDay() === 0) files.push({ path: `inbox/reports/${id('RPT')}.json`, body: { task_id: null, kind: 'weekly_report', week_ending: stamp } });\nreturn files.map(f => { f.body.task_id = f.path.split('/').pop().replace('.json', ''); return { json: f, binary: { data: { data: Buffer.from(JSON.stringify(f.body, null, 2)).toString('base64'), mimeType: 'application/json', fileName: f.path.split('/').pop() } } }; });"
+      },
+      "id": "5946a95e-fe1a-4c18-96c2-e2ed6cb50ffb",
+      "name": "Tạo file việc",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        160
+      ],
+      "notes": "Mỗi việc một file JSON có task_id duy nhất. File text group do cấp 3 lưu sẵn ở thư mục chung."
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $('Tạo file việc').item.json.path.startsWith('inbox') ? 'C:/smock-level2-copilot/' + $json.path : '' }}",
+        "dataPropertyName": "data",
+        "options": {}
+      },
+      "id": "489bb475-36f8-47f9-907a-c51bbfc75709",
+      "name": "Ghi vào inbox repo cấp 2",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "command": "=git -C \"C:/smock-level2-copilot\" pull --rebase && git -C \"C:/smock-level2-copilot\" add inbox && git -C \"C:/smock-level2-copilot\" commit -m \"inbox {{ $now.toFormat('yyyy-MM-dd HH:mm') }}\" ; git -C \"C:/smock-level2-copilot\" push",
+        "executeOnce": true
+      },
+      "id": "6864a6bd-254f-462c-bd99-90f97b808c9a",
+      "name": "git commit + push inbox",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        200,
+        160
+      ],
+      "notes": "Cần bật node Execute Command (xem n8n/level1/README.md) và git đã đăng nhập trên máy."
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "bbfb4a67-c418-40fb-9c43-cb45c09b74e6",
+      "name": "06:30 kéo kết quả cấp 2",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -900,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "command": "git -C \"C:/smock-level2-copilot\" pull --rebase"
+      },
+      "id": "514a7b3c-b38b-4137-ac87-b67a4ae1b40c",
+      "name": "git pull",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -680,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "fileSelector": "C:/smock-level2-copilot/outbox/*/*.json",
+        "options": {}
+      },
+      "id": "2bb88645-96a5-4069-b409-b5bdf8233d7e",
+      "name": "Đọc file outbox",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -460,
+        500
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "id": "1c143678-7cfa-4923-8b45-da24ed690366",
+      "name": "Đọc JSON",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===== Cấu hình chung cấp 1 (sửa ở đây) =====\nconst CFG = {\n  SHEET_ID: '1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0',\n  TOKEN: 'DOI_TOKEN_O_DAY',                 // trùng biến SMOCK_LOG_TOKEN trên máy cấp 3\n  PACK_DIR: 'C:/claude remote/anh-dang-bai', // thư mục gói bài cấp 3 đọc\n  L2_REPO: 'C:/smock-level2-copilot',        // bản clone repo cấp 2 trên máy này\n  OFFICE_START: '08:30', OFFICE_END: '17:00',\n  LUNCH_START: '11:45', LUNCH_END: '13:15',\n  GROUP_POST_GAP_MIN: 60,\n};\n\nconst FORBID = [\"phone\", \"email\", \"sdt\", \"so_dien_thoai\", \"password\", \"mat_khau\", \"2fa\"];\nconst rows = []; const errors = [];\nfor (const it of $input.all()) {\n  const o = it.json.data || it.json; const fname = it.json.fileName || '';\n  if (!/^(CAP|GRP|RPT)-\\d{8}-\\d{3}$/.test(o.task_id || '')) { errors.push(`${fname}: thiếu/ sai task_id`); continue; }\n  if (JSON.stringify(o).match(new RegExp('\"(' + FORBID.join('|') + ')\"', 'i'))) { errors.push(`${o.task_id}: có trường bị cấm`); continue; }\n  if (o.kind === 'caption') {\n    if (!Array.isArray(o.variants) || !o.variants.length) { errors.push(`${o.task_id}: không có variants`); continue; }\n    o.variants.forEach((v, k) => rows.push({ append: [`${o.source_code}-v${k + 1}`, `phái sinh từ ${o.source_code}`, o.type || 'group', v.caption, o.image_link || '', 'Chờ duyệt caption', '', '', '', '', o.task_id] }));\n    rows.push({ update: { range: `'Content Queue'!F${o.sheet_row}`, values: [['Chưa dùng']] } });\n  } else if (o.kind === 'group') {\n    const s = o.scores || {}; const keys = ['gates', 'icp', 'sell', 'active', 'engage', 'buyer', 'geo', 'spam'];\n    if (!keys.every(k => k in s)) { errors.push(`${o.task_id}: thiếu điểm`); continue; }\n    rows.push({ update: { range: `'Group Score'!F${o.sheet_row}:Q${o.sheet_row}`, values: [[s.gates, s.icp, s.sell, s.active, s.engage, s.buyer, s.geo, s.spam, o.total, o.tier, String(o.evidence || '').slice(0, 1000), 'Đã chấm']] } });\n  }\n}\nreturn [{ json: { appends: rows.filter(r => r.append).map(r => r.append), updates: rows.filter(r => r.update).map(r => r.update), errors } }];"
+      },
+      "id": "b2c9b22f-4420-455d-bb5e-a3c0a1b50b16",
+      "name": "Kiểm + chuyển thành lệnh ghi",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -20,
+        500
+      ],
+      "notes": "Từ chối file sai task_id, thiếu điểm, hoặc có trường bị cấm (SĐT, email, mật khẩu)."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values/{{ encodeURIComponent(\"'Content Queue'!A:K\") }}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: $json.appends }) }}",
+        "options": {}
+      },
+      "id": "7a953124-60a4-43c2-a481-6ad9a774199a",
+      "name": "Thêm caption phái sinh (Chờ duyệt)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        200,
+        440
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ valueInputOption: 'USER_ENTERED', data: $('Kiểm + chuyển thành lệnh ghi').first().json.updates }) }}",
+        "options": {}
+      },
+      "id": "d7f8e2b9-4fbb-465a-a85a-d58bcf9dda79",
+      "name": "Cập nhật điểm group + trạng thái",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        440
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2."
+    },
+    {
+      "parameters": {
+        "command": "powershell -NoProfile -Command \"cd 'C:/smock-level2-copilot'; New-Item -ItemType Directory -Force done | Out-Null; Get-ChildItem outbox -Recurse -Filter *.json | ForEach-Object { git mv $_.FullName ('done/' + $_.Name) }; git commit -m 'done'; git push\""
+      },
+      "id": "d9f9ee79-fb03-45b7-8091-57263ef63e99",
+      "name": "Chuyển outbox đã xử lý sang done",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        640,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_GROUP_CHAT_ID",
+        "text": "={{ $('Kiểm + chuyển thành lệnh ghi').first().json.errors.length ? '⚠️ Cấp 2: ' + $('Kiểm + chuyển thành lệnh ghi').first().json.errors.join('; ') : '✅ Cấp 2: đã nhập kết quả' }}",
+        "additionalFields": {}
+      },
+      "id": "a59d09fd-106b-4fe0-a201-c79f6ede9a7c",
+      "name": "Báo lỗi file cấp 2",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        860,
+        440
+      ],
+      "disabled": true,
+      "notes": "Tuỳ chọn: bật node, CHỌN CREDENTIAL Telegram, điền chat ID NHÓM MKT/Sale (không gửi vào máy chủ tài khoản Claude)."
+    }
+  ],
+  "connections": {
+    "22:15 đẩy việc sang cấp 2": {
+      "main": [
+        [
+          {
+            "node": "Đọc Content Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đọc Content Queue": {
+      "main": [
+        [
+          {
+            "node": "Đọc Group Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đọc Group Score": {
+      "main": [
+        [
+          {
+            "node": "Tạo file việc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tạo file việc": {
+      "main": [
+        [
+          {
+            "node": "Ghi vào inbox repo cấp 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ghi vào inbox repo cấp 2": {
+      "main": [
+        [
+          {
+            "node": "git commit + push inbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06:30 kéo kết quả cấp 2": {
+      "main": [
+        [
+          {
+            "node": "git pull",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "git pull": {
+      "main": [
+        [
+          {
+            "node": "Đọc file outbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đọc file outbox": {
+      "main": [
+        [
+          {
+            "node": "Đọc JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đọc JSON": {
+      "main": [
+        [
+          {
+            "node": "Kiểm + chuyển thành lệnh ghi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kiểm + chuyển thành lệnh ghi": {
+      "main": [
+        [
+          {
+            "node": "Thêm caption phái sinh (Chờ duyệt)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Thêm caption phái sinh (Chờ duyệt)": {
+      "main": [
+        [
+          {
+            "node": "Cập nhật điểm group + trạng thái",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cập nhật điểm group + trạng thái": {
+      "main": [
+        [
+          {
+            "node": "Chuyển outbox đã xử lý sang done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chuyển outbox đã xử lý sang done": {
+      "main": [
+        [
+          {
+            "node": "Báo lỗi file cấp 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Ho_Chi_Minh",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "meta": {
+    "smockNotes": "Bàn giao cấp 1 ↔ cấp 2 bằng file JSON trong repo smock-level2-copilot. Caption phái sinh luôn vào 'Chờ duyệt caption', người duyệt mới dùng."
+  },
+  "tags": []
+}

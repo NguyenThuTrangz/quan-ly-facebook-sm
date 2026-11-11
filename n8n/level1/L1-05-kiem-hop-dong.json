@@ -1,0 +1,347 @@
+{
+  "name": "L1-05 Kiểm hợp đồng dữ liệu + việc kẹt",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 6,21 * * *"
+            }
+          ]
+        }
+      },
+      "id": "edf50ef4-19d6-4d66-87d4-191c49e80729",
+      "name": "06:30 và 21:50",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -900,
+        300
+      ],
+      "notes": "06:30: trước ca (gói bài hôm nay đủ chưa). 21:50: sau khi sinh lịch (gói bài mai sẽ làm lúc 22:00)."
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values:batchGet?{{ [\"Lịch SM\", \"Nhật Ký SM\", \"Content Queue\", \"Lead Hunter\", \"Group Score\", \"Báo cáo ngày\"].map(t => 'ranges=' + encodeURIComponent(\"'\" + t + \"'!1:1\")).join('&') }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "id": "2fb4c86d-66fa-4f2c-8127-d86f88edc5ad",
+      "name": "Đọc dòng tiêu đề mọi tab",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -680,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===== Cấu hình chung cấp 1 (sửa ở đây) =====\nconst CFG = {\n  SHEET_ID: '1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0',\n  TOKEN: 'DOI_TOKEN_O_DAY',                 // trùng biến SMOCK_LOG_TOKEN trên máy cấp 3\n  PACK_DIR: 'C:/claude remote/anh-dang-bai', // thư mục gói bài cấp 3 đọc\n  L2_REPO: 'C:/smock-level2-copilot',        // bản clone repo cấp 2 trên máy này\n  OFFICE_START: '08:30', OFFICE_END: '17:00',\n  LUNCH_START: '11:45', LUNCH_END: '13:15',\n  GROUP_POST_GAP_MIN: 60,\n};\n\nconst HEADERS = {\"Lịch SM\": [\"Ngày\", \"Khoảng thời gian\", \"Mã TK\", \"Tên Facebook\", \"Câu lệnh\", \"Hành Động\", \"Duyệt\", \"Trạng thái\", \"URL bài đã đăng\", \"Ghi chú\"], \"Nhật Ký SM\": [\"Ngày\", \"Mã TK\", \"Tên Facebook\", \"Loại việc\", \"Nơi thực hiện\", \"Nội dung / chi tiết\", \"Chế độ hiển thị\", \"Kết quả\", \"Trạng thái\", \"Số lượng\", \"Mã log\"], \"Content Queue\": [\"Mã content\", \"Nguồn\", \"Loại\", \"Caption\", \"Link ảnh\", \"Trạng thái\", \"Mã bài\", \"Ngày dự kiến\", \"Nick\", \"Thư mục gói\", \"Ghi chú\"], \"Lead Hunter\": [\"Ngày\", \"Link\", \"Nguồn\", \"Tiêu đề\", \"Trích đoạn\", \"Loại khách\", \"Cần gì\", \"Số lượng / hạn\", \"Lý do\", \"Gợi ý trả lời\", \"Confidence\", \"Trạng thái\", \"Người xử lý\", \"Ghi chú\"], \"Group Score\": [\"STT\", \"Tên group\", \"Link\", \"Ngày lấy text\", \"File text\", \"Cổng loại\", \"ICP\", \"Cho bán\", \"Sôi động\", \"Tương tác\", \"Người mua\", \"Thị trường\", \"Ít rác\", \"Tổng\", \"Tier\", \"Bằng chứng\", \"Trạng thái\", \"Người duyệt\"], \"Báo cáo ngày\": [\"Ngày\", \"Nick\", \"Việc xong\", \"Việc lỗi\", \"Bài tường\", \"Bài group\", \"Join\", \"Kết bạn\", \"Tương tác\", \"Đèn\", \"Ghi chú\"]};\nconst tabs = Object.keys(HEADERS); const res = $input.first().json.valueRanges || [];\nconst problems = [];\ntabs.forEach((t, i) => {\n  const got = ((res[i] || {}).values || [[]])[0] || [];\n  HEADERS[t].forEach((h, j) => { if ((got[j] || '').trim() !== h) problems.push(`${t}: cột ${String.fromCharCode(65 + j)} phải là \"${h}\", đang là \"${got[j] || ''}\"`); });\n});\nreturn [{ json: { problems, ok: problems.length === 0, ranges: tabs.map(t => `'${t}'!1:1`) } }];"
+      },
+      "id": "90e09720-a657-425e-af56-f68f8ec4fd1f",
+      "name": "Kiểm tiêu đề",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values/{{ encodeURIComponent(\"'Content Queue'!A2:K3000\") }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "fb35a8cb-a847-4297-8b57-ffb4051a59ef",
+      "name": "Đọc Content Queue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -240,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2 (tài khoản có quyền sửa sheet chính).",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values/{{ encodeURIComponent(\"'Lead Hunter'!A2:N5000\") }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "9f6cd039-74fb-4b90-8ca0-449d88e8c125",
+      "name": "Đọc Lead Hunter",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -20,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2 (tài khoản có quyền sửa sheet chính).",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values/{{ encodeURIComponent(\"'Lịch SM'!A2:J5000\") }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "ac0912d3-8ecd-4f9e-9e13-2604dcae2221",
+      "name": "Đọc Lịch SM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        200,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2 (tài khoản có quyền sửa sheet chính).",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===== Cấu hình chung cấp 1 (sửa ở đây) =====\nconst CFG = {\n  SHEET_ID: '1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0',\n  TOKEN: 'DOI_TOKEN_O_DAY',                 // trùng biến SMOCK_LOG_TOKEN trên máy cấp 3\n  PACK_DIR: 'C:/claude remote/anh-dang-bai', // thư mục gói bài cấp 3 đọc\n  L2_REPO: 'C:/smock-level2-copilot',        // bản clone repo cấp 2 trên máy này\n  OFFICE_START: '08:30', OFFICE_END: '17:00',\n  LUNCH_START: '11:45', LUNCH_END: '13:15',\n  GROUP_POST_GAP_MIN: 60,\n};\n\nconst cq = ($('Đọc Content Queue').first().json.values || []), lh = ($('Đọc Lead Hunter').first().json.values || []),\n      lich = ($('Đọc Lịch SM').first().json.values || []);\nconst problems = [...$('Kiểm tiêu đề').first().json.problems];\nconst now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));\nconst t = new Date(now); t.setDate(t.getDate() + (now.getHours() >= 12 ? 1 : 0)); const dayVN = `${t.getDate()}/${t.getMonth() + 1}/${t.getFullYear()}`;\n// 1) Bài có lịch đăng mà gói chưa sẵn\nconst needPack = lich.filter(r => (r[0] || '').startsWith(dayVN) && /^đăng/.test(r[4] || '')).map(r => (/K\\d+/.exec(r[5] || '') || [])[0]).filter(Boolean);\nfor (const k of needPack) { const row = cq.find(r => r[6] === k); if (!row || row[5] !== 'Gói sẵn') problems.push(`Bài ${k} ngày ${dayVN} chưa có gói (trạng thái: ${row ? row[5] : 'không thấy trong Content Queue'})`); }\n// 2) Lead chờ duyệt quá 48 giờ\nconst old = lh.filter(r => r[11] === 'Chờ duyệt' && (now - new Date((r[0] || '').replace(' ', 'T'))) > 48 * 3600e3).length;\nif (old) problems.push(`${old} lead \"Chờ duyệt\" quá 48 giờ`);\n// 3) Lịch hôm qua còn \"Chờ\" (cấp 3 bỏ sót hoặc webhook không ghi)\nconst y = new Date(now); y.setDate(y.getDate() - 1); const yVN = `${y.getDate()}/${y.getMonth() + 1}/${y.getFullYear()}`;\nconst left = lich.filter(r => (r[0] || '').startsWith(yVN) && r[7] === 'Chờ').length;\nif (left) problems.push(`${left} việc ngày ${yVN} vẫn \"Chờ\" — kiểm cấp 3 hoặc webhook`);\n// 4) Đối soát: bài đã Done trên Lịch SM → Content Queue \"Đã đăng\"\nconst posted = new Set(lich.filter(r => r[7] === 'Done' && /^đăng/.test(r[4] || '')).map(r => (/K\\d+/.exec(r[5] || '') || [])[0]).filter(Boolean));\nconst data = [];\ncq.forEach((r, i) => { if (posted.has(r[6]) && r[5] !== 'Đã đăng') data.push({ range: `'Content Queue'!F${i + 2}`, values: [['Đã đăng']] }); });\nreturn [{ json: { problems, data, text: problems.length ? '⚠️ Kiểm hợp đồng Smock\\n- ' + problems.join('\\n- ') : '✅ Kiểm hợp đồng Smock: không có vấn đề' } }];"
+      },
+      "id": "287cc932-b4e5-4fc5-bda7-319c6063f75a",
+      "name": "Tìm việc kẹt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "5752c548-edec-4fbd-9923-5c31cb727e55",
+              "leftValue": "={{ $json.data.length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "449408de-5f13-4493-a6ef-edd9678a608b",
+      "name": "Có bài cần đánh dấu Đã đăng?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        640,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ valueInputOption: 'USER_ENTERED', data: $('Tìm việc kẹt').first().json.data }) }}",
+        "options": {}
+      },
+      "id": "dee9010e-8d36-4d4f-a7e2-28eb4ff42f0a",
+      "name": "Đánh dấu Đã đăng",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        860,
+        220
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2."
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_GROUP_CHAT_ID",
+        "text": "={{ $('Tìm việc kẹt').first().json.text }}",
+        "additionalFields": {}
+      },
+      "id": "9435d90e-67af-4db3-82e8-f3db2112bae3",
+      "name": "Báo nếu có vấn đề",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1080,
+        300
+      ],
+      "disabled": true,
+      "notes": "Tuỳ chọn: bật node, CHỌN CREDENTIAL Telegram, điền chat ID NHÓM MKT/Sale (không gửi vào máy chủ tài khoản Claude)."
+    }
+  ],
+  "connections": {
+    "06:30 và 21:50": {
+      "main": [
+        [
+          {
+            "node": "Đọc dòng tiêu đề mọi tab",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đọc dòng tiêu đề mọi tab": {
+      "main": [
+        [
+          {
+            "node": "Kiểm tiêu đề",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kiểm tiêu đề": {
+      "main": [
+        [
+          {
+            "node": "Đọc Content Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đọc Content Queue": {
+      "main": [
+        [
+          {
+            "node": "Đọc Lead Hunter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đọc Lead Hunter": {
+      "main": [
+        [
+          {
+            "node": "Đọc Lịch SM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đọc Lịch SM": {
+      "main": [
+        [
+          {
+            "node": "Tìm việc kẹt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tìm việc kẹt": {
+      "main": [
+        [
+          {
+            "node": "Có bài cần đánh dấu Đã đăng?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Có bài cần đánh dấu Đã đăng?": {
+      "main": [
+        [
+          {
+            "node": "Đánh dấu Đã đăng",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Báo nếu có vấn đề",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đánh dấu Đã đăng": {
+      "main": [
+        [
+          {
+            "node": "Báo nếu có vấn đề",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Ho_Chi_Minh",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "meta": {
+    "smockNotes": "Bắt lỗi phối hợp giữa 3 cấp: sai tiêu đề cột, gói bài thiếu, lead tồn, lịch hôm qua còn Chờ."
+  },
+  "tags": []
+}

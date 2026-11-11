@@ -19,6 +19,13 @@ Máy: ADMIN, 3 tài khoản SM01–SM03. Cập nhật ngày 2026-10-21. Thông t
 ## Dashboard Smock Radar (từ 2026-11-11)
 Mọi kết quả đo (comment, inbox, số đọc bài, kiểm tra hiển thị, sự cố nick, bài mới có mã Kxxx) đẩy vào https://claude.ai/artifact/4pxRJ5wv1URZUpsooZMjye theo skill **`day-du-lieu-radar`**. Gặp cảnh báo FB (can't use this feature, confirm identity, checkpoint, bài bị gỡ) thì ghi vào dashboard ngay, trước khi báo người dùng. Trước khi đăng group: chạy kiểm tra trước khi đăng + kiểm caption trên dashboard; bị chặn thì không đăng.
 
+## Kiến trúc 3 cấp (đọc `ops/KIEN-TRUC-3-CAP.md`; bật dần theo `n8n/level1/README.md`)
+- **Cấp 1 n8n (24/24)** sinh Lịch SM (L1-02, 21:30 tối hôm trước), chuẩn bị gói bài (L1-03, 22:00), báo cáo (L1-04, 18:00), kiểm hợp đồng (L1-05, 06:30/21:50), cầu nối cấp 2 (L1-06), ghi log qua webhook (L1-01). **Cấp 2 Copilot** (repo `smock-level2-copilot`) phái sinh caption, chấm group, viết báo cáo tuần. **Cấp 3 là Claude: chỉ giờ hành chính (08:30–17:00, thứ 2–7)**.
+- Khi L1-02 đã bật: **không tự "lên lịch hôm nay"**; chỉ chạy lịch n8n đã sinh. Khi L1-01 đã bật: ghi log bằng `tools\ghi-log-webhook.ps1` (mục 2 của `chay-lich-sm`), không gõ vào sheet.
+- Gom việc theo cụm từng nick (lịch đã xếp sẵn 2 cụm/nick/ngày): làm hết cụm của một nick rồi mới chọn trình duyệt khác.
+- Lấy text group cho cấp 2: skill `lay-text-group`. Không tự chấm group dài dòng trong phiên.
+- Có gì bất thường giữa các cấp (gói bài thiếu, webhook DỰ PHÒNG, lịch không có) → báo người dùng 1 dòng, không tự sửa sheet.
+
 ## Lead Hunter (n8n, từ 2026-11-11)
 Workflow `n8n/smock-lead-hunter.json` (xem `n8n/README.md`) tìm bài công khai có người đang tìm xưởng smock, ghi vào tab **Lead Hunter** của sheet chính với trạng thái "Chờ duyệt". Người dùng nói "xử lý lead" → dùng skill **`tra-loi-lead`**: soạn câu trả lời, **chờ người dùng duyệt từng lead**, tối đa 5 câu trả lời/ngày, mỗi lead một nội dung riêng, tự giới thiệu đúng là K-Embroidery, ghi kết quả lên sheet + Radar.
 

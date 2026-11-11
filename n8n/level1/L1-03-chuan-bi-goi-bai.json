@@ -1,0 +1,373 @@
+{
+  "name": "L1-03 Chuẩn bị gói bài (caption + ảnh)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 22 * * 0-5"
+            }
+          ]
+        }
+      },
+      "id": "df0926c4-5398-4889-b3af-0724557f0adf",
+      "name": "22:00 Chủ nhật–Thứ sáu",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values/{{ encodeURIComponent(\"'Content Queue'!A2:K3000\") }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "423100a3-5e7b-4629-b435-3ddb282a42cf",
+      "name": "Đọc Content Queue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -680,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2 (tài khoản có quyền sửa sheet chính).",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===== Cấu hình chung cấp 1 (sửa ở đây) =====\nconst CFG = {\n  SHEET_ID: '1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0',\n  TOKEN: 'DOI_TOKEN_O_DAY',                 // trùng biến SMOCK_LOG_TOKEN trên máy cấp 3\n  PACK_DIR: 'C:/claude remote/anh-dang-bai', // thư mục gói bài cấp 3 đọc\n  L2_REPO: 'C:/smock-level2-copilot',        // bản clone repo cấp 2 trên máy này\n  OFFICE_START: '08:30', OFFICE_END: '17:00',\n  LUNCH_START: '11:45', LUNCH_END: '13:15',\n  GROUP_POST_GAP_MIN: 60,\n};\n\nconst rows = ($input.first().json.values || []).map((r, i) => ({ r, row: i + 2 })).filter(x => x.r[5] === 'Đã xếp');\nconst out = [];\nfor (const x of rows) {\n  const link = x.r[4] || ''; const m = /folders\\/([\\w-]+)/.exec(link) || /[?&]id=([\\w-]+)/.exec(link);\n  // Thay {{MA_BAI}} (caption phái sinh từ cấp 2) bằng mã bài thật; caption gốc chưa có mã thì thêm câu mời nhắn tin\n  let cap = (x.r[3] || '').replace(/\\{\\{MA_BAI\\}\\}/g, x.r[6]);\n  if (!new RegExp('\\\\b' + x.r[6] + '\\\\b').test(cap)) cap += `\\n\\nDM or WhatsApp us code ${x.r[6]} for the catalog.`;\n  out.push({ json: { row: x.row, code: x.r[6], caption: cap, folderId: m ? m[1] : null, dir: `${CFG.PACK_DIR}/${x.r[6]}` } });\n}\nreturn out.length ? out : [{ json: { empty: true } }];"
+      },
+      "id": "d7431dea-ca3f-495b-bdd2-3237f81d4797",
+      "name": "Chọn bài cần gói",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "99862bec-964e-4f53-b65c-cf74e51b2d65",
+              "leftValue": "={{ !$json.empty && !!$json.folderId }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2232e5c8-584f-4407-ae04-99b455e5fdf8",
+      "name": "Có bài?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = [];\nfor (const it of $input.all()) {\n  if (it.json.empty) continue;\n  items.push({ json: it.json, binary: { data: { data: Buffer.from(it.json.caption, 'utf8').toString('base64'), mimeType: 'text/plain', fileName: 'caption.txt' } } });\n}\nreturn items;"
+      },
+      "id": "6e459d47-4f01-46de-84f7-0cc199fa056d",
+      "name": "Tạo caption.txt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -20,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $json.dir + '/caption.txt' }}",
+        "dataPropertyName": "data",
+        "options": {}
+      },
+      "id": "097fc7d6-af91-41c0-aaf9-d72942651a58",
+      "name": "Ghi caption.txt",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        200,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/drive/v3/files?q={{ encodeURIComponent(\"'\" + $json.folderId + \"' in parents and trashed=false\") }}&fields=files(id,name,mimeType)&supportsAllDrives=true&includeItemsFromAllDrives=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "options": {}
+      },
+      "id": "186ad225-c986-4160-b9df-91037fa0d590",
+      "name": "Liệt kê ảnh trong folder Drive",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -20,
+        380
+      ],
+      "notes": "CHỌN CREDENTIAL: Google Drive OAuth2. Folder do người khác sở hữu vẫn liệt kê được nếu tài khoản này mở được link.",
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mỗi bài → danh sách file trong folder (từ Drive API) → mỗi ảnh một item để tải bản JPG 2048px\nconst out = [];\nfor (const it of $input.all()) {\n  const meta = $('Chọn bài cần gói').all().find(x => x.json.folderId && true) || null;\n  const files = (it.json.files || []).filter(f => /^image\\//.test(f.mimeType || ''));\n  files.forEach((f, i) => out.push({ json: { ...(meta ? meta.json : {}), fileId: f.id, idx: i + 1, total: files.length } }));\n}\nreturn out;"
+      },
+      "id": "aaa3712b-589e-4650-b176-86acec600674",
+      "name": "Tách từng ảnh",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        200,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://drive.google.com/thumbnail?id={{ $json.fileId }}&sz=w2048",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          },
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1500
+            }
+          }
+        }
+      },
+      "id": "3eb2c368-55a4-44b2-a042-235f32313efd",
+      "name": "Tải ảnh JPG 2048px",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        380
+      ],
+      "notes": "Luôn tải bản JPG (xử lý được cả HEIC). 1,5 giây/ảnh để không bị Google chặn.",
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $json.dir + '/' + String($json.idx).padStart(2, '0') + '.jpg' }}",
+        "dataPropertyName": "data",
+        "options": {}
+      },
+      "id": "d2d0d250-822d-420a-b43a-51df49adca89",
+      "name": "Lưu ảnh vào gói",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        640,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const by = {};\nfor (const it of $('Tách từng ảnh').all()) { const k = it.json.row; by[k] = by[k] || { row: k, code: it.json.code, dir: it.json.dir, total: it.json.total, saved: 0 }; }\nfor (const it of $input.all()) { const k = it.json.row; if (by[k]) by[k].saved++; }\nconst data = Object.values(by).map(b => ({ range: `'Content Queue'!F${b.row}`, values: [[b.saved > 0 && b.saved === b.total ? 'Gói sẵn' : 'Lỗi gói']] }))\n  .concat(Object.values(by).map(b => ({ range: `'Content Queue'!J${b.row}:K${b.row}`, values: [[b.dir, `${b.saved}/${b.total} ảnh`]] })));\nreturn [{ json: { data, n: Object.keys(by).length } }];"
+      },
+      "id": "0d36daeb-459d-4d47-a38d-c1c195dd3c4f",
+      "name": "Gom kết quả theo bài",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ valueInputOption: 'USER_ENTERED', data: $json.data }) }}",
+        "options": {}
+      },
+      "id": "72ab8b82-3045-4b44-aff3-e208424951dd",
+      "name": "Ghi trạng thái gói",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1080,
+        380
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2."
+    }
+  ],
+  "connections": {
+    "22:00 Chủ nhật–Thứ sáu": {
+      "main": [
+        [
+          {
+            "node": "Đọc Content Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đọc Content Queue": {
+      "main": [
+        [
+          {
+            "node": "Chọn bài cần gói",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chọn bài cần gói": {
+      "main": [
+        [
+          {
+            "node": "Có bài?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Có bài?": {
+      "main": [
+        [
+          {
+            "node": "Tạo caption.txt",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Liệt kê ảnh trong folder Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tạo caption.txt": {
+      "main": [
+        [
+          {
+            "node": "Ghi caption.txt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Liệt kê ảnh trong folder Drive": {
+      "main": [
+        [
+          {
+            "node": "Tách từng ảnh",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tách từng ảnh": {
+      "main": [
+        [
+          {
+            "node": "Tải ảnh JPG 2048px",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tải ảnh JPG 2048px": {
+      "main": [
+        [
+          {
+            "node": "Lưu ảnh vào gói",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lưu ảnh vào gói": {
+      "main": [
+        [
+          {
+            "node": "Gom kết quả theo bài",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gom kết quả theo bài": {
+      "main": [
+        [
+          {
+            "node": "Ghi trạng thái gói",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Ho_Chi_Minh",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "meta": {
+    "smockNotes": "Cấp 3 chỉ cần mở thư mục anh-dang-bai/Kxxx: có caption.txt và 01.jpg, 02.jpg…"
+  },
+  "tags": []
+}

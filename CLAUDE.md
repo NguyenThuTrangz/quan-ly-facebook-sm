@@ -19,6 +19,16 @@ Máy: ADMIN, 3 tài khoản SM01–SM03. Cập nhật ngày 2026-10-21. Thông t
 ## Dashboard Smock Radar (từ 2026-11-11)
 Mọi kết quả đo (comment, inbox, số đọc bài, kiểm tra hiển thị, sự cố nick, bài mới có mã Kxxx) đẩy vào https://claude.ai/artifact/4pxRJ5wv1URZUpsooZMjye theo skill **`day-du-lieu-radar`**. Gặp cảnh báo FB (can't use this feature, confirm identity, checkpoint, bài bị gỡ) thì ghi vào dashboard ngay, trước khi báo người dùng. Trước khi đăng group: chạy kiểm tra trước khi đăng + kiểm caption trên dashboard; bị chặn thì không đăng.
 
+## Thông tin từ Sale K-Embroidery (trả lời ngày 2026-11-11) — dùng khi viết caption, trả lời comment, chuyển khách
+- **MOQ: 15 chiếc/mẫu** (website ghi 30 là chưa cập nhật — trong bài và khi trả lời luôn nói 15). **Mock-up 2D miễn phí, không giới hạn số lần.**
+- Khách chủ yếu là **shop online**; biết xưởng qua Facebook nhiều nhất (Fanpage và tài khoản cá nhân song song), website ít hơn.
+- Khách hay hỏi nhất: **thời gian giao hàng, giá ship**. Khách ít lo scam; lo **giao trễ hẹn**. Khách so giá sản phẩm, giá ship và thời gian sản xuất giữa nhiều xưởng → caption nên nói rõ thời gian sản xuất, phí ship, cam kết đúng hẹn, bằng chứng QC (đo thông số, kiểm lỗi, hoàn thiện).
+- Chu kỳ: vài tuần đến vài tháng (hỏi hàng, giá → phát triển thêm mẫu → báo giá → ký → lên đơn, kiểm ship, đặt cọc). Có tệp khách đặt lại ít nhất 1 đơn/tháng.
+- Mùa vụ: khách làm collection theo dịp lễ (Valentine, St. Patrick, Easter, Mother's Day, Halloween, Christmas) nên đơn đều cả năm; **cuối năm là thấp điểm**, khách đang nghĩ collection đầu năm và mùa hè → tháng 11–12 ưu tiên content Valentine/St. Patrick/Easter/Mother's Day/hè.
+- Góp ý sau giao hàng hay gặp: sai thông số, sai thiết kế, lỗi bẩn, hoàn thiện chưa tốt.
+- **Chuyển khách cho Sale qua WhatsApp hotline**, kèm: tên khách, tên shop, link trang cá nhân, nội dung hỏi, mã bài Kxxx; số WhatsApp/email khách đưa thì gửi thẳng cho Sale, **không ghi lên Radar hay sheet chung**. Sale muốn: khách to, thật sự có nhu cầu, đúng hàng smock, càng nhiều thông tin càng tốt.
+- Sale cho được: catalog, size chart, một số câu trả lời mẫu (xin qua người dùng).
+
 ## Tiết kiệm token (người dùng yêu cầu 2026-11-10)
 - Chạy từng dòng Lịch SM: dùng skill **`chay-lich-sm`** (`.claude/skills/chay-lich-sm/SKILL.md`) — có sẵn các đoạn JS và thứ tự bước; ghi log bằng `tools\ghi-log.ps1` (Excel + clipboard 1 lệnh); cửa sổ thu nhỏ → `tools\cuaso.ps1 -Mo "<tiêu đề>"`.
 - **Trả lời cực ngắn**: mỗi việc xong 1 dòng ("✅ 17:04 SM01 chấp nhận 3 lời mời"); chỉ viết dài khi có sự cố hoặc cần người dùng quyết định.

@@ -23,6 +23,7 @@ Toàn bộ file được sinh từ `ops/build_level1.py` (sửa ở đó rồi c
    N8N_ENCRYPTION_KEY=<chuỗi ngẫu nhiên 32+ ký tự — CẤT BẢN SAO Ở NƠI AN TOÀN>
    GENERIC_TIMEZONE=Asia/Ho_Chi_Minh
    NODES_EXCLUDE=[]
+   N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
    N8N_LISTEN_ADDRESS=127.0.0.1
    N8N_SECURE_COOKIE=false
    EXECUTIONS_DATA_PRUNE=true

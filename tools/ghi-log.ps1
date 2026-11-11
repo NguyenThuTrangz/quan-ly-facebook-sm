@@ -18,5 +18,8 @@ $ten = @{ SM01 = "Sophie Embroidery"; SM02 = "Benita Ariem"; SM03 = "Rosie Smock
 if (-not $KetQua) { $KetQua = $TrangThai }
 & (Join-Path (Split-Path $PSScriptRoot) "ghi-nhat-ky.ps1") $Ma $Loai $Noi $NoiDung $KetQua $CheDo
 $ngay = Get-Date -Format "yyyy-MM-dd"
-Set-Clipboard -Value (@($ngay, $Ma, $ten, $Loai, $Noi, $NoiDung, $CheDo, $KetQua, $TrangThai, $SoLuong) -join "`t")
-"Clipboard: dong Nhat Ky SM san sang"
+$dong = @($ngay, $Ma, $ten, $Loai, $Noi, $NoiDung, $CheDo, $KetQua, $TrangThai, $SoLuong) -join "`t"
+# Gom vao hang doi: dan nhieu dong len sheet 1 lan bang tools\dan-log.ps1
+Add-Content -Path (Join-Path $PSScriptRoot "hang-doi-log.tsv") -Value $dong -Encoding UTF8
+Set-Clipboard -Value $dong
+"Clipboard + hang doi: da them 1 dong Nhat Ky SM"

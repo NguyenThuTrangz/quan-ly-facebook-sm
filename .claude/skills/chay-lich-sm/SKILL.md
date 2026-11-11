@@ -35,7 +35,7 @@ const sl=ms=>new Promise(r=>setTimeout(r,ms));const end=Date.now()+38000;let n=0
 ```
 Có thể gửi 2–3 lệnh JS song song trong cùng 1 message (chạy tuần tự).
 
-**Tương tác a/b/c** (newsfeed) / **group X tương tác a/b**: theo CLAUDE.md (bỏ Sponsored/Reels/gợi ý). Đếm bài bằng JS `[role=article]`, cuộn tới bài đích (`scrollIntoView`), `find` nút Like/Love của bài đó rồi click; xen kẽ Like/Love.
+**Tương tác a/b/c** (newsfeed) / **group X tương tác a/b**: Read `tools\tuong-tac.js`, sửa `ST.targets`/`ST.useLove`, dán vào `javascript_tool` (trên feed/group), rồi gọi `await STEP(38000)` lặp tới khi `left: []`. Nút cảm xúc FB: `aria-label^="React with Like"` (Like), `"React to …"` mở bảng → `aria-label="Love"`. JS click chạy được, không cần screenshot.
 
 **Chấp nhận All**: mở `facebook.com/friends/requests`, `find` các nút "Confirm", click lần lượt; không có thì J = 0.
 
@@ -62,6 +62,9 @@ Có thể gửi 2–3 lệnh JS song song trong cùng 1 message (chạy tuần t
 2. Trên Edge, giữ 1 tab sheet chính `1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0` (`find` "Name box" lấy ref). Một `browser_batch`:
    Name box → `'Nhật Ký SM'!A<dòng trống kế tiếp>` → Enter → Ctrl+V → Name box → `'Lịch SM'!H<dòng>` → gõ `Done` → Enter (đăng bài: thêm I = link) → JS gviz đọc lại 2 ô để xác nhận.
    Gõ ô: Sheets hay tự điền (vd "kết bạn 16" → "kết bạn 16-20") → bấm `Delete` trước Enter.
+   Gom nhiều việc: `ghi-log.ps1` tự thêm vào hàng đợi → `tools\dan-log.ps1` đưa cả hàng đợi vào clipboard → dán 1 lần; cột H/I nhiều dòng: dựng TSV "H`tI" rồi dán từ H<dòng đầu>.
+   **Gõ tiếng Việt bằng `type` bị mất chữ "đ"** → luôn `Set-Clipboard` rồi Ctrl+V cho ô có dấu.
+   Đọc tab KE đầy đủ caption: `.../export?format=csv&gid=<gid>` (LILY gid 9663883). Group được đăng chào hàng: `ArtifactData query groups` cat = "potential" (resale/hobby → không đăng).
    **Luôn `navigate` lại tab sheet (URL không có `#`) trước khi ghi** — tab để lâu bị lỗi "Đã xảy ra lỗi", dán/gõ không ăn. Đọc lại thấy rỗng → tải lại, chạy lại `Set-Clipboard` rồi ghi lại.
 3. Không làm được: H để nguyên "Chờ", Nhật Ký SM ghi Không làm được, J = 0.
 

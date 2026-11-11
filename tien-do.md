@@ -1,5 +1,12 @@
 # Tiến độ chạy lịch SM
 
+## 2026-11-11
+Toàn bộ việc dở 10/11 (gồm SM02 — người dùng xác nhận SM02 **không** bị checkpoint/shadowban) đã dồn sang Lịch SM dòng **140–162**, 09:25–14:45; CG2 đổi sang group 2 (group 21 cấm quảng cáo). Dòng 110–139 ngày 10/11 còn "Chờ" là bản cũ, bỏ qua.
+- 09:12–10:00 chạy dồn: Done 140–142, 144–150, 152–154, 156, 158. Bài: K117 (SM01 group 1 CG1), K118 (SM01 tường CG8), K119 (SM03 tường CG12 — folder ảnh LILY 2 bị từ chối truy cập).
+- **SM02: đăng bài group vẫn bị "confirm your identity"** (Account Status vẫn looks good; like/lướt được) → đã ghi health lên Smock Radar; dừng đăng/join/kết bạn SM02. Còn Chờ: 143, 151, 157, 159, 160, 161.
+- Còn hẹn giờ: 10:40 SM03 CG6 → group 27 (dòng 155); 11:47 SM01 CG4 → group 5 thay 16 (dòng 162; group 16 cat resale).
+- Nhật Ký SM dòng trống kế tiếp: **116**. Mã Radar kế tiếp: **K120**.
+
 Cập nhật mỗi khi dừng ca. Ngày mới "lên lịch hôm nay" thì **ưu tiên dồn các việc chưa làm dưới đây** trước.
 
 ## 2026-11-10 (dừng 17:5x — hết giờ hành chính, người dùng bảo tạm dừng)

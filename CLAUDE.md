@@ -19,6 +19,9 @@ Máy: ADMIN, 3 tài khoản SM01–SM03. Cập nhật ngày 2026-10-21. Thông t
 ## Dashboard Smock Radar (từ 2026-11-11)
 Mọi kết quả đo (comment, inbox, số đọc bài, kiểm tra hiển thị, sự cố nick, bài mới có mã Kxxx) đẩy vào https://claude.ai/artifact/4pxRJ5wv1URZUpsooZMjye theo skill **`day-du-lieu-radar`**. Gặp cảnh báo FB (can't use this feature, confirm identity, checkpoint, bài bị gỡ) thì ghi vào dashboard ngay, trước khi báo người dùng. Trước khi đăng group: chạy kiểm tra trước khi đăng + kiểm caption trên dashboard; bị chặn thì không đăng.
 
+## Lead Hunter (n8n, từ 2026-11-11)
+Workflow `n8n/smock-lead-hunter.json` (xem `n8n/README.md`) tìm bài công khai có người đang tìm xưởng smock, ghi vào tab **Lead Hunter** của sheet chính với trạng thái "Chờ duyệt". Người dùng nói "xử lý lead" → dùng skill **`tra-loi-lead`**: soạn câu trả lời, **chờ người dùng duyệt từng lead**, tối đa 5 câu trả lời/ngày, mỗi lead một nội dung riêng, tự giới thiệu đúng là K-Embroidery, ghi kết quả lên sheet + Radar.
+
 ## Thông tin từ Sale K-Embroidery (trả lời ngày 2026-11-11) — dùng khi viết caption, trả lời comment, chuyển khách
 - **MOQ: 15 chiếc/mẫu** (website ghi 30 là chưa cập nhật — trong bài và khi trả lời luôn nói 15). **Mock-up 2D miễn phí, không giới hạn số lần.**
 - Khách chủ yếu là **shop online**; biết xưởng qua Facebook nhiều nhất (Fanpage và tài khoản cá nhân song song), website ít hơn.

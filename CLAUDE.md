@@ -20,6 +20,8 @@ Máy: ADMIN, 3 tài khoản SM01–SM03. Cập nhật ngày 2026-10-21. Thông t
 Mọi kết quả đo (comment, inbox, số đọc bài, kiểm tra hiển thị, sự cố nick, bài mới có mã Kxxx) đẩy vào https://claude.ai/artifact/4pxRJ5wv1URZUpsooZMjye theo skill **`day-du-lieu-radar`**. Gặp cảnh báo FB (can't use this feature, confirm identity, checkpoint, bài bị gỡ) thì ghi vào dashboard ngay, trước khi báo người dùng. Trước khi đăng group: chạy kiểm tra trước khi đăng + kiểm caption trên dashboard; bị chặn thì không đăng.
 
 ## Kiến trúc 3 cấp (đọc `ops/KIEN-TRUC-3-CAP.md`; bật dần theo `n8n/level1/README.md`)
+- **Máy công ty sau khi `git pull`: làm theo `ops/DONG-BO-MAY-CONG-TY.md`** (từng bước, báo 1 dòng mỗi bước, ghi tiến độ vào `tien-do.md`). Trước khi n8n cài xong, mọi thứ chạy như cũ (ghi log tự rơi về DỰ PHÒNG).
+- Skill `lay-text-group` đang TẠM DỪNG; nick persona chờ người dùng quyết (xem cuối `ops/DONG-BO-MAY-CONG-TY.md`).
 - **Cấp 1 n8n (24/24)** sinh Lịch SM (L1-02, 21:30 tối hôm trước), chuẩn bị gói bài (L1-03, 22:00), báo cáo (L1-04, 18:00), kiểm hợp đồng (L1-05, 06:30/21:50), cầu nối cấp 2 (L1-06), ghi log qua webhook (L1-01). **Cấp 2 Copilot** (repo `smock-level2-copilot`) phái sinh caption, chấm group, viết báo cáo tuần. **Cấp 3 là Claude: chỉ giờ hành chính (08:30–17:00, thứ 2–7)**.
 - Khi L1-02 đã bật: **không tự "lên lịch hôm nay"**; chỉ chạy lịch n8n đã sinh. Khi L1-01 đã bật: ghi log bằng `tools\ghi-log-webhook.ps1` (mục 2 của `chay-lich-sm`), không gõ vào sheet.
 - Gom việc theo cụm từng nick (lịch đã xếp sẵn 2 cụm/nick/ngày): làm hết cụm của một nick rồi mới chọn trình duyệt khác.

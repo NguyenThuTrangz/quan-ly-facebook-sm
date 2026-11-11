@@ -1,9 +1,11 @@
 ---
 name: lay-text-group
-description: Cấp 3 lấy text nội quy + bài gần nhất của một Facebook group (đã đăng nhập) và lưu thành file cho cấp 2 (Copilot) chấm điểm. Dùng khi người dùng nói "lấy text group", "chuẩn bị chấm group", hoặc khi tab Group Score có dòng "Chờ lấy text".
+description: TẠM DỪNG — chỉ chạy khi người dùng đã xác nhận trong chat cho phép. Cấp 3 lấy text nội quy + bài gần nhất của một Facebook group (đã đăng nhập) và lưu thành file cho cấp 2 (Copilot) chấm điểm.
 ---
 
 # Lấy text group cho cấp 2 chấm
+
+> **TẠM DỪNG (11/11/2026).** Có thể trái Điều khoản thu thập dữ liệu tự động của Meta (cần văn bản cho phép). Không tự chạy khi thấy dòng "Chờ lấy text". Chỉ chạy khi người dùng nói rõ trong chat là cho phép; nếu không, nhờ người dùng chép tay nội quy + vài bài vào file `data/group-text/gNN.txt` rồi mới giao cấp 2.
 
 Claude **không tự chấm** ở đây (tốn token); chỉ lấy text sạch rồi giao cho cấp 2.
 

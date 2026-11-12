@@ -41,6 +41,13 @@ Workflow `n8n/smock-lead-hunter.json` (xem `n8n/README.md`) tìm bài công khai
 - **Chuyển khách cho Sale qua WhatsApp hotline**, kèm: tên khách, tên shop, link trang cá nhân, nội dung hỏi, mã bài Kxxx; số WhatsApp/email khách đưa thì gửi thẳng cho Sale, **không ghi lên Radar hay sheet chung**. Sale muốn: khách to, thật sự có nhu cầu, đúng hàng smock, càng nhiều thông tin càng tốt.
 - Sale cho được: catalog, size chart, một số câu trả lời mẫu (xin qua người dùng).
 
+## Đo lường (từ 2026-11-11)
+- **QI (qualified inquiry)** = người nhắn **lần đầu**, hỏi giá / MOQ / catalog / sample / thời gian giao / ship, **và** là shop hay doanh nghiệp cần hàng smock. Khách lẻ mua 1–2 cái, spam và hỏi linh tinh không tính.
+- Thư mục `do-luong/`:
+  - `moi-nick.csv`: số đếm thật của từng nick SM. Người dùng nói **"đếm số nick"** → dùng skill **`dem-so-nick`** (chỉ đọc và đếm, không nhắn, CSV chỉ có số), xong push.
+  - `Hoi-Sale-phase-2-dinh-luong.xlsx`: bộ câu hỏi định lượng gửi Sale, so sánh với `moi-nick.csv`.
+- Tỷ lệ chốt thật (CRM KE, tháng 9–11): khách FB 2/24 ≈ 8%. Target 15%. Hòa vốn khoảng 10,6% (tab "Hòa vốn SM" trên sheet chính).
+
 ## Tiết kiệm token (người dùng yêu cầu 2026-11-10)
 - Chạy từng dòng Lịch SM: dùng skill **`chay-lich-sm`** (`.claude/skills/chay-lich-sm/SKILL.md`) — có sẵn các đoạn JS và thứ tự bước; ghi log bằng `tools\ghi-log.ps1` (Excel + clipboard 1 lệnh); cửa sổ thu nhỏ → `tools\cuaso.ps1 -Mo "<tiêu đề>"`.
 - **Trả lời cực ngắn**: mỗi việc xong 1 dòng ("✅ 17:04 SM01 chấp nhận 3 lời mời"); chỉ viết dài khi có sự cố hoặc cần người dùng quyết định.

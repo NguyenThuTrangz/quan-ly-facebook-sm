@@ -6,3 +6,4 @@
 ~$*
 .claude/scheduled_tasks.lock
 test.txt
+tools/hang-doi-log.tsv

@@ -22,6 +22,7 @@ Mọi kết quả đo (comment, inbox, số đọc bài, kiểm tra hiển thị
 ## Tiết kiệm token (người dùng yêu cầu 2026-11-10)
 - Chạy từng dòng Lịch SM: dùng skill **`chay-lich-sm`** (`.claude/skills/chay-lich-sm/SKILL.md`) — có sẵn các đoạn JS và thứ tự bước; ghi log bằng `tools\ghi-log.ps1` (Excel + clipboard 1 lệnh); cửa sổ thu nhỏ → `tools\cuaso.ps1 -Mo "<tiêu đề>"`.
 - **Tiết kiệm cực đoan (2026-11-11)**: trong ngày chỉ ghi Excel + hàng đợi (`ghi-log.ps1`); **dán Nhật Ký SM + cột H lên Google Sheet 1 lần cuối ca** (`dan-log.ps1`); không đọc lại để kiểm tra trừ khi nghi lỗi; không screenshot nếu JS/zoom đủ; mỗi ngày 1 session mới.
+- **Không chụp màn hình** (người dùng yêu cầu 2026-11-11): dùng `find` + ref và JS để thao tác/kiểm tra; chỉ chụp khi không còn cách nào khác.
 - **Trả lời cực ngắn**: mỗi việc xong 1 dòng ("✅ 17:04 SM01 chấp nhận 3 lời mời"); chỉ viết dài khi có sự cố hoặc cần người dùng quyết định.
 - Hạn chế screenshot (dùng JS/`find`, chụp scale 0.4–0.5 hoặc `zoom`), gộp thao tác vào `browser_batch`, mỗi ngày nên mở **session mới** (phiên dài thì mỗi lượt tốn nhiều token hơn).
 

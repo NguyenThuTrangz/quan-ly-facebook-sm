@@ -45,6 +45,9 @@ Mọi dữ liệu nằm trong kho chung của trang; trang tự phân loại tí
 ### 2. Inbox / WhatsApp
 Khi nick nhận tin nhắn mới từ người lạ: ghi `signal` với `source:"inbox"`, `post` = mã Kxxx khách nhắc trong tin (CTA có mã); không có mã thì để `post:""`. **Chỉ ghi nội dung tin đầu tiên và tên hiển thị; không ghi số điện thoại, email riêng của khách.**
 
+### 2b. Tín hiệu được Radar chấm QI → chuyển Sale
+Radar gắn nhãn "QI · đạt chuẩn" thì báo người dùng ngay 1 dòng để chuyển Sale qua **WhatsApp hotline** trong 2 giờ làm việc, kèm: tên khách, tên shop, link trang cá nhân, nội dung hỏi, mã bài. Trả lời khách (nếu người dùng cho phép) theo thông tin Sale trong CLAUDE.md: MOQ 15 chiếc/mẫu, mock-up 2D miễn phí, hỏi khách cần hàng trước ngày nào và ship về đâu để Sale báo phí ship. Nhãn "Có ý mua": hỏi tiếp shop bán ở đâu, mỗi mẫu bao nhiêu chiếc, cần hàng trước ngày nào.
+
 ### 3. Đăng ký bài mới (ngay sau khi đăng, trong `chay-lich-sm`)
 Mã mới = mã lớn nhất trên dashboard + 1 (dòng "Mã kế tiếp" ở tab Kết nối bot). Ghi `post` với `caption` đầy đủ (để bộ kiểm trùng nội dung hoạt động) và `postedAt` = giờ đăng thật. Ghi mã vào cột Ghi chú dòng Lịch SM.
 Trước khi đăng group: dùng ô **Kiểm tra trước khi đăng vào group** (tab Chấm group) và **Kiểm caption** (tab Chống shadowban). Kết quả "Chưa được đăng" / "Không nên đăng" → không đăng, báo người dùng.

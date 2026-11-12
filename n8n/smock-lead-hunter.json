@@ -1,0 +1,1241 @@
+{
+  "name": "Smock Lead Hunter (K-Embroidery)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "bddad860-da9f-44b3-8eae-7998242db22c",
+      "name": "Manual Trigger - One-Time DB Setup",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1376,
+        1168
+      ],
+      "notes": "Chạy tay 1 lần trước khi Active workflow chính, để tạo 3 bảng Postgres cần thiết."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "CREATE TABLE IF NOT EXISTS scanned_posts (\n    post_id VARCHAR(100) PRIMARY KEY,\n    scanned_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);\n\nCREATE TABLE IF NOT EXISTS lead_opportunities (\n    post_url TEXT PRIMARY KEY,\n    author_name VARCHAR(255),\n    intent_summary TEXT,\n    pain_point TEXT,\n    contact_info VARCHAR(255),\n    suggested_angle TEXT,\n    status VARCHAR(50) DEFAULT 'new',\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);\n\nCREATE TABLE IF NOT EXISTS intent_scan_stats (\n    id SERIAL PRIMARY KEY,\n    classification VARCHAR(50),\n    scanned_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);\n\nCREATE TABLE IF NOT EXISTS extraction_attempts (\n    id SERIAL PRIMARY KEY,\n    post_id VARCHAR(100),\n    extraction_ok BOOLEAN,\n    error_message TEXT,\n    model_used VARCHAR(255),\n    attempted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);",
+        "options": {}
+      },
+      "id": "79481097-e384-4b69-939d-0594da4c201c",
+      "name": "Postgres - Create Required Tables (DDL)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -1152,
+        1168
+      ],
+      "notes": "Idempotent DDL - an toàn khi chạy lại nhiều lần nhờ IF NOT EXISTS."
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 0 * * *"
+            }
+          ]
+        }
+      },
+      "id": "815761c2-b73d-4090-af41-d4d530b10cfb",
+      "name": "Schedule - Daily TTL Purge (00:00 VN)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1376,
+        880
+      ],
+      "notes": "Thực thi quyền lãng quên: xóa lead chưa chuyển đổi sau 30 ngày theo Luật Bảo vệ dữ liệu cá nhân 91/2025/QH15 (thay Nghị định 13/2023 từ 1/1/2026)."
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.all();\nconst normalized = [];\n\nfunction simpleHash(str) {\n  let hash = 0;\n  for (let i = 0; i < str.length; i++) {\n    const char = str.charCodeAt(i);\n    hash = ((hash << 5) - hash) + char;\n    hash |= 0;\n  }\n  return 'post_' + Math.abs(hash).toString(36);\n}\n\nfor (const entry of input) {\n  const data = entry.json || {};\n  const rawItems = Array.isArray(data.organic)\n    ? data.organic\n    : (Array.isArray(data.items) ? data.items : []);\n\n  for (const it of rawItems) {\n    const link = (it.link || '').trim();\n    if (!link) continue;\n\n    const postId = simpleHash(link);\n    const title = (it.title || '').trim();\n    const snippet = (it.snippet || '').trim();\n    const sourceDomain = (it.displayLink || it.domain || '').replace(/^https?:\\/\\//, '');\n\n    const content = `${title} ${snippet}`.trim();\n\n    normalized.push({\n      json: {\n        postId,\n        title,\n        snippet,\n        content,\n        link,\n        authorName: sourceDomain || 'Nguồn không xác định',\n        postUrl: link,\n        sourceDomain\n      }\n    });\n  }\n}\n\nreturn normalized;"
+      },
+      "id": "bcfcef52-84c7-4b7a-b68d-7919de822c32",
+      "name": "Normalize Search Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -928,
+        272
+      ],
+      "notes": "V4: output phẳng title/snippet/content/link. content = title + snippet để các node sau dùng cùng một field."
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Smock: bỏ bài phía NGƯỜI BÁN, tuyển dụng, đồ cũ. Bài vượt qua vẫn được LLM chấm lại.\nconst negativeKeywords = [\n  'we manufacture', 'our factory', 'we are a manufacturer', 'we are a supplier', 'supplier here',\n  'we offer wholesale', 'dm for price', 'pm for price', 'now accepting orders', 'shop our', 'use code',\n  'hiring', 'job opening', 'we are hiring', 'giveaway',\n  'preloved', 'pre-loved', 'destash', 'gently used', 'nwt', 'iso size'\n];\n\nconst norm = s => (s || '').toString().toLowerCase();\nreturn items.filter(item => {\n  const p = item.json || {};\n  const text = norm(p.content || `${p.title || ''} ${p.snippet || ''}`);\n  return !negativeKeywords.some(kw => text.includes(kw));\n});"
+      },
+      "id": "489d6e3d-d704-470a-8cd5-c9aca51663ee",
+      "name": "Pre-Filter Negative Keywords (Defense in Depth)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -704,
+        272
+      ],
+      "notes": "V4: negative keyword filter đọc content (title + snippet), không còn đọc field không tồn tại."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT post_id FROM scanned_posts WHERE scanned_at > NOW() - INTERVAL '14 days';",
+        "options": {}
+      },
+      "id": "7899d6a4-a666-4a53-88b8-7ee3aa279d4c",
+      "name": "Postgres - Get Already Scanned Post IDs",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -416,
+        432
+      ],
+      "alwaysOutputData": true,
+      "notes": "BẬT Always Output Data: nếu bảng scanned_posts rỗng (lần chạy đầu), node vẫn phải trả về 0-item hợp lệ thay vì chặn đứng toàn bộ luồng phía sau."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input chính = 100 bài viết mới (đến từ Pre-Filter Negative Keywords)\nconst newPosts = $input.all();\n\n// Lấy danh sách post_id đã scan từ node Postgres — tham chiếu trực tiếp theo tên node,\n// không cần node đó nối input vào đây, chỉ cần nó đã chạy trước trong cùng execution\nlet scannedRows = [];\ntry {\n  scannedRows = $('Postgres - Get Already Scanned Post IDs').all();\n} catch (err) {\n  scannedRows = [];\n}\n\nconst scannedIds = new Set(\n  scannedRows\n    .map(row => row.json.post_id)\n    .filter(id => id !== undefined && id !== null)\n);\n\n// Lọc: chỉ giữ lại bài chưa từng scan\nconst result = newPosts.filter(item => !scannedIds.has(item.json.postId));\n\nreturn result;"
+      },
+      "id": "ec838636-e869-4728-8eb9-c2342de63461",
+      "name": "Deduplicate & Clean Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -272,
+        272
+      ],
+      "notes": "Nếu Postgres không trả dòng nào (bảng rỗng / node trên trả 0 item nhưng vẫn kích hoạt nhờ Always Output Data), scannedIds sẽ là Set rỗng - không loại bỏ bài nào, hành vi đúng cho lần chạy đầu tiên."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const item = $input.item.json;\n\nconst systemPrompt = `You classify public posts for K-Embroidery, a Vietnam factory that makes hand-smocked children's clothing for boutiques and online shops (wholesale, OEM/private label, MOQ 15 pieces per design, free 2D mock-ups).\n\nYour input contains ONLY a search-result title and snippet. Classify only what the visible text supports. Do not invent hidden context.\n\nCLASSIFICATIONS\nHIGH_INTENT = a business buyer (boutique, online shop, brand, reseller) is actively looking for a supplier, vendor, manufacturer or wholesale source of smocked / hand-embroidered children's clothing, or asks for recommendations for one. Examples: \"looking for a smocked vendor for my boutique\", \"who makes your smocked dresses?\", \"ISO wholesale smocked supplier\", \"need a manufacturer for my smocked line\", \"any good private label smocking factory?\".\nLOW_INTENT = general discussion, a consumer buying 1-2 pieces for their own child, reviews, styling, or a mention of smocked clothing without a visible intent to source wholesale.\nSPAM_SEEDING = seller/vendor/factory promoting itself, resale of used items, giveaways, recruitment, or other supply-side content.\n\nIMPORTANT EDGE RULES\n1. A parent buying for their own child is LOW_INTENT, not HIGH_INTENT.\n2. If text contains both buyer and seller language, choose SPAM_SEEDING only when it is primarily offering goods.\n3. Confidence measures evidence strength in the visible snippet, not general model certainty.\n\nReturn STRICT JSON ONLY with EXACTLY these 4 keys, nothing else, no markdown fences, no explanation:\n{\n  \"classification\": \"HIGH_INTENT|LOW_INTENT|SPAM_SEEDING\",\n  \"buyer_signal\": true,\n  \"seller_signal\": false,\n  \"confidence_score\": 0.0\n}`;\n\nconst userContent = `TITLE: ${item.title || ''}\\nSNIPPET: ${item.snippet || ''}`;\n\n// V6 FIX: 'nex-agi/nex-n2.5-mini:free' la model duy nhat thuc su tra loi (2 model Gemma\n// truoc no gan nhu luon 404/unavailable nen OpenRouter fallback thang xuong no), va no\n// la reasoning model -> voi max_tokens=120 no dung het budget cho phan \"suy nghi\" roi bi\n// cat cut truoc khi kip xuat JSON => \"Model response was not valid JSON\" tren 100% item.\n// Fix: dùng openrouter/free (auto-router, tu chon model con dang song VA ho tro structured\n// output/json_object that su), tang max_tokens de co cho reasoning + JSON, va tat reasoning\n// visible content de khong ngon token vao phan suy nghi.\nconst modelPool = [\n  'openrouter/free',\n  'google/gemma-4-31b-it:free',\n  'nex-agi/nex-n2.5-mini:free'\n];\n\nconst payload = {\n  models: modelPool,\n  temperature: 0,\n  max_tokens: 7000,\n  response_format: { type: 'json_object' },\n  reasoning: { effort: 'low', exclude: true },\n  messages: [\n    { role: 'system', content: systemPrompt },\n    { role: 'user', content: userContent }\n  ]\n};\n\nreturn {\n  json: {\n    ...item,\n    requestBody: JSON.stringify(payload)\n  }\n};"
+      },
+      "id": "b1d12690-14c7-41ed-81de-5843b2c1d3c9",
+      "name": "Build LLM Request Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        272
+      ],
+      "notes": "Smock: phân loại người mua sỉ smock (boutique/online shop/brand). Giữ nguyên 4 key để node Parse phía sau không phải sửa."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.requestBody }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 3000
+            }
+          },
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 60000
+        }
+      },
+      "id": "ad2f6387-900b-458d-9462-98f14d5fc8dd",
+      "name": "HTTP Request - LLM Intent Classification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        176,
+        272
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "continueOnFail": true,
+      "notes": "V3.0.0 FIX: outputPropertyName đổi thành 'llmRaw' đúng đặc tả mới. Nhờ vậy toàn bộ field gốc (postId, authorName, postUrl, content, sourceDomain, requestBody) được GIỮ NGUYÊN trên $json, chỉ gộp thêm field llmRaw chứa response OpenAI - node Parse phía sau không cần truy ngược qua node trước."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const response = $input.item.json;\nconst original = $('Build LLM Request Payload').item.json;\n\nconst apiError = response.error?.message || response.message || null;\nlet parsed = null;\nlet parseErrorMsg = null;\n\n// V5: robust content reader - handles string, array-of-parts, and objects\n// that some OpenRouter providers return even when a string was expected.\n// This fixes the \"[object Object]\" -> JSON.parse crash bug from V4.\nfunction contentToRaw(content) {\n  if (content === null || content === undefined) return '';\n  if (typeof content === 'string') return content;\n  if (Array.isArray(content)) {\n    return content\n      .map((part) => {\n        if (typeof part === 'string') return part;\n        if (part && typeof part.text === 'string') return part.text;\n        return '';\n      })\n      .join('');\n  }\n  if (typeof content === 'object') {\n    // Some providers already hand back a parsed object instead of a string.\n    if ('classification' in content) return content; // already usable as-is\n    try { return JSON.stringify(content); } catch { return ''; }\n  }\n  return String(content);\n}\n\nfunction extractJson(raw) {\n  if (raw === null || raw === undefined || raw === '') return null;\n  if (typeof raw === 'object' && !Array.isArray(raw)) return raw; // already parsed\n  const cleaned = String(raw).trim().replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/i, '');\n  try { return JSON.parse(cleaned); } catch {}\n  const first = cleaned.indexOf('{');\n  const last = cleaned.lastIndexOf('}');\n  if (first >= 0 && last > first) {\n    try { return JSON.parse(cleaned.slice(first, last + 1)); } catch {}\n  }\n  return null;\n}\n\nlet debugRaw = '';\nif (!apiError) {\n  const rawContent = response.choices?.[0]?.message?.content;\n  const raw = contentToRaw(rawContent);\n  debugRaw = typeof raw === 'string' ? raw.slice(0, 300) : JSON.stringify(raw).slice(0, 300);\n  parsed = extractJson(raw);\n  if (!parsed) parseErrorMsg = `Model response was not valid JSON | raw: ${debugRaw || '(empty)'}`;\n}\n\nconst allowed = new Set(['HIGH_INTENT', 'LOW_INTENT', 'SPAM_SEEDING']);\nconst classification = String(parsed?.classification || '').trim().toUpperCase();\nconst isValid = !apiError && allowed.has(classification);\n\nconst confidence = Number(parsed?.confidence_score);\nconst safeConfidence = Number.isFinite(confidence) ? Math.max(0, Math.min(1, confidence)) : 0;\n\nreturn {\n  json: {\n    postId: original.postId,\n    authorName: original.authorName,\n    postUrl: original.postUrl,\n    title: original.title,\n    snippet: original.snippet,\n    content: original.content,\n    sourceDomain: original.sourceDomain,\n    classification: isValid ? classification : (apiError ? 'API_ERROR' : 'PARSE_ERROR'),\n    buyer_signal: isValid ? parsed.buyer_signal === true : false,\n    seller_signal: isValid ? parsed.seller_signal === true : false,\n    confidence_score: isValid ? safeConfidence : 0,\n    classifier_error: isValid ? null : (apiError || parseErrorMsg || 'Unknown classifier failure'),\n    classifier_model_used: response.model || 'unknown',\n    scan_ok: isValid\n  }\n};"
+      },
+      "id": "bc852fe6-e0b4-4a2d-b25a-2dadd7869011",
+      "name": "Parse & Validate LLM Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        272
+      ],
+      "notes": "V5: extractJson/contentToRaw xu ly ca truong hop content la object hoac array-of-parts (sua loi '[object Object]' -> JSON.parse fail cua V4). Node nay CHI parse 4 field classifier (classification, buyer_signal, seller_signal, confidence_score) + classifier_error/classifier_model_used de debug model nao dang loi. Cac field lead detail (pain_point, service_required, contact_phone, suggested_angle, intent_reason) khong con o day nua - xem node 'Parse Lead Extraction Output'."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO scanned_posts (post_id, scanned_at) SELECT $1, NOW() WHERE $2 = true ON CONFLICT (post_id) DO UPDATE SET scanned_at = NOW();",
+        "options": {
+          "queryReplacement": "={{ [$json.postId, $json.scan_ok] }}"
+        }
+      },
+      "id": "d8681ec8-4c8e-4ec9-920f-f2c4fdbe9858",
+      "name": "Postgres - Mark Post As Scanned",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        608,
+        432
+      ],
+      "notes": "V4: chỉ mark scanned khi classification hợp lệ. API_ERROR/PARSE_ERROR không bị khóa 14 ngày và sẽ được thử lại ở cycle sau."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-classification",
+              "leftValue": "={{ $json.classification }}",
+              "rightValue": "HIGH_INTENT",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-confidence",
+              "leftValue": "={{ $json.confidence_score }}",
+              "rightValue": 0.6,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "cond-buyer-signal",
+              "leftValue": "={{ $json.buyer_signal }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1301b1b8-430b-437d-8256-f208692d9415",
+      "name": "Filter High Intent Only",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        608,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO intent_scan_stats (classification, scanned_at) VALUES ($1, NOW());",
+        "options": {
+          "queryReplacement": "={{ [$json.classification] }}"
+        }
+      },
+      "id": "af9a073f-60e1-4fcf-a04a-ca2d2560c0de",
+      "name": "Postgres - Log Non-Lead Classification Stats",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        832,
+        352
+      ],
+      "notes": "V4: lưu thống kê các kết quả không qua lead filter, bao gồm LOW_INTENT, SPAM_SEEDING và lỗi classifier."
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.telegramSalesChatId }}",
+        "text": "=🧵 LEAD SMOCK MỚI (chờ duyệt)\n\n🔗 {{ $json.postUrl }}\n🌐 Nguồn: {{ $json.sourceDomain || 'N/A' }}\n👤 Loại khách: {{ $json.buyer_type || 'unknown' }}\n🧩 Cần: {{ $json.service_required || 'Hàng smock' }}\n📦 Số lượng / hạn: {{ $json.quantity_or_deadline || 'Chưa nói' }}\n💡 Lý do: {{ $json.intent_reason }}\n\n✍️ Gợi ý trả lời (sửa trước khi gửi):\n{{ $json.suggested_angle }}\n\n📊 Confidence: {{ ($json.confidence_score * 100).toFixed(0) }}%\n➡️ Duyệt ở tab Lead Hunter của sheet, rồi trả lời bằng tài khoản sales/Fanpage. Không gửi tự động.",
+        "additionalFields": {}
+      },
+      "id": "7e34b607-b8c9-4b5c-a511-d43d520b46dc",
+      "name": "Telegram - Hot Lead Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1504,
+        0
+      ],
+      "notes": "Tuỳ chọn. Gửi về nhóm Telegram của MKT/Sale (không gửi vào máy của chủ tài khoản Claude). Có thể tắt node này nếu chỉ dùng sheet."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "assign-chatid",
+              "name": "telegramSalesChatId",
+              "type": "string",
+              "value": "YOUR_TELEGRAM_CHAT_ID"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "2739c09e-5498-4286-b107-b26a3251b389",
+      "name": "Set Telegram Chat ID (Static Config)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1312,
+        0
+      ],
+      "notes": "Chat ID gán tĩnh tại đây (vì $env bị chặn trong UI Expression) - sửa trực tiếp giá trị bên dưới theo môi trường của bạn."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM lead_opportunities WHERE created_at < NOW() - INTERVAL '30 days' AND status != 'converted';",
+        "options": {}
+      },
+      "id": "3d91d097-0ec8-4acb-b2e3-413ba4846a90",
+      "name": "Postgres - Purge Expired Leads (30 Days)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -1152,
+        880
+      ],
+      "notes": "Thực thi quyền lãng quên: xóa lead chưa chuyển đổi ('status' != 'converted') sau 30 ngày."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM scanned_posts WHERE scanned_at < NOW() - INTERVAL '14 days';",
+        "options": {}
+      },
+      "id": "388eb362-4c06-421e-8d3a-e36b856294a3",
+      "name": "Postgres - Purge Old Scan Cache",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -928,
+        880
+      ],
+      "notes": "Dọn dẹp cache post_id quá 14 ngày để giới hạn phạm vi dữ liệu lưu trữ."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://google.serper.dev/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-KEY",
+              "value": "YOUR_SERPER_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "=keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $json.q }}"
+            },
+            {
+              "name": "gl",
+              "value": "us"
+            },
+            {
+              "name": "hl",
+              "value": "en"
+            },
+            {
+              "name": "tbs",
+              "value": "qdr:w"
+            },
+            {
+              "name": "num",
+              "value": "20"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "8e85ce2a-0d5f-4461-b178-a059a8b0b554",
+      "name": "API CALL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1168,
+        320
+      ],
+      "continueOnFail": true,
+      "notes": "Smock: quét Google (qua Serper) các bài công khai trong 7 ngày gần nhất (tbs=qdr:w), thị trường US (gl=us, hl=en). SETUP: thay YOUR_SERPER_API_KEY hoặc chuyển sang n8n Credential (HTTP Header Auth)."
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "lead_opportunities",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "post_url": "={{ $json.postUrl }}",
+            "author_name": "={{ $json.authorName }}",
+            "intent_summary": "={{ $json.intent_reason }} | {{ $json.service_required || '' }} | {{ $json.buyer_type || '' }}",
+            "pain_point": "={{ $json.pain_point || '' }}",
+            "contact_info": "=",
+            "suggested_angle": "={{ $json.suggested_angle || '' }}",
+            "status": "new",
+            "created_at": "={{ $now.setZone('Asia/Ho_Chi_Minh').toISO() }}"
+          },
+          "matchingColumns": [
+            "post_url"
+          ],
+          "schema": [
+            {
+              "id": "post_url",
+              "displayName": "post_url",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "author_name",
+              "displayName": "author_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "intent_summary",
+              "displayName": "intent_summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "pain_point",
+              "displayName": "pain_point",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "contact_info",
+              "displayName": "contact_info",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "suggested_angle",
+              "displayName": "suggested_angle",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "9ff8cbb6-8d07-4ddc-b6f8-b2e66ee95fb8",
+      "name": "Postgres - Save Lead Opportunity",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1312,
+        144
+      ],
+      "notes": "Node Upsert tự tham số hóa giá trị cột, không bị lỗi bind như executeQuery thô. Chỉ lưu các trường tối thiểu phục vụ công việc (Điều 3 NĐ 13/2023)."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Truy vấn tiếng Anh: chủ boutique / shop online ở US-EU đang tìm xưởng smock.\n// Chỉ tìm bài CÔNG KHAI đã được Google index. Group kín không hiện ở đây, và workflow không cố vào.\nconst queries = [\n  {\n    \"q\": \"site:facebook.com \\\"looking for\\\" smocked dresses supplier\"\n  },\n  {\n    \"q\": \"site:facebook.com \\\"ISO\\\" smocked wholesale vendor\"\n  },\n  {\n    \"q\": \"site:facebook.com \\\"recommend\\\" smocked clothing manufacturer\"\n  },\n  {\n    \"q\": \"site:facebook.com \\\"who makes\\\" smocked dresses boutique\"\n  },\n  {\n    \"q\": \"\\\"smocked\\\" \\\"wholesale\\\" \\\"looking for a vendor\\\"\"\n  },\n  {\n    \"q\": \"\\\"smocked\\\" \\\"manufacturer\\\" boutique owner recommendation\"\n  },\n  {\n    \"q\": \"site:reddit.com smocked dresses supplier boutique\"\n  },\n  {\n    \"q\": \"site:reddit.com children's boutique wholesale smocked vendor\"\n  },\n  {\n    \"q\": \"\\\"hand smocked\\\" \\\"private label\\\" manufacturer looking\"\n  },\n  {\n    \"q\": \"\\\"smocked\\\" \\\"Easter\\\" OR \\\"Valentine\\\" collection vendor boutique wholesale\"\n  }\n];\n\nreturn queries.map(item => ({ json: item }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1504,
+        288
+      ],
+      "id": "b7ce690e-4144-4a41-9a8c-91b17bb4fecd",
+      "name": "Build Search Query List"
+    },
+    {
+      "parameters": {
+        "maxItems": 20
+      },
+      "id": "53242cf1-63c8-4842-8be7-0a7570fa3d3b",
+      "name": "Limit - Cap Items Per Cycle (Token Guard)",
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "Giới hạn tối đa 20 bài/chu kỳ 15 phút (~80 bài/giờ) được đưa vào LLM để tránh burn token khi nguồn tin tăng đột biến. Ưu tiên giữ 20 item đầu tiên (firstItems); phần dư sẽ được xét ở chu kỳ quét kế tiếp vì bài đã qua Pre-Filter nhưng CHƯA được Mark As Scanned nên không bị mất, chỉ bị trễ."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const item = $input.item.json;\n\nconst systemPrompt = `This public search snippet is a HIGH_INTENT lead: a business looking for a supplier of smocked children's clothing. Extract outreach details strictly from the visible TITLE and SNIPPET. Never invent facts; use null where the text does not say. Do NOT extract phone numbers or email addresses.\n\nFacts about K-Embroidery you may use in the reply: Vietnam factory since 1996, hand-smocked and embroidered kids' clothing, wholesale and OEM/private label, MOQ 15 pieces per design, free 2D mock-ups, ships worldwide. Do not promise prices, delivery dates or anything else.\n\nReturn STRICT JSON ONLY with EXACTLY these 6 keys, no markdown fences, no explanation:\n{\n  \"service_required\": \"what they want to source (e.g. 'smocked Easter dresses', 'private label smocked line') or null\",\n  \"pain_point\": \"the buyer's stated need or problem, or null\",\n  \"buyer_type\": \"boutique|online_shop|brand|reseller|unknown\",\n  \"quantity_or_deadline\": \"quantity, sizes or deadline if literally stated, else null\",\n  \"suggested_angle\": \"a short, honest English reply (max 3 sentences) a K-Embroidery salesperson could post or send, introducing themselves as K-Embroidery, answering their need, and asking when they need the goods. No pressure, no fake claims.\",\n  \"intent_reason\": \"1 concise Vietnamese sentence explaining why this snippet shows buying intent\"\n}`;\n\nconst userContent = `TITLE: ${item.title || ''}\\nSNIPPET: ${item.snippet || ''}`;\n\nconst modelPool = [\n  'google/gemma-4-26b-a4b-it:free',\n  'google/gemma-4-31b-it:free',\n  'nex-agi/nex-n2.5-mini:free'\n];\n\nconst payload = {\n  models: modelPool,\n  temperature: 0.2,\n  max_tokens: 500,\n  response_format: { type: 'json_object' },\n  messages: [\n    { role: 'system', content: systemPrompt },\n    { role: 'user', content: userContent }\n  ]\n};\n\nreturn {\n  json: {\n    ...item,\n    extractionRequestBody: JSON.stringify(payload)\n  }\n};"
+      },
+      "id": "61beb72e-082f-41b6-8e85-da1c365626b4",
+      "name": "Build Lead Extraction Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        64
+      ],
+      "notes": "V5 MOI: sinh request body cho vong LLM thu 2, chi de trich xuat chi tiet lead - khong con bat classifier chinh phai sinh cac field nay cho toan bo item."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.extractionRequestBody }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 3000
+            }
+          },
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 60000
+        }
+      },
+      "id": "3e776e1d-e21e-4ab4-a554-84f9fc5e6d85",
+      "name": "HTTP Request - LLM Lead Extraction",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        928,
+        64
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "continueOnFail": true,
+      "notes": "V5 MOI: goi OpenRouter lan 2, chi cho lead HIGH_INTENT da qua filter. Dung chung credential voi node classify o tren."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const response = $input.item.json;\nconst original = $('Build Lead Extraction Payload').item.json;\n\nconst apiError = response.error?.message || response.message || null;\nlet parsed = null;\n\nfunction contentToRaw(content) {\n  if (content === null || content === undefined) return '';\n  if (typeof content === 'string') return content;\n  if (Array.isArray(content)) {\n    return content\n      .map((part) => {\n        if (typeof part === 'string') return part;\n        if (part && typeof part.text === 'string') return part.text;\n        return '';\n      })\n      .join('');\n  }\n  if (typeof content === 'object') {\n    if ('intent_reason' in content) return content;\n    try { return JSON.stringify(content); } catch { return ''; }\n  }\n  return String(content);\n}\n\nfunction extractJson(raw) {\n  if (raw === null || raw === undefined || raw === '') return null;\n  if (typeof raw === 'object' && !Array.isArray(raw)) return raw;\n  const cleaned = String(raw).trim().replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/i, '');\n  try { return JSON.parse(cleaned); } catch {}\n  const first = cleaned.indexOf('{');\n  const last = cleaned.lastIndexOf('}');\n  if (first >= 0 && last > first) {\n    try { return JSON.parse(cleaned.slice(first, last + 1)); } catch {}\n  }\n  return null;\n}\n\nif (!apiError) {\n  parsed = extractJson(contentToRaw(response.choices?.[0]?.message?.content));\n}\n\n// Extraction failing must NEVER drop a real lead - fall back to safe placeholders\n// so the Telegram alert / Postgres insert still go through with what we know.\nreturn {\n  json: {\n    postId: original.postId,\n    authorName: original.authorName,\n    postUrl: original.postUrl,\n    title: original.title,\n    snippet: original.snippet,\n    content: original.content,\n    sourceDomain: original.sourceDomain,\n    classification: original.classification,\n    buyer_signal: original.buyer_signal,\n    seller_signal: original.seller_signal,\n    confidence_score: original.confidence_score,\n    scan_ok: original.scan_ok,\n    service_required: parsed?.service_required ?? null,\n    pain_point: parsed?.pain_point ?? null,\n    buyer_type: parsed?.buyer_type ?? 'unknown',\n    quantity_or_deadline: parsed?.quantity_or_deadline ?? null,\n    contact_phone: null, // Smock: không thu SĐT/email; Sale lấy khi khách tự liên hệ\n    suggested_angle: parsed?.suggested_angle || 'Hi! This is K-Embroidery, a hand-smocked kids clothing factory in Vietnam (MOQ 15/design, free 2D mock-ups). Happy to share our catalog - when do you need the goods?',\n    intent_reason: parsed?.intent_reason || 'Bài viết đang tìm nhà cung cấp hàng smock',\n    extraction_model_used: response.model || 'unknown',\n    extraction_ok: !apiError && !!parsed,\n    extraction_error: apiError || (parsed ? null : 'Model response was not valid JSON')\n  }\n};"
+      },
+      "id": "80ff1018-d70b-40c3-97ac-b93bc490b470",
+      "name": "Parse Lead Extraction Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        64
+      ],
+      "notes": "V5 MOI: parser rieng cho vong extract, dung contentToRaw/extractJson giong node classify de tranh loi '[object Object]'. Neu extraction that bai, lead van duoc luu/gui voi placeholder thay vi bi mat."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c4d2ad58-a661-4d26-8041-aaafdc45d045",
+              "name": "executionId",
+              "type": "string",
+              "value": "461"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a26a4d82-0a66-4b26-84db-5dc4cd4c40de",
+      "name": "Set Execution ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -32,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:5678/api/v1/executions/{{$json.executionId}}?includeData=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "n8nApi",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "d4cbbc35-e881-403e-abff-f2cf3bdbb1bf",
+      "name": "Get Execution Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        224,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst execution = $json;\nconst workflow = execution.workflowData ?? execution.workflow ?? {};\nconst runData = execution.data?.resultData?.runData ?? {};\nconst connections = workflow.connections ?? {};\n\nfunction clone(v) {\n  try { return JSON.parse(JSON.stringify(v)); } catch { return v; }\n}\n\nfunction outputsOf(nodeName) {\n  const runs = runData[nodeName] ?? [];\n  return runs.map((run, runIndex) => ({\n    runIndex,\n    output: clone(run?.data?.main ?? [])\n  }));\n}\n\nfunction upstream(nodeName) {\n  const result = [];\n  for (const [sourceName, conn] of Object.entries(connections)) {\n    const groups = conn?.main ?? [];\n    for (let outputIndex = 0; outputIndex < groups.length; outputIndex++) {\n      for (const target of (groups[outputIndex] ?? [])) {\n        if (target.node === nodeName) {\n          result.push({\n            fromNode: sourceName,\n            fromOutputIndex: outputIndex,\n            data: outputsOf(sourceName)\n          });\n        }\n      }\n    }\n  }\n  return result;\n}\n\nconst nodeNames = Object.keys(runData);\nconst report = {\n  execution: {\n    id: execution.id ?? null,\n    status: execution.status ?? null,\n    startedAt: execution.startedAt ?? null,\n    stoppedAt: execution.stoppedAt ?? null,\n    workflowId: execution.workflowData?.id ?? execution.workflowId ?? null,\n    workflowName: execution.workflowData?.name ?? execution.workflowData?.meta?.name ?? null,\n  },\n  nodes: nodeNames.map((name, index) => ({\n    order: index + 1,\n    node: name,\n    input_reconstructed_from_upstream_outputs: upstream(name),\n    output: outputsOf(name),\n    note: \"Input is reconstructed from the execution outputs of nodes connected upstream. n8n execution storage primarily records runData/output; the UI derives displayed input from upstream execution data.\"\n  }))\n};\n\nreturn [{json: report}];\n"
+      },
+      "id": "1f7ae075-9461-4e11-8cee-dbf75f6edfef",
+      "name": "Build In-Out Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "mode": "each",
+        "options": {
+          "format": true,
+          "fileName": "={{ 'n8n-execution-' + $('Set Execution ID').item.json.executionId + '-in-out.json' }}"
+        }
+      },
+      "id": "846ba161-c820-457c-b7e2-081ba2ff5131",
+      "name": "Convert Report to JSON File",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        752,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO extraction_attempts (post_id, extraction_ok, error_message, model_used) VALUES ($1, $2, $3, $4);",
+        "options": {
+          "queryReplacement": "={{ [$json.postId, $json.extraction_ok, $json.extraction_error, $json.extraction_model_used] }}"
+        }
+      },
+      "id": "b2b70453-bde8-4e41-a4e0-4142255d86d9",
+      "name": "Postgres - Log Extraction Outcome",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1312,
+        288
+      ],
+      "notes": "Ghi lại mọi lần gọi LLM Lead Extraction (thành công lẫn thất bại) để theo dõi tỉ lệ lỗi theo thời gian/model. Không tốn token - chỉ là 1 INSERT."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-extraction-ok",
+              "leftValue": "={{ $json.extraction_ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f1dff515-9ee9-4481-9590-58267b324a1d",
+      "name": "Extraction Succeeded?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1312,
+        432
+      ],
+      "notes": "Chỉ mark post là đã scan khi extraction lấy được dữ liệu thật (extraction_ok=true). Nếu false (vd. lỗi mạng transient), post_id KHÔNG bị mark -> sẽ được classify + extract lại ở chu kỳ 15p kế tiếp thay vì kẹt vĩnh viễn với dữ liệu fallback."
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "1db6aeaf-1a87-4a88-82b4-bb26290b66b0",
+      "name": "Schedule - Every 6 Hours (Hunt Cycle)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1856,
+        256
+      ],
+      "notes": "Smock: 6 giờ/lần là đủ (khách sỉ không cần phản hồi trong 10 phút; truy vấn quét theo tuần). Tiết kiệm quota Serper và token LLM. Chỉ đọc nội dung công khai."
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Lead Hunter",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Ngày": "={{ $now.setZone('Asia/Ho_Chi_Minh').toFormat('yyyy-MM-dd HH:mm') }}",
+            "Link": "={{ $json.postUrl }}",
+            "Nguồn": "={{ $json.sourceDomain }}",
+            "Tiêu đề": "={{ $json.title }}",
+            "Trích đoạn": "={{ $json.snippet }}",
+            "Loại khách": "={{ $json.buyer_type }}",
+            "Cần gì": "={{ $json.service_required }}",
+            "Số lượng / hạn": "={{ $json.quantity_or_deadline }}",
+            "Lý do": "={{ $json.intent_reason }}",
+            "Gợi ý trả lời": "={{ $json.suggested_angle }}",
+            "Confidence": "={{ $json.confidence_score }}",
+            "Trạng thái": "Chờ duyệt",
+            "Người xử lý": "",
+            "Ghi chú": ""
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Ngày",
+              "displayName": "Ngày",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Link",
+              "displayName": "Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nguồn",
+              "displayName": "Nguồn",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tiêu đề",
+              "displayName": "Tiêu đề",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Trích đoạn",
+              "displayName": "Trích đoạn",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Loại khách",
+              "displayName": "Loại khách",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cần gì",
+              "displayName": "Cần gì",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Số lượng / hạn",
+              "displayName": "Số lượng / hạn",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lý do",
+              "displayName": "Lý do",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Gợi ý trả lời",
+              "displayName": "Gợi ý trả lời",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Confidence",
+              "displayName": "Confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Trạng thái",
+              "displayName": "Trạng thái",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Người xử lý",
+              "displayName": "Người xử lý",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Ghi chú",
+              "displayName": "Ghi chú",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6a4bf7f2-4a64-4cdf-a714-6e7490fdcdac",
+      "name": "Google Sheets - Append Lead (Lead Hunter tab)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1504,
+        144
+      ],
+      "notes": "Smock: hàng đợi duyệt. Tạo tab 'Lead Hunter' trong sheet chính với đúng 14 tiêu đề cột này trước khi Active. Cần Google Sheets credential (OAuth2) của tài khoản có quyền sửa sheet."
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger - One-Time DB Setup": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Create Required Tables (DDL)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Search Results": {
+      "main": [
+        [
+          {
+            "node": "Pre-Filter Negative Keywords (Defense in Depth)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pre-Filter Negative Keywords (Defense in Depth)": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Get Already Scanned Post IDs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Deduplicate & Clean Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deduplicate & Clean Content": {
+      "main": [
+        [
+          {
+            "node": "Limit - Cap Items Per Cycle (Token Guard)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build LLM Request Payload": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - LLM Intent Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - LLM Intent Classification": {
+      "main": [
+        [
+          {
+            "node": "Parse & Validate LLM Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse & Validate LLM Output": {
+      "main": [
+        [
+          {
+            "node": "Filter High Intent Only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter High Intent Only": {
+      "main": [
+        [
+          {
+            "node": "Build Lead Extraction Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Postgres - Log Non-Lead Classification Stats",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Postgres - Mark Post As Scanned",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Telegram Chat ID (Static Config)": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Hot Lead Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule - Daily TTL Purge (00:00 VN)": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Purge Expired Leads (30 Days)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Purge Expired Leads (30 Days)": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Purge Old Scan Cache",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API CALL": {
+      "main": [
+        [
+          {
+            "node": "Normalize Search Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Search Query List": {
+      "main": [
+        [
+          {
+            "node": "API CALL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit - Cap Items Per Cycle (Token Guard)": {
+      "main": [
+        [
+          {
+            "node": "Build LLM Request Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Lead Extraction Payload": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - LLM Lead Extraction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - LLM Lead Extraction": {
+      "main": [
+        [
+          {
+            "node": "Parse Lead Extraction Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Lead Extraction Output": {
+      "main": [
+        [
+          {
+            "node": "Set Telegram Chat ID (Static Config)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Postgres - Save Lead Opportunity",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Postgres - Log Extraction Outcome",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extraction Succeeded?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Sheets - Append Lead (Lead Hunter tab)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Execution ID": {
+      "main": [
+        [
+          {
+            "node": "Get Execution Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Execution Data": {
+      "main": [
+        [
+          {
+            "node": "Build In-Out Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build In-Out Report": {
+      "main": [
+        [
+          {
+            "node": "Convert Report to JSON File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraction Succeeded?": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Mark Post As Scanned",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule - Every 6 Hours (Hunt Cycle)": {
+      "main": [
+        [
+          {
+            "node": "Build Search Query List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "meta": {},
+  "tags": []
+}

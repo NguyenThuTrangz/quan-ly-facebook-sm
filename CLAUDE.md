@@ -19,6 +19,28 @@ Máy: ADMIN, 3 tài khoản SM01–SM03. Cập nhật ngày 2026-10-21. Thông t
 ## Dashboard Smock Radar (từ 2026-11-11)
 Mọi kết quả đo (comment, inbox, số đọc bài, kiểm tra hiển thị, sự cố nick, bài mới có mã Kxxx) đẩy vào https://claude.ai/artifact/4pxRJ5wv1URZUpsooZMjye theo skill **`day-du-lieu-radar`**. Gặp cảnh báo FB (can't use this feature, confirm identity, checkpoint, bài bị gỡ) thì ghi vào dashboard ngay, trước khi báo người dùng. Trước khi đăng group: chạy kiểm tra trước khi đăng + kiểm caption trên dashboard; bị chặn thì không đăng.
 
+## Kiến trúc 3 cấp (đọc `ops/KIEN-TRUC-3-CAP.md`; bật dần theo `n8n/level1/README.md`)
+- **Máy công ty sau khi `git pull`: làm theo `ops/DONG-BO-MAY-CONG-TY.md`** (từng bước, báo 1 dòng mỗi bước, ghi tiến độ vào `tien-do.md`). Trước khi n8n cài xong, mọi thứ chạy như cũ (ghi log tự rơi về DỰ PHÒNG).
+- Skill `lay-text-group` đang TẠM DỪNG; nick persona chờ người dùng quyết (xem cuối `ops/DONG-BO-MAY-CONG-TY.md`).
+- **Cấp 1 n8n (24/24)** sinh Lịch SM (L1-02, 21:30 tối hôm trước), chuẩn bị gói bài (L1-03, 22:00), báo cáo (L1-04, 18:00), kiểm hợp đồng (L1-05, 06:30/21:50), cầu nối cấp 2 (L1-06), ghi log qua webhook (L1-01). **Cấp 2 Copilot** (repo `smock-level2-copilot`) phái sinh caption, chấm group, viết báo cáo tuần. **Cấp 3 là Claude: chỉ giờ hành chính (08:30–17:00, thứ 2–7)**.
+- Khi L1-02 đã bật: **không tự "lên lịch hôm nay"**; chỉ chạy lịch n8n đã sinh. Khi L1-01 đã bật: ghi log bằng `tools\ghi-log-webhook.ps1` (mục 2 của `chay-lich-sm`), không gõ vào sheet.
+- Gom việc theo cụm từng nick (lịch đã xếp sẵn 2 cụm/nick/ngày): làm hết cụm của một nick rồi mới chọn trình duyệt khác.
+- Lấy text group cho cấp 2: skill `lay-text-group`. Không tự chấm group dài dòng trong phiên.
+- Có gì bất thường giữa các cấp (gói bài thiếu, webhook DỰ PHÒNG, lịch không có) → báo người dùng 1 dòng, không tự sửa sheet.
+
+## Lead Hunter (n8n, từ 2026-11-11)
+Workflow `n8n/smock-lead-hunter.json` (xem `n8n/README.md`) tìm bài công khai có người đang tìm xưởng smock, ghi vào tab **Lead Hunter** của sheet chính với trạng thái "Chờ duyệt". Người dùng nói "xử lý lead" → dùng skill **`tra-loi-lead`**: soạn câu trả lời, **chờ người dùng duyệt từng lead**, tối đa 5 câu trả lời/ngày, mỗi lead một nội dung riêng, tự giới thiệu đúng là K-Embroidery, ghi kết quả lên sheet + Radar.
+
+## Thông tin từ Sale K-Embroidery (trả lời ngày 2026-11-11) — dùng khi viết caption, trả lời comment, chuyển khách
+- **MOQ: 15 chiếc/mẫu** (website ghi 30 là chưa cập nhật — trong bài và khi trả lời luôn nói 15). **Mock-up 2D miễn phí, không giới hạn số lần.**
+- Khách chủ yếu là **shop online**; biết xưởng qua Facebook nhiều nhất (Fanpage và tài khoản cá nhân song song), website ít hơn.
+- Khách hay hỏi nhất: **thời gian giao hàng, giá ship**. Khách ít lo scam; lo **giao trễ hẹn**. Khách so giá sản phẩm, giá ship và thời gian sản xuất giữa nhiều xưởng → caption nên nói rõ thời gian sản xuất, phí ship, cam kết đúng hẹn, bằng chứng QC (đo thông số, kiểm lỗi, hoàn thiện).
+- Chu kỳ: vài tuần đến vài tháng (hỏi hàng, giá → phát triển thêm mẫu → báo giá → ký → lên đơn, kiểm ship, đặt cọc). Có tệp khách đặt lại ít nhất 1 đơn/tháng.
+- Mùa vụ: khách làm collection theo dịp lễ (Valentine, St. Patrick, Easter, Mother's Day, Halloween, Christmas) nên đơn đều cả năm; **cuối năm là thấp điểm**, khách đang nghĩ collection đầu năm và mùa hè → tháng 11–12 ưu tiên content Valentine/St. Patrick/Easter/Mother's Day/hè.
+- Góp ý sau giao hàng hay gặp: sai thông số, sai thiết kế, lỗi bẩn, hoàn thiện chưa tốt.
+- **Chuyển khách cho Sale qua WhatsApp hotline**, kèm: tên khách, tên shop, link trang cá nhân, nội dung hỏi, mã bài Kxxx; số WhatsApp/email khách đưa thì gửi thẳng cho Sale, **không ghi lên Radar hay sheet chung**. Sale muốn: khách to, thật sự có nhu cầu, đúng hàng smock, càng nhiều thông tin càng tốt.
+- Sale cho được: catalog, size chart, một số câu trả lời mẫu (xin qua người dùng).
+
 ## Tiết kiệm token (người dùng yêu cầu 2026-11-10)
 - Chạy từng dòng Lịch SM: dùng skill **`chay-lich-sm`** (`.claude/skills/chay-lich-sm/SKILL.md`) — có sẵn các đoạn JS và thứ tự bước; ghi log bằng `tools\ghi-log.ps1` (Excel + clipboard 1 lệnh); cửa sổ thu nhỏ → `tools\cuaso.ps1 -Mo "<tiêu đề>"`.
 - **Tiết kiệm cực đoan (2026-11-11)**: trong ngày chỉ ghi Excel + hàng đợi (`ghi-log.ps1`); **dán Nhật Ký SM + cột H lên Google Sheet 1 lần cuối ca** (`dan-log.ps1`); không đọc lại để kiểm tra trừ khi nghi lỗi; không screenshot nếu JS/zoom đủ; mỗi ngày 1 session mới.

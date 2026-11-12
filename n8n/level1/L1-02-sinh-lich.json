@@ -1,0 +1,474 @@
+{
+  "name": "L1-02 Sinh Lịch SM ngày làm việc kế tiếp",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 21 * * 0-5"
+            }
+          ]
+        }
+      },
+      "id": "b01b9bfa-8dd3-4d71-a895-abeb466a03d7",
+      "name": "21:30 Chủ nhật–Thứ sáu",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1200,
+        300
+      ],
+      "notes": "Sinh lịch cho ngày làm việc kế tiếp (thứ 2–7)."
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values/{{ encodeURIComponent(\"'Tài khoản'!A2:I20\") }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "b0f6045f-256e-4a72-a48e-d282b18b32f3",
+      "name": "Đọc Tài khoản",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -980,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2 (tài khoản có quyền sửa sheet chính).",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values/{{ encodeURIComponent(\"'Target + Workload'!A4:K11\") }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "4f6a77ab-dada-45a7-8563-2a5eed1d53d8",
+      "name": "Đọc Target + Workload",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -780,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2 (tài khoản có quyền sửa sheet chính).",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values/{{ encodeURIComponent(\"'Join Group SM'!A2:F200\") }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "0527118d-af34-4f74-b4f3-ae88ba77c6a4",
+      "name": "Đọc Join Group SM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -580,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2 (tài khoản có quyền sửa sheet chính).",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values/{{ encodeURIComponent(\"'Add Friend'!A2:D2000\") }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "68e01060-0998-4b1b-97c9-60e3e3cfc125",
+      "name": "Đọc Add Friend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -380,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2 (tài khoản có quyền sửa sheet chính).",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values/{{ encodeURIComponent(\"'Lịch SM'!A2:A3000\") }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "b5551b6d-d157-40cb-856a-65821a72b65d",
+      "name": "Đọc Lịch SM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -180,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2 (tài khoản có quyền sửa sheet chính).",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values/{{ encodeURIComponent(\"'Content Queue'!A2:K3000\") }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "da922a28-59f8-4207-9b72-0fb71d8b22bb",
+      "name": "Đọc Content Queue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        20,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2 (tài khoản có quyền sửa sheet chính).",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values/{{ encodeURIComponent(\"'Group Score'!A2:R500\") }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "3015711e-fb8f-426e-973a-0d495a7661d5",
+      "name": "Đọc Group Score",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2 (tài khoản có quyền sửa sheet chính).",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===== Cấu hình chung cấp 1 (sửa ở đây) =====\nconst CFG = {\n  SHEET_ID: '1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0',\n  TOKEN: 'DOI_TOKEN_O_DAY',                 // trùng biến SMOCK_LOG_TOKEN trên máy cấp 3\n  PACK_DIR: 'C:/claude remote/anh-dang-bai', // thư mục gói bài cấp 3 đọc\n  L2_REPO: 'C:/smock-level2-copilot',        // bản clone repo cấp 2 trên máy này\n  OFFICE_START: '08:30', OFFICE_END: '17:00',\n  LUNCH_START: '11:45', LUNCH_END: '13:15',\n  GROUP_POST_GAP_MIN: 60,\n};\n\n// Đầu vào: 6 lần đọc sheet ở các node trước. Sinh lịch NGÀY LÀM VIỆC KẾ TIẾP, giờ hành chính, gom việc theo cụm từng nick.\nconst V = n => ($(n).first().json.values || []);\nconst acc = V('Đọc Tài khoản'), kpi = V('Đọc Target + Workload'), jg = V('Đọc Join Group SM'),\n      af = V('Đọc Add Friend'), lich = V('Đọc Lịch SM'), cq = V('Đọc Content Queue'), gs = V('Đọc Group Score');\n// Ngày làm việc kế tiếp (bỏ Chủ nhật)\nconst now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));\nconst d = new Date(now); d.setDate(d.getDate() + 1); if (d.getDay() === 0) d.setDate(d.getDate() + 1);\nconst day = d.toISOString().slice(0, 10);\nconst dayVN = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;\n// Đã có lịch cho ngày đó thì dừng (chạy lại không sinh trùng)\nif (lich.some(r => (r[0] || '').includes(dayVN) || (r[0] || '').startsWith(day))) return [{ json: { skip: true, reason: 'Đã có lịch ngày ' + day } }];\n// Nick hoạt động + tên\nconst nicks = acc.filter(r => /^SM0\\d$/.test(r[0]) && /Hoạt động/i.test(r[5] || '')).map(r => ({ id: r[0], name: r[1] }));\nconst quota = {}; for (const r of kpi) if (/^SM0\\d$/.test(r[0])) quota[r[0]] = { wall: +r[3] || 0, join: +r[4] || 0, fr: +r[5] || 0, grp: +r[6] || 0 };\n// Random có hạt giống theo ngày → chạy lại ra cùng kết quả\nlet seed = [...day].reduce((s, ch) => s * 31 + ch.charCodeAt(0), 7) >>> 0;\nconst rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);\nconst ri = (a, b) => a + Math.floor(rnd() * (b - a + 1));\nconst shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };\nconst pattern = n => Array.from({ length: n }, () => ri(1, 5)).join('/');\n// Group tier A/B theo Group Score (nếu chưa chấm thì KHÔNG xếp bài group)\nconst gsCol = { stt: 0, tier: 14, st: 16 };\nconst okGroup = new Set(gs.filter(r => ['A', 'B'].includes((r[gsCol.tier] || '').trim()) && ['Đã chấm', 'Đã duyệt'].includes(r[gsCol.st])).map(r => +r[gsCol.stt]));\nconst jgCol = { SM01: 3, SM02: 4, SM03: 5 };\n// Kho content chưa dùng + mã bài kế tiếp\nconst cqRows = cq.map((r, i) => ({ r, row: i + 2 })).filter(x => x.r[5] === 'Chưa dùng');\nlet maxK = 116; for (const r of cq) { const m = /^K(\\d+)$/.exec(r[6] || ''); if (m) maxK = Math.max(maxK, +m[1]); }\nconst used = new Set(); const reserve = [];\nconst takeContent = (nick, kind) => {\n  const x = cqRows.find(x => !used.has(x.row) && (kind === 'group' ? /group/i.test(x.r[2] || 'group') : true));\n  if (!x) return null; used.add(x.row); const code = 'K' + (++maxK);\n  reserve.push({ row: x.row, code, nick }); return { code, content: x.r[0] };\n};\n// Người kết bạn kế tiếp (cột C = 'Chưa Add')\nlet frIdx = 0; const frList = af.map((r, i) => ({ r, row: i + 2 })).filter(x => /Chưa Add/i.test(x.r[2] || ''));\nconst frReserve = [];\n// Dựng việc theo nick\nconst tasks = [];\nfor (const n of nicks) {\n  const q = quota[n.id] || { wall: 1, join: 1, fr: 1, grp: 0 };\n  const list = [];\n  list.push(['story tim', `story tim ${ri(1, 3)}/${ri(1, 4)}`]);\n  list.push(['lướt newfeed', `lướt newfeed ${ri(2, 4)}`]);\n  list.push(['chấp nhận All', 'chấp nhận All']);\n  list.push(['tương tác', `tương tác ${pattern(ri(3, 5))}`]);\n  const col = jgCol[n.id];\n  if (col !== undefined) {\n    const joined = jg.filter(r => /đã join/i.test(r[col] || '')).map(r => +r[0]);\n    if (joined.length) list.push(['tương tác group', `group ${joined[ri(0, joined.length - 1)]} tương tác ${pattern(ri(2, 3))}`]);\n    const toJoin = jg.filter(r => /chưa join/i.test(r[col] || '') && (okGroup.size === 0 || okGroup.has(+r[0]))).slice(0, Math.max(0, q.join)).map(r => +r[0]);\n    if (toJoin.length) list.push(['join group', `join group ${toJoin.join(', ')}`]);\n    const canPost = jg.filter(r => /đã join/i.test(r[col] || '') && okGroup.has(+r[0])).map(r => +r[0]);\n    for (let i = 0; i < q.grp && canPost.length; i++) {\n      const c = takeContent(n.id, 'group'); if (!c) break;\n      list.push(['đăng group', `đăng group ${c.code} (${c.content}) → group ${canPost[i % canPost.length]}`, 'group']);\n    }\n  }\n  for (let i = 0; i < q.wall; i++) { const c = takeContent(n.id, 'wall'); if (!c) break; list.push(['đăng tường', `đăng tường ${c.code} (${c.content})`]); }\n  const nf = Math.min(q.fr, frList.length - frIdx);\n  if (nf > 0) { const ids = frList.slice(frIdx, frIdx + nf); frIdx += nf; ids.forEach(x => frReserve.push({ row: x.row, nick: n.id }));\n    list.push(['kết bạn', `kết bạn ${ids.map(x => x.r[0]).join(', ')}`]); }\n  // 2 cụm mỗi nick: sáng và chiều (giảm chọn lại trình duyệt, vẫn rải trong ngày)\n  shuffle(list); const half = Math.ceil(list.length / 2);\n  tasks.push({ nick: n, block: 'sáng', items: list.slice(0, half) }, { nick: n, block: 'chiều', items: list.slice(half) });\n}\n// Xếp giờ: cụm cách nhau 20–40 phút, việc trong cụm cách 4–9 phút; bài group cả đội cách ≥ 60 phút\nconst toMin = s => +s.slice(0, 2) * 60 + +s.slice(3); const hhmm = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');\nconst S = toMin(CFG.OFFICE_START), E = toMin(CFG.OFFICE_END), L1 = toMin(CFG.LUNCH_START), L2 = toMin(CFG.LUNCH_END);\nconst order = [...shuffle(tasks.filter(t => t.block === 'sáng')), ...shuffle(tasks.filter(t => t.block === 'chiều'))];\nlet t = S + ri(0, 15), lastGroup = -999; const rows = []; const overflow = [];\nfor (const b of order) {\n  if (b.block === 'chiều' && t < L2) t = L2 + ri(0, 10);\n  for (const it of b.items) {\n    if (t >= L1 && t < L2) t = L2 + ri(0, 10);\n    if (it[2] === 'group' && t - lastGroup < CFG.GROUP_POST_GAP_MIN) t = lastGroup + CFG.GROUP_POST_GAP_MIN + ri(0, 5);\n    if (t > E) { overflow.push(`${b.nick.id}: ${it[1]}`); continue; }\n    if (it[2] === 'group') lastGroup = t;\n    rows.push([dayVN, hhmm(t), b.nick.id, b.nick.name, it[0], it[1], 'Có', 'Chờ', '', 'sinh bởi n8n L1-02']);\n    t += ri(4, 9);\n  }\n  t += ri(20, 40);\n}\nrows.sort((a, b) => a[1].localeCompare(b[1]));\nconst data = reserve.map(x => ({ range: `'Content Queue'!F${x.row}:I${x.row}`, values: [['Đã xếp', x.code, dayVN, x.nick]] }))\n  .concat(frReserve.map(x => ({ range: `'Add Friend'!C${x.row}`, values: [[`Đã xếp ${x.nick} ${dayVN}`]] })));\nreturn [{ json: { skip: false, day, rows, data, overflow, summary: `${rows.length} việc cho ${nicks.length} nick ngày ${dayVN}` + (overflow.length ? `; ${overflow.length} việc không vừa giờ` : '') + (okGroup.size ? '' : '; chưa có group A/B nên không xếp bài group') } }];\n"
+      },
+      "id": "a745b75f-763b-4554-b134-0bff4054227f",
+      "name": "Sinh lịch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        300
+      ],
+      "notes": "Luật: giờ hành chính, 2 cụm/nick, bài group chỉ vào group tier A/B đã join, cách nhau ≥60 phút, mỗi content 1 lần."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "1aa9279b-8d62-44fe-89bc-457b18062914",
+              "leftValue": "={{ !$json.skip && $json.rows.length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "81e982ac-4eb0-42ff-afe5-933612256aa2",
+      "name": "Có việc mới?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        640,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values/{{ encodeURIComponent(\"'Lịch SM'!A:J\") }}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: $json.rows }) }}",
+        "options": {}
+      },
+      "id": "b7fd0186-fea8-4e1a-9b3b-3d404f840d59",
+      "name": "Ghi Lịch SM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        860,
+        220
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ valueInputOption: 'USER_ENTERED', data: $('Sinh lịch').first().json.data }) }}",
+        "options": {}
+      },
+      "id": "03555794-cd04-4afb-95a0-9f547122177d",
+      "name": "Giữ chỗ content + kết bạn",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1080,
+        220
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2."
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_GROUP_CHAT_ID",
+        "text": "={{ '🗓 ' + $('Sinh lịch').first().json.summary }}",
+        "additionalFields": {}
+      },
+      "id": "6c5cc6c1-8f55-45b1-b9b0-99090964a369",
+      "name": "Báo nhóm",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1300,
+        220
+      ],
+      "disabled": true,
+      "notes": "Tuỳ chọn: bật node, CHỌN CREDENTIAL Telegram, điền chat ID NHÓM MKT/Sale (không gửi vào máy chủ tài khoản Claude)."
+    }
+  ],
+  "connections": {
+    "21:30 Chủ nhật–Thứ sáu": {
+      "main": [
+        [
+          {
+            "node": "Đọc Tài khoản",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đọc Tài khoản": {
+      "main": [
+        [
+          {
+            "node": "Đọc Target + Workload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đọc Target + Workload": {
+      "main": [
+        [
+          {
+            "node": "Đọc Join Group SM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đọc Join Group SM": {
+      "main": [
+        [
+          {
+            "node": "Đọc Add Friend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đọc Add Friend": {
+      "main": [
+        [
+          {
+            "node": "Đọc Lịch SM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đọc Lịch SM": {
+      "main": [
+        [
+          {
+            "node": "Đọc Content Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đọc Content Queue": {
+      "main": [
+        [
+          {
+            "node": "Đọc Group Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đọc Group Score": {
+      "main": [
+        [
+          {
+            "node": "Sinh lịch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sinh lịch": {
+      "main": [
+        [
+          {
+            "node": "Có việc mới?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Có việc mới?": {
+      "main": [
+        [
+          {
+            "node": "Ghi Lịch SM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ghi Lịch SM": {
+      "main": [
+        [
+          {
+            "node": "Giữ chỗ content + kết bạn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Giữ chỗ content + kết bạn": {
+      "main": [
+        [
+          {
+            "node": "Báo nhóm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Ho_Chi_Minh",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "meta": {
+    "smockNotes": "Thay việc 'lên lịch hôm nay' của Claude. Chạy lại không sinh trùng (kiểm ngày đã có lịch). Random có hạt giống theo ngày."
+  },
+  "tags": []
+}

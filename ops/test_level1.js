@@ -47,8 +47,11 @@ r = run(g, { nodes: base })[0].json;
 ok(!r.skip && r.rows.length > 20, `sinh ${r.rows.length} việc cho 3 nick (bỏ nick không Hoạt động)`);
 ok(r.rows.every(x => x[1] >= '08:30' && x[1] <= '17:00'), 'mọi việc trong 08:30–17:00');
 ok(r.rows.every(x => !(x[1] >= '11:45' && x[1] < '13:15')), 'không có việc giờ nghỉ trưa');
-const gp = r.rows.filter(x => x[4] === 'đăng group').map(x => +x[1].slice(0, 2) * 60 + +x[1].slice(3)).sort((a, b) => a - b);
-ok(gp.every((m, i) => i === 0 || m - gp[i - 1] >= 60), `bài group cả đội cách nhau ≥ 60 phút (${gp.length} bài)`);
+const mins = x => +x[1].slice(0, 2) * 60 + +x[1].slice(3);
+const gapOK = (rows, teamGap, nickGap) => { const g = rows.filter(x => x[4] === 'đăng group').sort((a, b) => mins(a) - mins(b));
+  const team = g.every((x, i) => i === 0 || mins(x) - mins(g[i - 1]) >= teamGap);
+  const nick = g.every((x, i) => g.slice(0, i).filter(y => y[2] === x[2]).every(y => mins(x) - mins(y) >= nickGap)); return team && nick; };
+ok(gapOK(r.rows, 6, 60), 'bài group: cả đội cách ≥ 6 phút, cùng nick cách ≥ 60 phút');
 ok(r.rows.filter(x => x[4] === 'đăng group').every(x => /group (1|2)$/.test(x[5])), 'bài group chỉ vào group tier A/B đã join');
 const codes = r.rows.map(x => (/K\d+/.exec(x[5]) || [])[0]).filter(Boolean);
 ok(new Set(codes).size === codes.length, `mã bài không trùng (${codes.join(', ')})`);
@@ -61,6 +64,33 @@ const withLich = { ...base, 'Đọc Lịch SM': { values: r.rows.map(x => [x[0]]
 ok(run(g, { nodes: withLich })[0].json.skip === true, 'đã có lịch ngày đó → không sinh trùng');
 const noGS = run(g, { nodes: { ...base, 'Đọc Group Score': { values: [] } } })[0].json;
 ok(noGS.rows.every(x => x[4] !== 'đăng group') && /chưa có group A\/B/.test(noGS.summary), 'chưa chấm group → không xếp bài group, có báo lý do');
+
+
+console.log('L1-02 công suất 8 nick × 5 bài group/ngày (target 1,75× Sale)');
+const acc8 = Array.from({ length: 8 }, (_, i) => ['SM0' + (i + 1), 'Nick ' + (i + 1), 'Chrome', 'SM0' + (i + 1), 'u', 'Hoạt động']);
+const kpi8 = acc8.map(a => [a[0], 'u', 2, 2, 2, 1, 5]);
+// 45 group A/B, mọi nick đã join (cột D,E,F,I..M)
+const jg8 = Array.from({ length: 45 }, (_, i) => { const r = [i + 1, 'G' + (i + 1), 'url', 'đã join', 'đã join', 'đã join', 'A', 88, 'đã join', 'đã join', 'đã join', 'đã join', 'đã join']; return r; });
+const gs8 = jg8.map(r => [r[0], r[1], 'u', '', '', '', '', '', '', '', '', '', '', 80, 'A', '', 'Đã duyệt']);
+const cq8 = Array.from({ length: 120 }, (_, i) => ['CG' + (i + 1), 'KE', i % 3 ? 'group' : 'wall', 'cap', 'https://drive.google.com/drive/folders/x' + i, 'Chưa dùng', '', '', '', '', '']);
+const base8 = { 'Đọc Tài khoản': { values: acc8 }, 'Đọc Target + Workload': { values: kpi8 }, 'Đọc Join Group SM': { values: jg8 }, 'Đọc Add Friend': { values: af },
+  'Đọc Lịch SM': { values: [] }, 'Đọc Content Queue': { values: cq8 }, 'Đọc Group Score': { values: gs8 } };
+const r8 = run(g, { nodes: base8 })[0].json;
+const g8 = r8.rows.filter(x => x[4] === 'đăng group');
+ok(g8.length === 40 && r8.overflow.length === 0, `8 nick × 5 = ${g8.length} bài group, ${r8.rows.length} việc, không việc nào tràn giờ (2 luồng)`);
+ok(gapOK(r8.rows, 6, 60), 'công suất cao vẫn giữ: cả đội cách ≥ 6 phút, cùng nick ≥ 60 phút');
+const gIds = g8.map(x => /→ group (\d+)/.exec(x[5])[1]);
+ok(new Set(gIds).size === gIds.length, 'cả đội không đăng trùng 1 group trong ngày');
+ok(r8.rows.every(x => x[1] >= '08:30' && x[1] <= '17:00' && !(x[1] >= '11:45' && x[1] < '13:15')), 'vẫn trong giờ hành chính, bỏ giờ trưa');
+ok(new Set(r8.rows.map(x => x[9])).size === 2, 'chia 2 luồng chạy song song (ghi ở cột Ghi chú)');
+// Lịch sử: hôm qua SM01 đã đăng group 1..25 → hôm nay SM01 chỉ được vào group > 25
+const d0 = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' })); const yest = `${d0.getDate()}/${d0.getMonth() + 1}/${d0.getFullYear()}`;
+const hist = Array.from({ length: 25 }, (_, i) => [yest, '09:00', 'SM01', 'Nick 1', 'đăng group', `đăng group K1 (CG1) → group ${i + 1}`]);
+const rH = run(g, { nodes: { ...base8, 'Đọc Lịch SM': { values: hist } } })[0].json;
+ok(rH.rows.filter(x => x[2] === 'SM01' && x[4] === 'đăng group').every(x => +/→ group (\d+)/.exec(x[5])[1] > 25), 'không đăng lại group đã đăng trong 3 ngày');
+const bcL = [['d', 'SM02', 0, 0, 0, 0, 0, 0, 0, 'Đỏ'], ['d', 'SM03', 0, 0, 0, 0, 0, 0, 0, 'Vàng']];
+const rL = run(g, { nodes: { ...base8, 'Đọc Báo cáo ngày': { values: bcL } } })[0].json;
+ok(rL.rows.filter(x => x[2] === 'SM02' && x[4] === 'đăng group').length === 0 && rL.rows.filter(x => x[2] === 'SM03' && x[4] === 'đăng group').length <= 2, 'đèn Đỏ → 0 bài group, đèn Vàng → tối đa 2');
 
 console.log('L1-03 gói bài: thay mã bài vào caption');
 const w3 = W('L1-03-chuan-bi-goi-bai.json'), p3 = codeOf(w3, 'Chọn bài cần gói');

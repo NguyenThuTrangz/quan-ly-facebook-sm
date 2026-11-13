@@ -39,7 +39,7 @@ Có thể gửi 2–3 lệnh JS song song trong cùng 1 message (chạy tuần t
 
 **Chấp nhận All**: mở `facebook.com/friends/requests`, `find` các nút "Confirm", click lần lượt; không có thì J = 0.
 
-**Join group …**: link lấy cột C tab Join Group SM; bấm Join, nội quy → tick đồng ý, câu hỏi → "Oke" rồi Submit. Điền "đã join"/"đang chờ duyệt" vào cột của nick (D=SM01, E=SM02, F=SM03).
+**Join group …**: link lấy cột C tab Join Group SM; bấm Join, nội quy → tick đồng ý, câu hỏi → "Oke" rồi Submit. Điền "đã join"/"đang chờ duyệt" vào cột của nick (D=SM01, E=SM02, F=SM03, I–M=SM04–SM08).
 
 **Kết bạn …**: link cột B tab Add Friend; Add friend (không có thì Follow). Báo "can't use this feature" → dừng kết bạn nick đó hôm nay.
 

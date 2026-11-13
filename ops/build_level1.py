@@ -20,7 +20,12 @@ const CFG = {
   L2_REPO: 'C:/smock-level2-copilot',        // bản clone repo cấp 2 trên máy này
   OFFICE_START: '08:30', OFFICE_END: '17:00',
   LUNCH_START: '11:45', LUNCH_END: '13:15',
-  GROUP_POST_GAP_MIN: 60,
+  NICK_GROUP_GAP_MIN: 60,       // 2 bài group của CÙNG 1 nick cách nhau tối thiểu (phút)
+  TEAM_GROUP_GAP_MIN: 6,        // 2 bài group bất kỳ của cả đội cách nhau tối thiểu (phút)
+  GROUP_REPOST_DAYS: 3,         // 1 nick không đăng lại cùng 1 group trong ngần này ngày; cả đội không trùng group trong ngày
+  TASK_GAP: [2, 4], BLOCK_GAP: [6, 12], // phút giữa 2 việc trong cụm / giữa 2 cụm
+  LANES: 2,                     // số luồng chạy song song: mỗi luồng = 1 phiên Claude cấp 3 + nhóm trình duyệt riêng
+  JG_COL: { SM01: 3, SM02: 4, SM03: 5, SM04: 8, SM05: 9, SM06: 10, SM07: 11, SM08: 12 }, // cột nick trong tab Join Group SM (D,E,F,I..M)
 };
 """ % SHEET
 
@@ -171,9 +176,10 @@ save("L1-01-webhook-ghi-log.json", "L1-01 Webhook ghi log + trạng thái", node
 # ---------------------------------------------------------------- L1-02 sinh lịch ngày làm việc kế tiếp
 gen_js = CONFIG_JS + r"""
 // Đầu vào: 6 lần đọc sheet ở các node trước. Sinh lịch NGÀY LÀM VIỆC KẾ TIẾP, giờ hành chính, gom việc theo cụm từng nick.
-const V = n => ($(n).first().json.values || []);
+const V = n => { try { return (($(n).first().json) || {}).values || []; } catch (e) { return []; } };
 const acc = V('Đọc Tài khoản'), kpi = V('Đọc Target + Workload'), jg = V('Đọc Join Group SM'),
-      af = V('Đọc Add Friend'), lich = V('Đọc Lịch SM'), cq = V('Đọc Content Queue'), gs = V('Đọc Group Score');
+      af = V('Đọc Add Friend'), lich = V('Đọc Lịch SM'), cq = V('Đọc Content Queue'), gs = V('Đọc Group Score'),
+      bc = V('Đọc Báo cáo ngày');
 // Ngày làm việc kế tiếp (bỏ Chủ nhật)
 const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
 const d = new Date(now); d.setDate(d.getDate() + 1); if (d.getDay() === 0) d.setDate(d.getDate() + 1);
@@ -193,7 +199,18 @@ const pattern = n => Array.from({ length: n }, () => ri(1, 5)).join('/');
 // Group tier A/B theo Group Score (nếu chưa chấm thì KHÔNG xếp bài group)
 const gsCol = { stt: 0, tier: 14, st: 16 };
 const okGroup = new Set(gs.filter(r => ['A', 'B'].includes((r[gsCol.tier] || '').trim()) && ['Đã chấm', 'Đã duyệt'].includes(r[gsCol.st])).map(r => +r[gsCol.stt]));
-const jgCol = { SM01: 3, SM02: 4, SM03: 5 };
+const jgCol = CFG.JG_COL;
+// Lịch sử đăng group N ngày gần nhất (chống đăng lại cùng group) — đọc từ tab Lịch SM (A ngày, C nick, F lệnh)
+const parseDay = s => { s = String(s || ''); let m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s); if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+  m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; };
+const dayDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const recent = {}; // nick -> Set(group)
+for (const r of lich) { const dd = parseDay(r[0]); const g = /đăng group .*→ group (\d+)/.exec(r[5] || '');
+  if (!dd || !g || !r[2]) continue; const age = (dayDate - dd) / 864e5;
+  if (age > 0 && age <= CFG.GROUP_REPOST_DAYS) (recent[r[2]] = recent[r[2]] || new Set()).add(+g[1]); }
+// Đèn sức khoẻ nick (tab Báo cáo ngày, cột J = Đèn, lấy dòng mới nhất): Đỏ → không đăng group; Vàng → tối đa 2 bài group
+const light = {}; for (const r of bc) if (/^SM0\d$/.test(r[1] || '')) light[r[1]] = (r[9] || '').trim();
+const teamGroupsToday = new Set();
 // Kho content chưa dùng + mã bài kế tiếp
 const cqRows = cq.map((r, i) => ({ r, row: i + 2 })).filter(x => x.r[5] === 'Chưa dùng');
 let maxK = 116; for (const r of cq) { const m = /^K(\d+)$/.exec(r[6] || ''); if (m) maxK = Math.max(maxK, +m[1]); }
@@ -221,10 +238,14 @@ for (const n of nicks) {
     if (joined.length) list.push(['tương tác group', `group ${joined[ri(0, joined.length - 1)]} tương tác ${pattern(ri(2, 3))}`]);
     const toJoin = jg.filter(r => /chưa join/i.test(r[col] || '') && (okGroup.size === 0 || okGroup.has(+r[0]))).slice(0, Math.max(0, q.join)).map(r => +r[0]);
     if (toJoin.length) list.push(['join group', `join group ${toJoin.join(', ')}`]);
-    const canPost = jg.filter(r => /đã join/i.test(r[col] || '') && okGroup.has(+r[0])).map(r => +r[0]);
-    for (let i = 0; i < q.grp && canPost.length; i++) {
+    const rec = recent[n.id] || new Set();
+    const canPost = shuffle(jg.filter(r => /đã join/i.test(r[col] || '') && okGroup.has(+r[0])).map(r => +r[0])
+      .filter(g => !rec.has(g) && !teamGroupsToday.has(g)));
+    let grp = q.grp; if (light[n.id] === 'Đỏ') grp = 0; else if (light[n.id] === 'Vàng') grp = Math.min(grp, 2);
+    for (let i = 0; i < Math.min(grp, canPost.length); i++) {
       const c = takeContent(n.id, 'group'); if (!c) break;
-      list.push(['đăng group', `đăng group ${c.code} (${c.content}) → group ${canPost[i % canPost.length]}`, 'group']);
+      teamGroupsToday.add(canPost[i]);
+      list.push(['đăng group', `đăng group ${c.code} (${c.content}) → group ${canPost[i]}`, 'group']);
     }
   }
   for (let i = 0; i < q.wall; i++) { const c = takeContent(n.id, 'wall'); if (!c) break; list.push(['đăng tường', `đăng tường ${c.code} (${c.content})`]); }
@@ -232,25 +253,35 @@ for (const n of nicks) {
   if (nf > 0) { const ids = frList.slice(frIdx, frIdx + nf); frIdx += nf; ids.forEach(x => frReserve.push({ row: x.row, nick: n.id }));
     list.push(['kết bạn', `kết bạn ${ids.map(x => x.r[0]).join(', ')}`]); }
   // 2 cụm mỗi nick: sáng và chiều (giảm chọn lại trình duyệt, vẫn rải trong ngày)
-  shuffle(list); const half = Math.ceil(list.length / 2);
-  tasks.push({ nick: n, block: 'sáng', items: list.slice(0, half) }, { nick: n, block: 'chiều', items: list.slice(half) });
+  // Chia cụm: mỗi bài group 1 cụm riêng (tối thiểu 2 cụm/nick), việc khác rải đều vào các cụm
+  const lane = nicks.indexOf(n) % CFG.LANES; const groups = list.filter(x => x[2] === 'group'); const others = shuffle(list.filter(x => x[2] !== 'group'));
+  const k = Math.max(2, groups.length); const blocks = Array.from({ length: k }, (_, i) => (groups[i] ? [groups[i]] : []));
+  others.forEach((x, i) => blocks[i % k].push(x)); blocks.forEach((b, i) => { shuffle(b); tasks.push({ nick: n, lane, idx: i, items: b }); });
 }
-// Xếp giờ: cụm cách nhau 20–40 phút, việc trong cụm cách 4–9 phút; bài group cả đội cách ≥ 60 phút
+// Xếp giờ: mỗi luồng 1 dòng thời gian riêng (chạy song song); việc trong cụm cách TASK_GAP, giữa cụm BLOCK_GAP;
+// bài group: cùng nick cách ≥ NICK_GROUP_GAP_MIN, cả đội cách ≥ TEAM_GROUP_GAP_MIN (tính chung mọi luồng)
 const toMin = s => +s.slice(0, 2) * 60 + +s.slice(3); const hhmm = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
 const S = toMin(CFG.OFFICE_START), E = toMin(CFG.OFFICE_END), L1 = toMin(CFG.LUNCH_START), L2 = toMin(CFG.LUNCH_END);
-const order = [...shuffle(tasks.filter(t => t.block === 'sáng')), ...shuffle(tasks.filter(t => t.block === 'chiều'))];
-let t = S + ri(0, 15), lastGroup = -999; const rows = []; const overflow = [];
-for (const b of order) {
-  if (b.block === 'chiều' && t < L2) t = L2 + ri(0, 10);
-  for (const it of b.items) {
-    if (t >= L1 && t < L2) t = L2 + ri(0, 10);
-    if (it[2] === 'group' && t - lastGroup < CFG.GROUP_POST_GAP_MIN) t = lastGroup + CFG.GROUP_POST_GAP_MIN + ri(0, 5);
-    if (t > E) { overflow.push(`${b.nick.id}: ${it[1]}`); continue; }
-    if (it[2] === 'group') lastGroup = t;
-    rows.push([dayVN, hhmm(t), b.nick.id, b.nick.name, it[0], it[1], 'Có', 'Chờ', '', 'sinh bởi n8n L1-02']);
-    t += ri(4, 9);
+const rows = []; const overflow = []; const groupTimes = []; const lastNickGroup = {};
+const fixGroup = (t, nick) => { t = Math.max(t, (lastNickGroup[nick] ?? -999) + CFG.NICK_GROUP_GAP_MIN);
+  for (let k = 0; k < 500; k++) { if (t >= L1 && t < L2) t = L2; const c = groupTimes.find(g => Math.abs(t - g) < CFG.TEAM_GROUP_GAP_MIN); if (!c) break; t = c + CFG.TEAM_GROUP_GAP_MIN; } return t; };
+for (let lane = 0; lane < CFG.LANES; lane++) {
+  // Xếp vòng: cụm 1 của mọi nick trong luồng, rồi cụm 2... → 2 cụm liền nhau của cùng nick cách xa nhau
+  const mine = tasks.filter(x => x.lane === lane); const ln = shuffle([...new Set(mine.map(x => x.nick.id))]);
+  const maxIdx = Math.max(-1, ...mine.map(x => x.idx)); const order = [];
+  for (let i = 0; i <= maxIdx; i++) for (const id of ln) { const b = mine.find(x => x.nick.id === id && x.idx === i); if (b) order.push(b); }
+  let t = S + ri(0, 10);
+  for (const b of order) {
+    for (const it of b.items) {
+      if (t >= L1 && t < L2) t = L2 + ri(0, 10);
+      if (it[2] === 'group') t = fixGroup(t, b.nick.id);
+      if (t > E) { overflow.push(`${b.nick.id}: ${it[1]}`); continue; }
+      if (it[2] === 'group') { groupTimes.push(t); lastNickGroup[b.nick.id] = t; }
+      rows.push([dayVN, hhmm(t), b.nick.id, b.nick.name, it[0], it[1], 'Có', 'Chờ', '', `sinh bởi n8n L1-02 · luồng ${lane + 1}`]);
+      t += ri(CFG.TASK_GAP[0], CFG.TASK_GAP[1]);
+    }
+    t += ri(CFG.BLOCK_GAP[0], CFG.BLOCK_GAP[1]);
   }
-  t += ri(20, 40);
 }
 rows.sort((a, b) => a[1].localeCompare(b[1]));
 const data = reserve.map(x => ({ range: `'Content Queue'!F${x.row}:I${x.row}`, values: [['Đã xếp', x.code, dayVN, x.nick]] }))
@@ -259,13 +290,14 @@ return [{ json: { skip: false, day, rows, data, overflow, summary: `${rows.lengt
 """
 nodes, c = [], {}
 reads = [("Đọc Tài khoản", "\"'Tài khoản'!A2:I20\""), ("Đọc Target + Workload", "\"'Target + Workload'!A4:K11\""),
-         ("Đọc Join Group SM", "\"'Join Group SM'!A2:F200\""), ("Đọc Add Friend", "\"'Add Friend'!A2:D2000\""),
-         ("Đọc Lịch SM", "\"'Lịch SM'!A2:A3000\""), ("Đọc Content Queue", "\"'Content Queue'!A2:K3000\""), ("Đọc Group Score", "\"'Group Score'!A2:R500\"")]
+         ("Đọc Join Group SM", "\"'Join Group SM'!A2:M300\""), ("Đọc Add Friend", "\"'Add Friend'!A2:D2000\""),
+         ("Đọc Lịch SM", "\"'Lịch SM'!A2:J3000\""), ("Đọc Content Queue", "\"'Content Queue'!A2:K3000\""), ("Đọc Group Score", "\"'Group Score'!A2:R500\""),
+         ("Đọc Báo cáo ngày", "\"'Báo cáo ngày'!A2:K3000\"")]
 nodes.append(sched("21:30 Chủ nhật–Thứ sáu", "30 21 * * 0-5", [-1200, 300], notes="Sinh lịch cho ngày làm việc kế tiếp (thứ 2–7)."))
 prev = "21:30 Chủ nhật–Thứ sáu"
 for i, (nm, rng) in enumerate(reads):
     nodes.append(gget(nm, rng, [-980 + i * 200, 300])); link(c, prev, nm); prev = nm
-nodes += [code("Sinh lịch", gen_js, [420, 300], notes="Luật: giờ hành chính, 2 cụm/nick, bài group chỉ vào group tier A/B đã join, cách nhau ≥60 phút, mỗi content 1 lần."),
+nodes += [code("Sinh lịch", gen_js, [420, 300], notes="Luật: giờ hành chính, 2 luồng song song, bài group chỉ vào group A/B đã join; cùng nick cách ≥60 phút, cả đội cách ≥6 phút; không đăng lại 1 group trong 3 ngày; đèn Đỏ → 0 bài group, Vàng → ≤2; mỗi content 1 lần."),
           iff("Có việc mới?", "{{ !$json.skip && $json.rows.length > 0 }}", [640, 300]),
           gpost("Ghi Lịch SM", "/values/{{ encodeURIComponent(\"'Lịch SM'!A:J\") }}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS", "{ values: $json.rows }", [860, 220]),
           gpost("Giữ chỗ content + kết bạn", "/values:batchUpdate", "{ valueInputOption: 'USER_ENTERED', data: $('Sinh lịch').first().json.data }", [1080, 220]),

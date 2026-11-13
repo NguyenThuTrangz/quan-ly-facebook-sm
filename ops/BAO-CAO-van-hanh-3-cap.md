@@ -9,7 +9,7 @@ Nhánh `ba-cap` của repo quan-ly-facebook-sm đã có 7 workflow cấp 1, sinh
 | Mã | Chức năng |
 |---|---|
 | L1-01 | Webhook ghi log và trạng thái, có chống ghi trùng |
-| L1-02 | Sinh lịch ngày kế tiếp 08:30–17:00, gom cụm theo nick; bài group chỉ vào group tier A/B, cách nhau ≥60 phút |
+| L1-02 | Sinh lịch ngày kế tiếp 08:30–17:00, 2 luồng song song; bài group chỉ vào group tier A/B, cùng nick ≥60 phút, cả đội ≥6 phút, không lặp group 3 ngày, đèn Đỏ → 0, Vàng → ≤2 |
 | L1-03 | Chuẩn bị gói bài (caption + ảnh JPG) |
 | L1-04 | Báo cáo ngày, có đèn trạng thái |
 | L1-05 | Kiểm hợp đồng dữ liệu và việc bị kẹt |

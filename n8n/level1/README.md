@@ -3,7 +3,7 @@
 | File | Giờ chạy | Làm gì | Ai dùng kết quả |
 | --- | --- | --- | --- |
 | `L1-01-webhook-ghi-log.json` | Luôn nghe (localhost) | Nhận 1 lệnh từ Claude → ghi Nhật Ký SM, ghi Done/URL vào Lịch SM, cập nhật trạng thái tab khác. Chống ghi trùng bằng cột **Mã log** | Cấp 3, báo cáo |
-| `L1-02-sinh-lich.json` | 21:30 CN–T6 | Sinh Lịch SM ngày làm việc kế tiếp: 08:30–17:00, 2 cụm/nick, bài group chỉ vào group A/B đã join, cách ≥ 60 phút; giữ chỗ content (mã Kxxx) và người kết bạn | Cấp 3 |
+| `L1-02-sinh-lich.json` | 21:30 CN–T6 | Sinh Lịch SM ngày làm việc kế tiếp: 08:30–17:00, 2 luồng song song, bài group chỉ vào group A/B đã join, cùng nick cách ≥ 60 phút, cả đội ≥ 6 phút, không đăng lại group trong 3 ngày, đèn Đỏ/Vàng tự giảm; giữ chỗ content (mã Kxxx) và người kết bạn | Cấp 3 |
 | `L1-03-chuan-bi-goi-bai.json` | 22:00 CN–T6 | Với mỗi content "Đã xếp": `caption.txt` (đã thay mã bài) + ảnh JPG 2048px vào `anh-dang-bai/Kxxx/` → "Gói sẵn" | Cấp 3 |
 | `L1-04-bao-cao-ngay.json` | 18:00 T2–T7 | Tổng hợp Nhật Ký SM hôm nay theo nick + đèn → tab Báo cáo ngày (+ Telegram nhóm, tuỳ chọn) | Mọi người |
 | `L1-05-kiem-hop-dong.json` | 06:30, 21:50 | Kiểm tiêu đề cột mọi tab theo `ops/contract.json`, gói bài còn thiếu, lead tồn 48h, lịch hôm qua còn "Chờ"; đánh dấu content "Đã đăng" | Người dùng |

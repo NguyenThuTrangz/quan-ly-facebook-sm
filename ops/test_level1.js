@@ -143,7 +143,16 @@ r = run(imp, { inputAll: [
   { json: { data: { task_id: 'CAP-20261111-001', kind: 'caption', sheet_row: 5, source_code: 'CG4', type: 'group', variants: [{ caption: 'a {{MA_BAI}}' }, { caption: 'b {{MA_BAI}}' }, { caption: 'c {{MA_BAI}}' }] } } },
   { json: { data: { task_id: 'GRP-20261111-002', kind: 'group', sheet_row: 3, scores: { gates: false, icp: 25, sell: 20, active: 8, engage: 8, buyer: 5, geo: 10, spam: 5 }, total: 81, tier: 'A', evidence: 'x' } } },
   { json: { data: { task_id: 'BAD', kind: 'caption' } } },
-  { json: { data: { task_id: 'GRP-20261111-003', kind: 'group', sheet_row: 4, scores: { icp: 1 }, email: 'a@b.c' } } }] , nodes: { 'Đọc Pool Content SM (sáng)': { values: [['5', 'x'], ['', '']] } } })[0].json;
+  { json: { data: { task_id: 'GRP-20261111-003', kind: 'group', sheet_row: 4, scores: { icp: 1 }, email: 'a@b.c' } } }] , nodes: { 'Đọc Pool Content SM (sáng)': { values: [['5', 'x'], ['', '']] },
+  'Đọc content KE (sáng)': { values: [['4', 'goc', 'https://drive.google.com/drive/folders/KE4']] } } })[0].json;
+ok(r.appends.every(a => a[2] === 'https://drive.google.com/drive/folders/KE4'), 'kết quả cấp 2 thiếu image_link → tự lấy link ảnh của bài gốc CG4');
+const exp = codeOf(w6, 'Tạo file việc');
+const old = new Date(d0); old.setDate(old.getDate() - 10); const oldIso = `${old.getFullYear()}-${String(old.getMonth() + 1).padStart(2, '0')}-${String(old.getDate()).padStart(2, '0')}`;
+const ex = run(exp, { nodes: { 'Đọc Lịch SM': { values: [[oldIso, '09:00', 'SM01', 'x', 'đăng group', 'đăng group K140 (CG2) → group 1', 'Có', 'Done']] },
+  'Đọc content KE': { values: [['1', 'a'.repeat(50), 'L1'], ['2', 'b'.repeat(50), 'L2']] }, 'Đọc Pool Content SM': { values: [] }, 'Đọc Group Score': { values: [] } } });
+const b = ex.length && ex[0].json.body;
+ok(ex.length === 1 && b.source_code === 'CG2' && b.sheet_row === 4 && b.type === 'group' && /^CAP-\d{8}-\d{3}$/.test(b.task_id),
+   'việc caption gửi cấp 2 có sheet_row, type, task_id đúng schema repo cấp 2; chỉ bài đã đăng ≥ 7 ngày');
 ok(r.appends.length === 3 && r.appends.every(a => a.length === 6 && /Phái sinh từ CG4.*chờ duyệt/.test(a[3])) && r.appends.map(a => a[0]).join() === '6,7,8',
    '3 caption phái sinh ghi vào Pool Content SM (STT 6–8), Phân loại "… chờ duyệt"');
 ok(r.updates.some(u => u.range.includes("'Group Score'!F3:Q3") && u.values[0][11] === 'Đã chấm'), 'điểm group ghi đúng dòng, trạng thái Đã chấm');

@@ -19,7 +19,7 @@ Máy: ADMIN, 3 tài khoản SM01–SM03. Cập nhật ngày 2026-10-21. Thông t
 ## Dashboard Smock Radar (từ 2026-11-11)
 Mọi kết quả đo (comment, inbox, số đọc bài, kiểm tra hiển thị, sự cố nick, bài mới có mã Kxxx) đẩy vào https://claude.ai/artifact/4pxRJ5wv1URZUpsooZMjye theo skill **`day-du-lieu-radar`**. Gặp cảnh báo FB (can't use this feature, confirm identity, checkpoint, bài bị gỡ) thì ghi vào dashboard ngay, trước khi báo người dùng. Trước khi đăng group: chạy kiểm tra trước khi đăng + kiểm caption trên dashboard; bị chặn thì không đăng.
 
-## Bàn giao cấp 3 (16/11/2026): đọc **`ops/BAN-GIAO-CAP-3.md`** trước khi làm. L1-01…L1-07 đang bật → không tự lên lịch, ghi log bằng webhook.
+## Bàn giao (16/11/2026): vận hành → **`ops/BAN-GIAO-CAP-3.md`**; số liệu, target, sheet Sale, quyết định của người dùng → **`ops/BAN-GIAO-MKT-TARGET.md`**. Đọc cả hai trước khi làm. L1-01…L1-07 đang bật → không tự lên lịch, ghi log bằng webhook.
 
 ## Kiến trúc 3 cấp (đọc `ops/KIEN-TRUC-3-CAP.md`; bật dần theo `n8n/level1/README.md`)
 - **Máy công ty sau khi `git pull`: làm theo `ops/DONG-BO-MAY-CONG-TY.md`** (từng bước, báo 1 dòng mỗi bước, ghi tiến độ vào `tien-do.md`). Trước khi n8n cài xong, mọi thứ chạy như cũ (ghi log tự rơi về DỰ PHÒNG).

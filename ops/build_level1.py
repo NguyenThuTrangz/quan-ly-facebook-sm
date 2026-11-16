@@ -379,7 +379,11 @@ const out = []; const metas = $('Có bài?').all();
 $input.all().forEach((it, k) => {
   const meta = metas[k] ? metas[k].json : {};
   const files = (it.json.files || []).filter(f => /^image\//.test(f.mimeType || '')).sort((a, b) => String(a.name).localeCompare(String(b.name)));
-  files.forEach((f, i) => out.push({ json: { ...meta, fileId: f.id, idx: i + 1, total: files.length } }));
+  // Tải qua Drive API: ảnh thường lấy bản gốc (alt=media); HEIC lấy thumbnail 2048px (JPG) để FB nhận được
+  files.forEach((f, i) => { const heic = /heic|heif/i.test(f.mimeType || '') || /\.hei[cf]$/i.test(f.name || '');
+    const url = heic && f.thumbnailLink ? f.thumbnailLink.replace(/=s\d+$/, '=s2048')
+      : `https://www.googleapis.com/drive/v3/files/${f.id}?alt=media&supportsAllDrives=true`;
+    out.push({ json: { ...meta, fileId: f.id, url, idx: i + 1, total: files.length } }); });
 });
 return out;"""
 nodes, c = [], {}
@@ -395,18 +399,20 @@ nodes += [sched("22:00 Chủ nhật–Thứ sáu", "0 22 * * 0-5", [-1340, 300])
           code("Tạo caption.txt", caption_js, [-20, 140]),
           node("Ghi caption.txt", "n8n-nodes-base.readWriteFile", 1, {"operation": "write", "fileName": "={{ $json.dir + '/caption.txt' }}", "dataPropertyName": "data", "options": {}}, [200, 140]),
           node("Liệt kê ảnh trong folder Drive", "n8n-nodes-base.httpRequest", 4.2, {
-              "url": "=https://www.googleapis.com/drive/v3/files?q={{ encodeURIComponent(\"'\" + $json.folderId + \"' in parents and trashed=false\") }}&fields=files(id,name,mimeType)&supportsAllDrives=true&includeItemsFromAllDrives=true",
+              "url": "=https://www.googleapis.com/drive/v3/files?q={{ encodeURIComponent(\"'\" + $json.folderId + \"' in parents and trashed=false\") }}&fields=files(id,name,mimeType,thumbnailLink)&supportsAllDrives=true&includeItemsFromAllDrives=true",
               "authentication": "predefinedCredentialType", "nodeCredentialType": "googleDriveOAuth2Api", "options": {}}, [-20, 380],
               notes="CHỌN CREDENTIAL: Google Drive OAuth2. Folder do người khác sở hữu vẫn liệt kê được nếu tài khoản này mở được link.", retryOnFail=True, maxTries=3),
           code("Tách từng ảnh", explode_js, [200, 380]),
           node("Tải ảnh JPG 2048px", "n8n-nodes-base.httpRequest", 4.2, {
-              "url": "=https://drive.google.com/thumbnail?id={{ $json.fileId }}&sz=w2048",
+              "url": "={{ $json.url }}",
               "authentication": "predefinedCredentialType", "nodeCredentialType": "googleDriveOAuth2Api",
-              "options": {"response": {"response": {"responseFormat": "file"}}, "batching": {"batch": {"batchSize": 1, "batchInterval": 1500}}}}, [420, 380],
-              notes="Luôn tải bản JPG (xử lý được cả HEIC). 1,5 giây/ảnh để không bị Google chặn.", retryOnFail=True, maxTries=3),
+              "options": {"response": {"response": {"responseFormat": "file"}}, "timeout": 120000, "batching": {"batch": {"batchSize": 1, "batchInterval": 1000}}}}, [420, 380],
+              notes="Drive API alt=media (ảnh gốc); HEIC dùng thumbnailLink 2048px. 1 giây/ảnh.", retryOnFail=True, maxTries=3),
           node("Lưu ảnh vào gói", "n8n-nodes-base.readWriteFile", 1, {"operation": "write", "fileName": "={{ $json.dir + '/' + String($json.idx).padStart(2, '0') + '.jpg' }}", "dataPropertyName": "data", "options": {}}, [640, 380]),
           code("Gom kết quả theo bài", r"""const by = {};
-for (const it of $('Tách từng ảnh').all()) { const k = it.json.row; by[k] = by[k] || { row: k, code: it.json.code, note: it.json.note || '', total: it.json.total, saved: 0 }; }
+// Bài nào folder không có ảnh (video, thư mục con, trống) cũng phải ghi "Lỗi gói 0/0 ảnh"
+for (const it of $('Có bài?').all()) { const k = it.json.row; by[k] = { row: k, code: it.json.code, note: it.json.note || '', total: 0, saved: 0 }; }
+for (const it of $('Tách từng ảnh').all()) { const k = it.json.row; by[k] = by[k] || { row: k, code: it.json.code, note: it.json.note || '', saved: 0 }; by[k].total = it.json.total; }
 for (const it of $input.all()) { const k = it.json.row; if (by[k]) by[k].saved++; }
 // Ghi kết quả vào cột J (Ghi chú) của chính dòng Lịch SM — cấp 3 đọc "Gói sẵn" là có thư mục anh-dang-bai/Kxxx
 const tag = b => (b.saved > 0 && b.saved === b.total ? 'Gói sẵn' : 'Lỗi gói') + ` ${b.saved}/${b.total} ảnh`;

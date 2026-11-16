@@ -28,16 +28,16 @@ Người duyệt → bot trả lời bằng tài khoản được chỉ định 
 
 ## Cài đặt (một lần)
 
-1. Import `smock-lead-hunter.json` vào n8n (workflow để ở trạng thái tắt).
-2. Credential: OpenRouter (kiểu OpenAI API, base URL OpenRouter) cho 2 node LLM · Postgres · Google Sheets OAuth2 · Telegram (nếu dùng).
-3. Node **API CALL**: thay `YOUR_SERPER_API_KEY` (hoặc chuyển sang HTTP Header Auth credential).
-4. Node **Set Telegram Chat ID**: điền chat ID nhóm MKT/Sale, hoặc tắt 2 node Telegram.
-5. Trong sheet chính tạo tab **Lead Hunter**, dòng 1 gồm đúng 14 cột: `Ngày, Link, Nguồn, Tiêu đề, Trích đoạn, Loại khách, Cần gì, Số lượng / hạn, Lý do, Gợi ý trả lời, Confidence, Trạng thái, Người xử lý, Ghi chú`.
-6. Chạy tay node **Manual Trigger - One-Time DB Setup** để tạo bảng Postgres.
-7. Chạy thử 1 lần bằng tay, xem tab Lead Hunter có dòng mới, rồi mới Active.
+**Không dùng Postgres (sửa 16/11/2026, `ops/sua_lead_hunter.py`)**: chống trùng bằng link cột B tab **Lead Hunter** có sẵn + danh sách bài đã quét 14 ngày lưu trong chính workflow (chỉ ghi nhớ khi chạy theo lịch).
+
+1. Tạo key Serper (serper.dev) → đặt biến môi trường User `SERPER_API_KEY`.
+2. Tạo key OpenRouter (openrouter.ai) → trong n8n tạo credential **OpenAI API**: API Key = key OpenRouter, Base URL = `https://openrouter.ai/api/v1`.
+3. Chạy `py -I -X utf8 ops/cai_dat_n8n.py lead` → tự gắn credential Google Sheets + OpenAI API, điền Serper key, import đè đúng workflow.
+4. Telegram: 2 node đang tắt sẵn; muốn dùng thì điền chat ID nhóm MKT/Sale ở node **Set Telegram Chat ID**, tạo credential Telegram, bật 2 node.
+5. Chạy thử 1 lần bằng tay, xem tab Lead Hunter có dòng mới, rồi mới Active.
 
 ## Giới hạn cần biết
 - Google chỉ index một phần bài Facebook công khai; **bài trong group kín không bao giờ hiện**. Lead Hunter bổ sung cho bot đọc group, không thay thế.
 - Reddit, blog, diễn đàn boutique cũng được quét; tuần đầu xem nguồn nào ra lead thật rồi chỉnh truy vấn.
-- Model free trên OpenRouter có thể chậm/lỗi; bài lỗi không bị đánh dấu đã quét nên sẽ được thử lại chu kỳ sau.
-- Dữ liệu lead chưa chuyển đổi tự xoá sau 30 ngày (node Purge), cache quét xoá sau 14 ngày.
+- Model free trên OpenRouter có thể chậm/lỗi; bài đã gửi LLM được ghi nhớ 14 ngày nên bài lỗi sẽ không được thử lại.
+- Lead nằm lại trên tab Lead Hunter (không tự xoá); danh sách bài đã quét tự quên sau 14 ngày.

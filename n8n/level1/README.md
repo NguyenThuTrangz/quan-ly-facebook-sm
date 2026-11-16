@@ -32,9 +32,14 @@ Toàn bộ file được sinh từ `ops/build_level1.py` (sửa ở đó rồi c
    `NODES_EXCLUDE=[]` bật lại Execute Command (mặc định tắt từ n8n 2.0). `N8N_LISTEN_ADDRESS=127.0.0.1` để webhook chỉ nghe trong máy.
 3. Dịch vụ Windows bằng NSSM: `nssm install n8n "C:\Program Files\nodejs\n8n.cmd"`, đặt AppDirectory `C:\n8n`, AppEnvironmentExtra từ file `.env`, Log on = tài khoản Windows đang chạy Claude, Startup = Automatic, Exit actions = Restart. `nssm start n8n` → mở http://localhost:5678.
 4. Máy: tắt Sleep/Hibernate; BIOS "Power on after AC loss" = On; đặt Active hours Windows Update ngoài 21:00–07:00 không được vì giới hạn 18 giờ → đặt **06:00–23:59** và kiểm máy mỗi sáng thứ Hai; nên có UPS.
-5. Trên sheet chính: tạo 4 tab mới đúng tiêu đề trong `ops/contract.json` (Content Queue, Lead Hunter, Group Score, Báo cáo ngày) và **thêm cột K "Mã log" vào Nhật Ký SM**. Chạy L1-05 bằng tay: phải ra "không có vấn đề".
-6. Import 7 file. Trong mỗi workflow: chọn credential cho node ghi "CHỌN CREDENTIAL" (Google Sheets OAuth2, Google Drive OAuth2; Telegram nếu dùng). Ứng dụng Google OAuth để ở trạng thái **In production** (ở "Testing" token hết hạn sau 7 ngày).
-7. Đổi `TOKEN: 'DOI_TOKEN_O_DAY'` trong node "Kiểm tra dữ liệu" (L1-01) và đặt cùng giá trị vào biến môi trường Windows `SMOCK_LOG_TOKEN` của tài khoản chạy Claude.
+5. **Không tạo tab mới.** Workflow bám theo tab đang có (mô tả ở `ops/contract.json`, đọc thật ngày 16/11/2026):
+   - Content: workbook KE tab `3. CONTENT GROUP` (mã `CGn`) + tab `Pool Content SM` (mã `PCn`). Content đã dùng và mã bài `Kxxx` đọc từ cột F/J tab `Lịch SM` (vd `đăng group K123 (CG13) → group 5`).
+   - Tier group: tab `Group Score` nếu đã chấm, chưa chấm thì cột G "Tier" tab `Join Group SM`.
+   - Đèn sức khoẻ: tính thẳng từ `Nhật Ký SM` 2 ngày gần nhất. Nick chỉ đăng tường: ghi thêm "hạn chế group" vào cột F tab `Tài khoản` (vd `Hoạt động - hạn chế group`).
+   - Gói bài (L1-03) ghi "Gói sẵn n/n ảnh" vào cột J của dòng Lịch SM. Caption phái sinh cấp 2 ghi vào `Pool Content SM` với Phân loại "Phái sinh từ CGn – chờ duyệt" (xoá chữ "chờ duyệt" là được dùng).
+   - Cột K "Mã log" của Nhật Ký SM không bắt buộc có tiêu đề (L1-01 tự ghi mã vào cột K).
+6. Tạo credential **Google Sheets OAuth2** và **Google Drive OAuth2** trong n8n (ứng dụng Google OAuth để **In production**). Đặt biến môi trường User `SMOCK_LOG_TOKEN`. Rồi chạy **`py -I -X utf8 ops/cai_dat_n8n.py`**: tự gắn credential + token vào mọi node, import đè đúng workflow cũ (không sinh bản trùng), thêm quyền ghi file vào `.env`. **Không cần mở từng node chọn lại credential.** Sửa `ops/build_level1.py` xong thì: `py -I -X utf8 ops/build_level1.py` → `node ops/test_level1.js` → chạy lại `cai_dat_n8n.py`.
+7. Sau khi `cai_dat_n8n.py` báo đã thêm `.env`: tắt n8n (Ctrl+C) và gõ lại `n8n`.
 8. Thứ tự bật (mỗi bước chạy thử 1 ngày rồi mới sang bước sau): **L1-07 → L1-01 → L1-05 → L1-04 → L1-02 + L1-03 → L1-06 → Lead Hunter**. Trước khi bật L1-02, Claude vẫn tự lên lịch như cũ; trước khi bật L1-01, Claude vẫn ghi log kiểu cũ (skill tự chuyển sang DỰ PHÒNG khi webhook không trả lời).
 
 ## Kiểm nhanh sau khi cài

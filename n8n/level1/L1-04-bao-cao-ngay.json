@@ -12,7 +12,7 @@
           ]
         }
       },
-      "id": "80086b80-78d6-4e1f-8672-216c03ce5c46",
+      "id": "e6889f1a-f47a-4ee8-9b21-3de8c8035ead",
       "name": "18:00 Thứ 2–7",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -34,7 +34,7 @@
           }
         }
       },
-      "id": "6bc2c73d-45a1-44ff-92a3-989fce81fcd6",
+      "id": "2ce32dba-95af-419d-bbf2-63fd708d41ea",
       "name": "Đọc Nhật Ký SM",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -45,7 +45,7 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 3000,
-      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2 (tài khoản có quyền sửa sheet chính).",
+      "notes": "Credential Google Sheets OAuth2 được gắn tự động bởi ops/cai_dat_n8n.py.",
       "alwaysOutputData": true
     },
     {
@@ -61,7 +61,7 @@
           }
         }
       },
-      "id": "03877426-755f-4428-86dc-ca39bb87007d",
+      "id": "13978dba-c4a3-4496-8f8d-f9bf24fac762",
       "name": "Đọc Target + Workload",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -72,7 +72,7 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 3000,
-      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2 (tài khoản có quyền sửa sheet chính).",
+      "notes": "Credential Google Sheets OAuth2 được gắn tự động bởi ops/cai_dat_n8n.py.",
       "alwaysOutputData": true
     },
     {
@@ -88,7 +88,7 @@
           }
         }
       },
-      "id": "1ecb9b34-f454-4673-be90-5948b26777c5",
+      "id": "fccc48d3-2c07-4f4d-b4ef-8272a4e71ed4",
       "name": "Đọc Lịch SM",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -99,14 +99,14 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 3000,
-      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2 (tài khoản có quyền sửa sheet chính).",
+      "notes": "Credential Google Sheets OAuth2 được gắn tự động bởi ops/cai_dat_n8n.py.",
       "alwaysOutputData": true
     },
     {
       "parameters": {
-        "jsCode": "// ===== Cấu hình chung cấp 1 (sửa ở đây) =====\nconst CFG = {\n  SHEET_ID: '1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0',\n  TOKEN: 'DOI_TOKEN_O_DAY',                 // trùng biến SMOCK_LOG_TOKEN trên máy cấp 3\n  PACK_DIR: 'C:/claude remote/anh-dang-bai', // thư mục gói bài cấp 3 đọc\n  L2_REPO: 'C:/smock-level2-copilot',        // bản clone repo cấp 2 trên máy này\n  OFFICE_START: '08:30', OFFICE_END: '17:00',\n  LUNCH_START: '11:45', LUNCH_END: '13:15',\n  NICK_GROUP_GAP_MIN: 60,       // 2 bài group của CÙNG 1 nick cách nhau tối thiểu (phút)\n  TEAM_GROUP_GAP_MIN: 6,        // 2 bài group bất kỳ của cả đội cách nhau tối thiểu (phút)\n  GROUP_REPOST_DAYS: 3,         // 1 nick không đăng lại cùng 1 group trong ngần này ngày; cả đội không trùng group trong ngày\n  TASK_GAP: [2, 4], BLOCK_GAP: [6, 12], // phút giữa 2 việc trong cụm / giữa 2 cụm\n  LANES: 2,                     // số luồng chạy song song: mỗi luồng = 1 phiên Claude cấp 3 + nhóm trình duyệt riêng\n  JG_COL: { SM01: 3, SM02: 4, SM03: 5, SM04: 8, SM05: 9, SM06: 10, SM07: 11, SM08: 12 }, // cột nick trong tab Join Group SM (D,E,F,I..M)\n};\n\nconst nk = ($('Đọc Nhật Ký SM').first().json.values || []), kpi = ($('Đọc Target + Workload').first().json.values || []),\n      lich = ($('Đọc Lịch SM').first().json.values || []);\nconst today = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' }).slice(0, 10);\nconst d = new Date(today); const todayVN = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;\nconst isToday = s => (s || '').startsWith(today) || (s || '').startsWith(todayVN);\nconst quota = {}; for (const r of kpi) if (/^SM0\\d$/.test(r[0])) quota[r[0]] = { wall: +r[3] || 0, grp: +r[6] || 0 };\nconst per = {};\nfor (const r of nk.filter(r => isToday(r[0]))) {\n  const n = r[1]; const p = per[n] = per[n] || { xong: 0, loi: 0, wall: 0, grp: 0, join: 0, fr: 0, tt: 0, red: false };\n  if (r[8] === 'Xong' || r[8] === 'Một phần') p.xong++; else p.loi++;\n  const sl = +r[9] || 0;\n  if (r[3] === 'Đăng bài') { if (/group/i.test(r[4] || '')) p.grp += sl; else p.wall += sl; }\n  if (r[3] === 'Join group') p.join += sl; if (r[3] === 'Kết bạn') p.fr += sl;\n  if (/^Tương tác/.test(r[3] || '') || r[3] === 'Tim story') p.tt += sl;\n  if (/checkpoint|identity|xác minh|can.?t use|bị gỡ|hạn chế/i.test((r[5] || '') + ' ' + (r[7] || ''))) p.red = true;\n}\nconst left = lich.filter(r => isToday(r[0]) && r[7] === 'Chờ');\nconst rows = Object.entries(per).map(([n, p]) => {\n  const q = quota[n] || { wall: 0, grp: 0 };\n  const den = p.red ? 'Đỏ' : (p.loi > p.xong || p.wall < q.wall || p.grp < q.grp) ? 'Vàng' : 'Xanh';\n  return [today, n, p.xong, p.loi, p.wall, p.grp, p.join, p.fr, p.tt, den, left.filter(r => r[2] === n).length + ' việc còn Chờ'];\n});\nconst text = '📊 Smock ' + today + '\\n' + rows.map(r => `${r[1]} ${r[9] === 'Đỏ' ? '🔴' : r[9] === 'Vàng' ? '🟡' : '🟢'} xong ${r[2]}, lỗi ${r[3]}, tường ${r[4]}, group ${r[5]}`).join('\\n') + (left.length ? `\\nCòn ${left.length} việc Chờ` : '');\nreturn [{ json: { rows, text } }];"
+        "jsCode": "// ===== Cấu hình chung cấp 1 (sửa ở đây) =====\nconst CFG = {\n  SHEET_ID: '1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0',\n  TOKEN: 'DOI_TOKEN_O_DAY',                 // trùng biến SMOCK_LOG_TOKEN trên máy cấp 3\n  PACK_DIR: 'C:/claude remote/anh-dang-bai', // thư mục gói bài cấp 3 đọc\n  L2_REPO: 'C:/smock-level2-copilot',        // bản clone repo cấp 2 trên máy này\n  OFFICE_START: '08:30', OFFICE_END: '17:00',\n  LUNCH_START: '11:45', LUNCH_END: '13:15',\n  NICK_GROUP_GAP_MIN: 60,       // 2 bài group của CÙNG 1 nick cách nhau tối thiểu (phút)\n  TEAM_GROUP_GAP_MIN: 6,        // 2 bài group bất kỳ của cả đội cách nhau tối thiểu (phút)\n  GROUP_REPOST_DAYS: 3,         // 1 nick không đăng lại cùng 1 group trong ngần này ngày; cả đội không trùng group trong ngày\n  TASK_GAP: [2, 4], BLOCK_GAP: [6, 12], // phút giữa 2 việc trong cụm / giữa 2 cụm\n  LANES: 2,                     // số luồng chạy song song: mỗi luồng = 1 phiên Claude cấp 3 + nhóm trình duyệt riêng\n  JG_COL: { SM01: 3, SM02: 4, SM03: 5, SM04: 8, SM05: 9, SM06: 10, SM07: 11, SM08: 12 }, // cột nick trong tab Join Group SM (D,E,F,I..M)\n  JG_TIER_COL: 6,               // cột G \"Tier\" tab Join Group SM — dùng khi tab Group Score chưa chấm\n  K_START: 122,                 // mã bài Kxxx lớn nhất đã dùng trước khi có n8n (Smock Radar)\n  CONTENT_REUSE_DAYS: 7,        // bộ ảnh được phái sinh caption mới sau ngần này ngày\n};\n// Kho content dùng tab có sẵn, KHÔNG cần tab riêng:\n//  - workbook KE, tab '3. CONTENT GROUP' (A STT, B TEXT, C MEDIA) → mã CG<STT>\n//  - tab 'Pool Content SM' (A STT, B Content, C Ảnh/Video, D Phân loại) → mã PC<STT>; Phân loại có \"chờ duyệt\" thì chưa dùng\n//  - content đã dùng / mã bài Kxxx: đọc từ cột F, J tab 'Lịch SM' (vd \"đăng group K123 (CG13) → group 5\")\nconst buildPool = (ke, pool) => {\n  const out = [];\n  for (const r of ke) { const s = String(r[0] || '').trim(); if (/^\\d+$/.test(s) && String(r[1] || '').trim()) out.push({ id: 'CG' + s, caption: r[1], media: r[2] || '', kind: 'any' }); }\n  for (const r of pool) { const s = String(r[0] || '').trim(); if (/^\\d+$/.test(s) && String(r[1] || '').trim() && !/chờ duyệt/i.test(r[3] || ''))\n    out.push({ id: 'PC' + s, caption: r[1], media: r[2] || '', kind: /tường|wall/i.test(r[3] || '') ? 'wall' : 'any', note: r[3] || '' }); }\n  return out;\n};\nconst lichText = r => (r[5] || '') + ' ' + (r[9] || '');\nconst usedContent = lich => { const s = new Set(); for (const r of lich) for (const m of lichText(r).matchAll(/\\b(CG|PC)(\\d+)\\b/g)) s.add(m[1] + m[2]); return s; };\nconst maxKOf = (lich, start) => { let k = start; for (const r of lich) for (const m of lichText(r).matchAll(/\\bK(\\d{3,})\\b/g)) k = Math.max(k, +m[1]); return k; };\nconst vnNow = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));\nconst isoOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;\nconst vnOf = d => `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;\nconst sameDay = (s, d) => { s = String(s || '').trim(); return s.startsWith(isoOf(d)) || s.startsWith(vnOf(d)); };\n\nconst nk = ($('Đọc Nhật Ký SM').first().json.values || []), kpi = ($('Đọc Target + Workload').first().json.values || []),\n      lich = ($('Đọc Lịch SM').first().json.values || []);\nconst today = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' }).slice(0, 10);\nconst d = new Date(today); const todayVN = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;\nconst isToday = s => (s || '').startsWith(today) || (s || '').startsWith(todayVN);\nconst quota = {}; for (const r of kpi) if (/^SM0\\d$/.test(r[0])) quota[r[0]] = { wall: +r[3] || 0, grp: +r[6] || 0 };\nconst per = {};\nfor (const r of nk.filter(r => isToday(r[0]))) {\n  const n = r[1]; const p = per[n] = per[n] || { xong: 0, loi: 0, wall: 0, grp: 0, join: 0, fr: 0, tt: 0, red: false };\n  if (r[8] === 'Xong' || r[8] === 'Một phần') p.xong++; else p.loi++;\n  const sl = +r[9] || 0;\n  if (r[3] === 'Đăng bài') { if (/group/i.test(r[4] || '')) p.grp += sl; else p.wall += sl; }\n  if (r[3] === 'Join group') p.join += sl; if (r[3] === 'Kết bạn') p.fr += sl;\n  if (/^Tương tác/.test(r[3] || '') || r[3] === 'Tim story') p.tt += sl;\n  if (/checkpoint|identity|xác minh|can.?t use|bị gỡ|hạn chế/i.test((r[5] || '') + ' ' + (r[7] || ''))) p.red = true;\n}\nconst left = lich.filter(r => isToday(r[0]) && r[7] === 'Chờ');\nconst rows = Object.entries(per).map(([n, p]) => {\n  const q = quota[n] || { wall: 0, grp: 0 };\n  const den = p.red ? 'Đỏ' : (p.loi > p.xong || p.wall < q.wall || p.grp < q.grp) ? 'Vàng' : 'Xanh';\n  return [today, n, p.xong, p.loi, p.wall, p.grp, p.join, p.fr, p.tt, den, left.filter(r => r[2] === n).length + ' việc còn Chờ'];\n});\nconst text = '📊 Smock ' + today + '\\n' + rows.map(r => `${r[1]} ${r[9] === 'Đỏ' ? '🔴' : r[9] === 'Vàng' ? '🟡' : '🟢'} xong ${r[2]}, lỗi ${r[3]}, tường ${r[4]}, group ${r[5]}`).join('\\n') + (left.length ? `\\nCòn ${left.length} việc Chờ` : '');\nreturn [{ json: { rows, text } }];"
       },
-      "id": "e1ddbbf3-5fbb-40cd-a8c3-0d247dc253eb",
+      "id": "0e11cdd9-23fc-481b-9828-0709e11a2f2c",
       "name": "Tính báo cáo + đèn",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -114,31 +114,7 @@
         -20,
         300
       ],
-      "notes": "Đèn: Đỏ nếu có cảnh báo FB trong log; Vàng nếu lỗi nhiều hơn xong hoặc thiếu bài so với KPI ngày."
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values/{{ encodeURIComponent(\"'Báo cáo ngày'!A:K\") }}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "googleSheetsOAuth2Api",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ values: $json.rows }) }}",
-        "options": {}
-      },
-      "id": "a91239e0-0a6e-48e8-90a6-5a21f1a06686",
-      "name": "Ghi Báo cáo ngày",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        200,
-        300
-      ],
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 3000,
-      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2."
+      "notes": "Đèn: Đỏ nếu có cảnh báo FB trong log; Vàng nếu lỗi nhiều hơn xong hoặc thiếu bài so với KPI ngày. Không ghi tab riêng: tab Báo cáo SM đã tự tính từ Nhật Ký SM; L1-02 tự tính đèn từ Nhật Ký SM."
     },
     {
       "parameters": {
@@ -146,12 +122,12 @@
         "text": "={{ $('Tính báo cáo + đèn').first().json.text }}",
         "additionalFields": {}
       },
-      "id": "bc32ba6f-be7b-4108-b76c-c3153e80bf9f",
+      "id": "344418bd-1383-4ee4-abb0-9e4a04bd9bbf",
       "name": "Gửi nhóm",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        420,
+        200,
         300
       ],
       "disabled": true,
@@ -207,17 +183,6 @@
       "main": [
         [
           {
-            "node": "Ghi Báo cáo ngày",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Ghi Báo cáo ngày": {
-      "main": [
-        [
-          {
             "node": "Gửi nhóm",
             "type": "main",
             "index": 0
@@ -235,7 +200,7 @@
     "saveDataSuccessExecution": "all"
   },
   "meta": {
-    "smockNotes": "Không cần Claude tổng hợp báo cáo."
+    "smockNotes": "Tóm tắt cuối ngày gửi nhóm (bật node Telegram nếu dùng). Số liệu chi tiết xem tab Báo cáo SM."
   },
   "tags": []
 }

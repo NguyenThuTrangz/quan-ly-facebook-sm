@@ -12,18 +12,18 @@
           ]
         }
       },
-      "id": "6be15a4d-6b22-4a02-b046-68113b7d1c91",
+      "id": "b1404041-cd96-47ed-b66c-8c26e7aca4c8",
       "name": "22:00 Chủ nhật–Thứ sáu",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        -900,
+        -1340,
         300
       ]
     },
     {
       "parameters": {
-        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values/{{ encodeURIComponent(\"'Content Queue'!A2:K3000\") }}",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values/{{ encodeURIComponent(\"'Lịch SM'!A2:J5000\") }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "options": {
@@ -34,8 +34,62 @@
           }
         }
       },
-      "id": "19b8d0f4-e8a7-4a6a-a8c2-eebee193667b",
-      "name": "Đọc Content Queue",
+      "id": "2f51309a-a835-4ea4-9c89-6f97f628d6a7",
+      "name": "Đọc Lịch SM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1120,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "Credential Google Sheets OAuth2 được gắn tự động bởi ops/cai_dat_n8n.py.",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0/values/{{ encodeURIComponent(\"'Pool Content SM'!A2:F2000\") }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "9214e27e-ccff-4bbe-ad64-c82fc90e4fad",
+      "name": "Đọc Pool Content SM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -900,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "Credential Google Sheets OAuth2 được gắn tự động bởi ops/cai_dat_n8n.py.",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1mY_7HeFFokARzxwS9xCeby46cYGC5QpA_ju4jl5f-UA/values/{{ encodeURIComponent(\"'3. CONTENT GROUP'!A3:D2000\") }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "fe00514f-b47b-4cac-a5cb-1ff8564c32f5",
+      "name": "Đọc content KE",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -45,14 +99,14 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 3000,
-      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2 (tài khoản có quyền sửa sheet chính).",
+      "notes": "Credential Google Sheets OAuth2 được gắn tự động bởi ops/cai_dat_n8n.py.",
       "alwaysOutputData": true
     },
     {
       "parameters": {
-        "jsCode": "// ===== Cấu hình chung cấp 1 (sửa ở đây) =====\nconst CFG = {\n  SHEET_ID: '1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0',\n  TOKEN: 'DOI_TOKEN_O_DAY',                 // trùng biến SMOCK_LOG_TOKEN trên máy cấp 3\n  PACK_DIR: 'C:/claude remote/anh-dang-bai', // thư mục gói bài cấp 3 đọc\n  L2_REPO: 'C:/smock-level2-copilot',        // bản clone repo cấp 2 trên máy này\n  OFFICE_START: '08:30', OFFICE_END: '17:00',\n  LUNCH_START: '11:45', LUNCH_END: '13:15',\n  NICK_GROUP_GAP_MIN: 60,       // 2 bài group của CÙNG 1 nick cách nhau tối thiểu (phút)\n  TEAM_GROUP_GAP_MIN: 6,        // 2 bài group bất kỳ của cả đội cách nhau tối thiểu (phút)\n  GROUP_REPOST_DAYS: 3,         // 1 nick không đăng lại cùng 1 group trong ngần này ngày; cả đội không trùng group trong ngày\n  TASK_GAP: [2, 4], BLOCK_GAP: [6, 12], // phút giữa 2 việc trong cụm / giữa 2 cụm\n  LANES: 2,                     // số luồng chạy song song: mỗi luồng = 1 phiên Claude cấp 3 + nhóm trình duyệt riêng\n  JG_COL: { SM01: 3, SM02: 4, SM03: 5, SM04: 8, SM05: 9, SM06: 10, SM07: 11, SM08: 12 }, // cột nick trong tab Join Group SM (D,E,F,I..M)\n};\n\nconst rows = ($input.first().json.values || []).map((r, i) => ({ r, row: i + 2 })).filter(x => x.r[5] === 'Đã xếp');\nconst out = [];\nfor (const x of rows) {\n  const link = x.r[4] || ''; const m = /folders\\/([\\w-]+)/.exec(link) || /[?&]id=([\\w-]+)/.exec(link);\n  // Thay {{MA_BAI}} (caption phái sinh từ cấp 2) bằng mã bài thật; caption gốc chưa có mã thì thêm câu mời nhắn tin\n  let cap = (x.r[3] || '').replace(/\\{\\{MA_BAI\\}\\}/g, x.r[6]);\n  if (!new RegExp('\\\\b' + x.r[6] + '\\\\b').test(cap)) cap += `\\n\\nDM or WhatsApp us code ${x.r[6]} for the catalog.`;\n  out.push({ json: { row: x.row, code: x.r[6], caption: cap, folderId: m ? m[1] : null, dir: `${CFG.PACK_DIR}/${x.r[6]}` } });\n}\nreturn out.length ? out : [{ json: { empty: true } }];"
+        "jsCode": "// ===== Cấu hình chung cấp 1 (sửa ở đây) =====\nconst CFG = {\n  SHEET_ID: '1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0',\n  TOKEN: 'DOI_TOKEN_O_DAY',                 // trùng biến SMOCK_LOG_TOKEN trên máy cấp 3\n  PACK_DIR: 'C:/claude remote/anh-dang-bai', // thư mục gói bài cấp 3 đọc\n  L2_REPO: 'C:/smock-level2-copilot',        // bản clone repo cấp 2 trên máy này\n  OFFICE_START: '08:30', OFFICE_END: '17:00',\n  LUNCH_START: '11:45', LUNCH_END: '13:15',\n  NICK_GROUP_GAP_MIN: 60,       // 2 bài group của CÙNG 1 nick cách nhau tối thiểu (phút)\n  TEAM_GROUP_GAP_MIN: 6,        // 2 bài group bất kỳ của cả đội cách nhau tối thiểu (phút)\n  GROUP_REPOST_DAYS: 3,         // 1 nick không đăng lại cùng 1 group trong ngần này ngày; cả đội không trùng group trong ngày\n  TASK_GAP: [2, 4], BLOCK_GAP: [6, 12], // phút giữa 2 việc trong cụm / giữa 2 cụm\n  LANES: 2,                     // số luồng chạy song song: mỗi luồng = 1 phiên Claude cấp 3 + nhóm trình duyệt riêng\n  JG_COL: { SM01: 3, SM02: 4, SM03: 5, SM04: 8, SM05: 9, SM06: 10, SM07: 11, SM08: 12 }, // cột nick trong tab Join Group SM (D,E,F,I..M)\n  JG_TIER_COL: 6,               // cột G \"Tier\" tab Join Group SM — dùng khi tab Group Score chưa chấm\n  K_START: 122,                 // mã bài Kxxx lớn nhất đã dùng trước khi có n8n (Smock Radar)\n  CONTENT_REUSE_DAYS: 7,        // bộ ảnh được phái sinh caption mới sau ngần này ngày\n};\n// Kho content dùng tab có sẵn, KHÔNG cần tab riêng:\n//  - workbook KE, tab '3. CONTENT GROUP' (A STT, B TEXT, C MEDIA) → mã CG<STT>\n//  - tab 'Pool Content SM' (A STT, B Content, C Ảnh/Video, D Phân loại) → mã PC<STT>; Phân loại có \"chờ duyệt\" thì chưa dùng\n//  - content đã dùng / mã bài Kxxx: đọc từ cột F, J tab 'Lịch SM' (vd \"đăng group K123 (CG13) → group 5\")\nconst buildPool = (ke, pool) => {\n  const out = [];\n  for (const r of ke) { const s = String(r[0] || '').trim(); if (/^\\d+$/.test(s) && String(r[1] || '').trim()) out.push({ id: 'CG' + s, caption: r[1], media: r[2] || '', kind: 'any' }); }\n  for (const r of pool) { const s = String(r[0] || '').trim(); if (/^\\d+$/.test(s) && String(r[1] || '').trim() && !/chờ duyệt/i.test(r[3] || ''))\n    out.push({ id: 'PC' + s, caption: r[1], media: r[2] || '', kind: /tường|wall/i.test(r[3] || '') ? 'wall' : 'any', note: r[3] || '' }); }\n  return out;\n};\nconst lichText = r => (r[5] || '') + ' ' + (r[9] || '');\nconst usedContent = lich => { const s = new Set(); for (const r of lich) for (const m of lichText(r).matchAll(/\\b(CG|PC)(\\d+)\\b/g)) s.add(m[1] + m[2]); return s; };\nconst maxKOf = (lich, start) => { let k = start; for (const r of lich) for (const m of lichText(r).matchAll(/\\bK(\\d{3,})\\b/g)) k = Math.max(k, +m[1]); return k; };\nconst vnNow = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));\nconst isoOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;\nconst vnOf = d => `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;\nconst sameDay = (s, d) => { s = String(s || '').trim(); return s.startsWith(isoOf(d)) || s.startsWith(vnOf(d)); };\n\n// Bài cần gói = dòng Lịch SM từ hôm nay trở đi, lệnh \"đăng … Kxxx (CGn|PCn)\", cột J chưa ghi \"Gói sẵn\"\nconst V = n => { try { return (($(n).first().json) || {}).values || []; } catch (e) { return []; } };\nconst lich = V('Đọc Lịch SM'); const pool = buildPool(V('Đọc content KE'), V('Đọc Pool Content SM'));\nconst byId = Object.fromEntries(pool.map(x => [x.id, x]));\nconst today = vnNow(); today.setHours(0, 0, 0, 0);\nconst parseDay = s => { s = String(s || ''); let m = /^(\\d{4})-(\\d{2})-(\\d{2})/.exec(s); if (m) return new Date(+m[1], +m[2] - 1, +m[3]);\n  m = /^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})/.exec(s); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; };\nconst out = [];\nlich.forEach((r, i) => {\n  const dd = parseDay(r[0]); if (!dd || dd < today || r[7] === 'Done') return;\n  const m = /\\b(K\\d{3,})\\b.*?\\b((?:CG|PC)\\d+)\\b/.exec(r[5] || ''); if (!m || /Gói sẵn/.test(r[9] || '')) return;\n  const code = m[1], src = byId[m[2]];\n  if (!src) { out.push({ json: { row: i + 2, code, note: r[9] || '', missing: m[2] } }); return; }\n  const link = src.media || ''; const f = /folders\\/([\\w-]+)/.exec(link) || /[?&]id=([\\w-]+)/.exec(link) || /\\/d\\/([\\w-]+)/.exec(link);\n  // Thay {{MA_BAI}} (caption phái sinh từ cấp 2) bằng mã bài thật; caption gốc chưa có mã thì thêm câu mời nhắn tin\n  let cap = String(src.caption).replace(/\\{\\{MA_BAI\\}\\}/g, code);\n  if (!new RegExp('\\\\b' + code + '\\\\b').test(cap)) cap += `\\n\\nDM or WhatsApp us code ${code} for the catalog.`;\n  out.push({ json: { row: i + 2, code, src: m[2], note: r[9] || '', caption: cap, folderId: f ? f[1] : null, dir: `${CFG.PACK_DIR}/${code}` } });\n});\nreturn out.length ? out : [{ json: { empty: true } }];"
       },
-      "id": "463eb5d7-e6af-4c5f-aba7-5d20798b338e",
+      "id": "8503db8a-bf4b-4ded-8d52-05f6efa2cc10",
       "name": "Chọn bài cần gói",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -72,7 +126,7 @@
           },
           "conditions": [
             {
-              "id": "3170d4f8-b6c3-45b5-a0ab-193e410a2ab4",
+              "id": "46e52b99-a643-4e88-b14b-42a409f1ac99",
               "leftValue": "={{ !$json.empty && !!$json.folderId }}",
               "rightValue": true,
               "operator": {
@@ -86,7 +140,7 @@
         },
         "options": {}
       },
-      "id": "6d7b2b04-2e47-43ce-ad43-932534b00861",
+      "id": "92fa6e44-176b-432e-911e-0b39d3db92ce",
       "name": "Có bài?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
@@ -99,7 +153,7 @@
       "parameters": {
         "jsCode": "const items = [];\nfor (const it of $input.all()) {\n  if (it.json.empty) continue;\n  items.push({ json: it.json, binary: { data: { data: Buffer.from(it.json.caption, 'utf8').toString('base64'), mimeType: 'text/plain', fileName: 'caption.txt' } } });\n}\nreturn items;"
       },
-      "id": "e414118b-e261-477c-b423-1533bcdd6456",
+      "id": "b0db950d-422a-4708-abc5-478e519af7db",
       "name": "Tạo caption.txt",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -115,7 +169,7 @@
         "dataPropertyName": "data",
         "options": {}
       },
-      "id": "b2851b1f-4460-4e5e-9436-71fda2186a96",
+      "id": "922500d6-351c-4a1e-920d-a571e22cebee",
       "name": "Ghi caption.txt",
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1,
@@ -131,7 +185,7 @@
         "nodeCredentialType": "googleDriveOAuth2Api",
         "options": {}
       },
-      "id": "2857abf9-deb8-43cb-9ecc-81e765cac4fd",
+      "id": "2ac31f51-e121-4dc6-b6e9-096f9c07671f",
       "name": "Liệt kê ảnh trong folder Drive",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -145,9 +199,9 @@
     },
     {
       "parameters": {
-        "jsCode": "// Mỗi bài → danh sách file trong folder (từ Drive API) → mỗi ảnh một item để tải bản JPG 2048px\nconst out = [];\nfor (const it of $input.all()) {\n  const meta = $('Chọn bài cần gói').all().find(x => x.json.folderId && true) || null;\n  const files = (it.json.files || []).filter(f => /^image\\//.test(f.mimeType || ''));\n  files.forEach((f, i) => out.push({ json: { ...(meta ? meta.json : {}), fileId: f.id, idx: i + 1, total: files.length } }));\n}\nreturn out;"
+        "jsCode": "// Mỗi bài → danh sách file trong folder (từ Drive API) → mỗi ảnh một item để tải bản JPG 2048px\n// Node Drive trả 1 item cho mỗi bài theo đúng thứ tự đầu vào → ghép với bài cùng vị trí ở nhánh \"Có bài?\"\nconst out = []; const metas = $('Có bài?').all();\n$input.all().forEach((it, k) => {\n  const meta = metas[k] ? metas[k].json : {};\n  const files = (it.json.files || []).filter(f => /^image\\//.test(f.mimeType || '')).sort((a, b) => String(a.name).localeCompare(String(b.name)));\n  files.forEach((f, i) => out.push({ json: { ...meta, fileId: f.id, idx: i + 1, total: files.length } }));\n});\nreturn out;"
       },
-      "id": "9dc5e879-aa42-449e-8edb-3d4648e0d8bf",
+      "id": "059a0f70-d5f8-4fcf-aabc-40ce64bc88f6",
       "name": "Tách từng ảnh",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -175,7 +229,7 @@
           }
         }
       },
-      "id": "c2d78d7e-5b6b-437f-b55f-6148ebe46db7",
+      "id": "cde0274c-5ef4-419b-9568-4d634e30b1e9",
       "name": "Tải ảnh JPG 2048px",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -194,7 +248,7 @@
         "dataPropertyName": "data",
         "options": {}
       },
-      "id": "521dccd6-1faf-4e2a-abb2-0427032d4372",
+      "id": "9cf9a7cc-ed11-41d5-a9ae-3d68446d7b63",
       "name": "Lưu ảnh vào gói",
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1,
@@ -205,9 +259,9 @@
     },
     {
       "parameters": {
-        "jsCode": "const by = {};\nfor (const it of $('Tách từng ảnh').all()) { const k = it.json.row; by[k] = by[k] || { row: k, code: it.json.code, dir: it.json.dir, total: it.json.total, saved: 0 }; }\nfor (const it of $input.all()) { const k = it.json.row; if (by[k]) by[k].saved++; }\nconst data = Object.values(by).map(b => ({ range: `'Content Queue'!F${b.row}`, values: [[b.saved > 0 && b.saved === b.total ? 'Gói sẵn' : 'Lỗi gói']] }))\n  .concat(Object.values(by).map(b => ({ range: `'Content Queue'!J${b.row}:K${b.row}`, values: [[b.dir, `${b.saved}/${b.total} ảnh`]] })));\nreturn [{ json: { data, n: Object.keys(by).length } }];"
+        "jsCode": "const by = {};\nfor (const it of $('Tách từng ảnh').all()) { const k = it.json.row; by[k] = by[k] || { row: k, code: it.json.code, note: it.json.note || '', total: it.json.total, saved: 0 }; }\nfor (const it of $input.all()) { const k = it.json.row; if (by[k]) by[k].saved++; }\n// Ghi kết quả vào cột J (Ghi chú) của chính dòng Lịch SM — cấp 3 đọc \"Gói sẵn\" là có thư mục anh-dang-bai/Kxxx\nconst tag = b => (b.saved > 0 && b.saved === b.total ? 'Gói sẵn' : 'Lỗi gói') + ` ${b.saved}/${b.total} ảnh`;\nconst data = Object.values(by).map(b => ({ range: `'Lịch SM'!J${b.row}`, values: [[(b.note ? b.note + ' · ' : '') + tag(b)]] }));\nreturn [{ json: { data, n: Object.keys(by).length } }];"
       },
-      "id": "7caac1e8-44ec-4c60-ba3e-2534a251b573",
+      "id": "5ff4fdfc-091f-4dd5-ab86-476dd4d6f600",
       "name": "Gom kết quả theo bài",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -227,7 +281,7 @@
         "jsonBody": "={{ JSON.stringify({ valueInputOption: 'USER_ENTERED', data: $json.data }) }}",
         "options": {}
       },
-      "id": "68c965ed-81d1-4e6a-855e-338af901b4ca",
+      "id": "15ddb85a-5c25-4ab0-8285-7c26689130ab",
       "name": "Ghi trạng thái gói",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -238,7 +292,7 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 3000,
-      "notes": "CHỌN CREDENTIAL: Google Sheets OAuth2."
+      "notes": "Credential Google Sheets OAuth2 được gắn tự động bởi ops/cai_dat_n8n.py."
     }
   ],
   "connections": {
@@ -246,14 +300,36 @@
       "main": [
         [
           {
-            "node": "Đọc Content Queue",
+            "node": "Đọc Lịch SM",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Đọc Content Queue": {
+    "Đọc Lịch SM": {
+      "main": [
+        [
+          {
+            "node": "Đọc Pool Content SM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đọc Pool Content SM": {
+      "main": [
+        [
+          {
+            "node": "Đọc content KE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đọc content KE": {
       "main": [
         [
           {

@@ -12,7 +12,7 @@
           ]
         }
       },
-      "id": "0a410d05-041e-4264-8355-c994b5b3dd3d",
+      "id": "d10c7e6e-c7ac-4b14-a4b8-7144d9a81187",
       "name": "Mỗi 10 phút",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -28,7 +28,7 @@
           "timeout": 10000
         }
       },
-      "id": "89f6f2ba-09f6-4f06-b014-0ec00cb31364",
+      "id": "752b24df-f0e9-4e80-a01e-bc0dc8887502",
       "name": "Ping healthchecks",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -37,7 +37,8 @@
         160
       ],
       "continueOnFail": true,
-      "notes": "Tạo check miễn phí ở healthchecks.io (chu kỳ 10 phút, grace 20 phút), gửi cảnh báo email/Telegram khi n8n hoặc máy chết."
+      "disabled": true,
+      "notes": "TẮT sẵn. Muốn dùng: tạo check miễn phí ở healthchecks.io (chu kỳ 10 phút, grace 20 phút), dán link thay YOUR-UUID rồi bật node."
     },
     {
       "parameters": {
@@ -50,7 +51,7 @@
           ]
         }
       },
-      "id": "ecded925-5022-4cb9-b54c-6882e8cc19e9",
+      "id": "0e7cf24e-7e5d-43ec-bbb5-7cd212395056",
       "name": "00:15 hằng ngày",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -61,9 +62,9 @@
     },
     {
       "parameters": {
-        "command": "=n8n export:workflow --all --separate --output=\"C:/n8n-backup/{{ $now.toFormat('yyyy-MM-dd') }}\""
+        "command": "=set N8N_RUNNERS_BROKER_PORT=5689&& set N8N_PORT=5699&& C:\\n8n\\bin\\n8n.cmd export:workflow --all --separate --output=\"C:/n8n-backup/{{ $now.toFormat('yyyy-MM-dd') }}\""
       },
-      "id": "82373dca-3b65-4896-a062-8a15e6719008",
+      "id": "04f2a160-6d92-4358-b087-7470bfe70e87",
       "name": "Xuất toàn bộ workflow",
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
@@ -71,13 +72,13 @@
         -380,
         420
       ],
-      "notes": "Bản npm: chạy được trực tiếp. Bản Docker: đổi thành 'docker exec n8n n8n export:workflow --all --separate --output=/backup/...' với /backup là volume ra ổ đĩa."
+      "notes": "Đổi cổng tạm để lệnh CLI không đụng cổng 5678/5679 của n8n đang chạy. C:\\n8n\\bin\\n8n.cmd nạp C:\\n8n\\.env."
     },
     {
       "parameters": {
         "command": "powershell -NoProfile -Command \"Get-ChildItem 'C:/n8n-backup' -Directory | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-30) } | Remove-Item -Recurse -Force\""
       },
-      "id": "5e446374-4a82-469b-b0ee-3069d7040eab",
+      "id": "f534a2e6-c6a6-41d4-b558-f16ed1f25184",
       "name": "Xoá bản sao lưu > 30 ngày",
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,

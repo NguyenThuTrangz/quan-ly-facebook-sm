@@ -64,7 +64,7 @@ Sau mỗi việc chạy **một** lệnh, xong. Webhook tự ghi Nhật Ký SM, 
 - `DỰ PHÒNG: …` → script đã tự ghi Excel kiểu cũ; làm tiếp bước 2–3 ở mục 2b cho dòng này, và báo người dùng "n8n không phản hồi" một lần trong ca.
 Không còn mở tab sheet để gõ ô. Số dòng Lịch SM (`-LichRow`) lấy từ lúc đọc lịch đầu ca (gviz, cột A–J, dòng = chỉ số + 2).
 
-**Đăng bài khi có gói sẵn (n8n L1-03):** Hành Động có mã `Kxxx` → mở `C:\claude remote\anh-dang-bai\Kxxx\`: `caption.txt` (đã có mã bài trong lời mời nhắn tin) + `01.jpg, 02.jpg…`. Không đọc workbook KE, không tải ảnh Drive. Thư mục thiếu/rỗng → `Bỏ qua`, báo người dùng (n8n L1-05 sẽ báo lúc 06:30 nếu gói chưa sẵn). Đăng xong: ghi log bằng webhook kèm `-Url`, rồi đăng ký bài vào Radar (`day-du-lieu-radar`, dùng đúng mã Kxxx).
+**Đăng bài khi có gói sẵn (n8n L1-03):** Hành Động có mã `Kxxx` → mở `C:\claude remote\anh-dang-bai\Kxxx\`: `caption.txt` (đã có mã bài trong lời mời nhắn tin) + `01.jpg, 02.jpg…`. Không đọc workbook KE, không tải ảnh Drive. Cột J của dòng lịch có "Gói sẵn n/n ảnh" là gói đủ. Thư mục thiếu/rỗng hoặc J ghi "Lỗi gói" → `Bỏ qua`, báo người dùng (n8n L1-05 sẽ báo lúc 06:30 nếu gói chưa sẵn). Đăng xong: ghi log bằng webhook kèm `-Url`, rồi đăng ký bài vào Radar (`day-du-lieu-radar`, dùng đúng mã Kxxx).
 
 **Lướt newfeed N phút: một lệnh** thay vì gọi lại mỗi 38 giây — chạy JS không chờ (`setTimeout` lặp trong trang N phút), rồi gọi `computer wait` hoặc làm việc khác của cùng nick; chỉ kiểm lại một lần khi hết N phút.
 

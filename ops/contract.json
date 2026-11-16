@@ -1,41 +1,43 @@
 {
-  "version": 1,
+  "version": 2,
+  "note": "Chỉ mô tả tab ĐANG CÓ trên sheet chính (đọc thật ngày 2026-11-16). Workflow bám theo đây, không tự tạo tab. header_row = dòng tiêu đề; null = cột không kiểm.",
   "sheet_id": "1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0",
   "timezone": "Asia/Ho_Chi_Minh",
   "office_hours": {"start": "08:30", "end": "17:00", "days": [1, 2, 3, 4, 5, 6]},
   "tabs": {
     "Lịch SM": {
+      "header_row": 1,
       "headers": ["Ngày", "Khoảng thời gian", "Mã TK", "Tên Facebook", "Câu lệnh", "Hành Động", "Duyệt", "Trạng thái", "URL bài đã đăng", "Ghi chú"],
       "status_col": "Trạng thái",
-      "statuses": ["Chờ", "Đang làm", "Done", "Bỏ qua", "Lỗi"],
-      "stuck_after_minutes": {"Đang làm": 60}
+      "statuses": ["Chờ", "Đang làm", "Done", "Bỏ qua", "Lỗi"]
     },
     "Nhật Ký SM": {
-      "headers": ["Ngày", "Mã TK", "Tên Facebook", "Loại việc", "Nơi thực hiện", "Nội dung / chi tiết", "Chế độ hiển thị", "Kết quả", "Trạng thái", "Số lượng", "Mã log"],
+      "header_row": 1,
+      "headers": ["Ngày", "Mã TK", "Tên Facebook", "Loại việc", "Nơi thực hiện", "Nội dung / chi tiết", "Chế độ hiển thị", "Kết quả", "Trạng thái", "Số lượng"],
+      "optional": {"K": "Mã log"},
       "loai_viec": ["Tim story", "Lướt newfeed", "Đăng bài", "Chấp nhận kết bạn", "Tương tác newsfeed", "Join group", "Tương tác group", "Kết bạn"],
       "trang_thai": ["Xong", "Một phần", "Không làm được", "Bỏ qua"]
     },
-    "Content Queue": {
-      "headers": ["Mã content", "Nguồn", "Loại", "Caption", "Link ảnh", "Trạng thái", "Mã bài", "Ngày dự kiến", "Nick", "Thư mục gói", "Ghi chú"],
-      "status_col": "Trạng thái",
-      "statuses": ["Cần phái sinh", "Chờ duyệt caption", "Chưa dùng", "Đã xếp", "Gói sẵn", "Đã đăng", "Lỗi gói"],
-      "stuck_after_minutes": {"Đã xếp": 720}
-    },
+    "Tài khoản": {"header_row": 1, "headers": [null, "Tên Facebook", null, null, null, "Trạng thái"]},
+    "Target + Workload": {"header_row": 2, "headers": ["STT", null, null, "Bài đăng tường/ngày", "Join Group/ngày", "Gửi Kết bạn/ngày", "Đăng Group/ngày"]},
+    "Join Group SM": {"header_row": 1, "headers": ["STT", "Tên group", "Link Group", "SM01", "SM02", "SM03", null, null, "SM04", "SM05", "SM06", "SM07", "SM08"]},
+    "Add Friend": {"header_row": 1, "headers": ["STT", "Link Friend", "Tình trạng"]},
+    "Pool Content SM": {"header_row": 1, "headers": ["STT", "Content", "Ảnh/Video", "Phân loại", null, "PIC"]},
     "Lead Hunter": {
+      "header_row": 1,
       "headers": ["Ngày", "Link", "Nguồn", "Tiêu đề", "Trích đoạn", "Loại khách", "Cần gì", "Số lượng / hạn", "Lý do", "Gợi ý trả lời", "Confidence", "Trạng thái", "Người xử lý", "Ghi chú"],
       "status_col": "Trạng thái",
-      "statuses": ["Chờ duyệt", "Loại", "Đã trả lời", "Khách phản hồi", "Chuyển Sale", "Không phản hồi"],
-      "stuck_after_minutes": {"Chờ duyệt": 2880}
+      "statuses": ["Chờ duyệt", "Loại", "Đã trả lời", "Khách phản hồi", "Chuyển Sale", "Không phản hồi"]
     },
     "Group Score": {
+      "header_row": 1,
       "headers": ["STT", "Tên group", "Link", "Ngày lấy text", "File text", "Cổng loại", "ICP", "Cho bán", "Sôi động", "Tương tác", "Người mua", "Thị trường", "Ít rác", "Tổng", "Tier", "Bằng chứng", "Trạng thái", "Người duyệt"],
       "status_col": "Trạng thái",
-      "statuses": ["Chờ lấy text", "Chờ chấm", "Đã chấm", "Đã duyệt"],
-      "stuck_after_minutes": {"Chờ chấm": 2880}
-    },
-    "Báo cáo ngày": {
-      "headers": ["Ngày", "Nick", "Việc xong", "Việc lỗi", "Bài tường", "Bài group", "Join", "Kết bạn", "Tương tác", "Đèn", "Ghi chú"]
+      "statuses": ["Chờ lấy text", "Chờ chấm", "Đã chấm", "Đã duyệt"]
     }
+  },
+  "external": {
+    "KE content": {"sheet_id": "1mY_7HeFFokARzxwS9xCeby46cYGC5QpA_ju4jl5f-UA", "tab": "3. CONTENT GROUP", "header_row": 2, "headers": ["STT", "TEXT", "MEDIA"], "code_prefix": "CG"}
   },
   "level2_repo": {
     "inbox": ["inbox/captions", "inbox/groups", "inbox/reports"],

@@ -2,6 +2,15 @@
 
 Agent mới đọc file này **sau** `CLAUDE.md` và `tien-do.md`. Trả lời người dùng (Việt TTS) bằng tiếng Việt, cực ngắn, không chụp màn hình trừ khi bắt buộc.
 
+## 0. Trạng thái lúc dừng (16/11/2026 tối — người dùng tắt máy)
+- Máy tắt qua đêm → lịch n8n 21:30 / 22:00 / 22:15 và Copilot 05:30 **không chạy** (n8n không chạy bù giờ đã lỡ). Không sao: lịch 17/11 đã có sẵn.
+- Sáng 17/11: đăng nhập Windows → n8n tự mở (Task Scheduler "Smock n8n"). Kiểm `http://localhost:5678/healthz` = ok trước khi chạy lịch; không ok thì gõ `n8n` trong cmd.
+- Lịch 17/11: Lịch SM dòng **193–234**, 42 việc, 2 luồng (SM01, SM02, SM03, SM04). Gói bài đã sẵn trong `anh-dang-bai\`: K123, K124, K125, K128, K129, K131, K133, K134, K135, K136 (cột J "Gói sẵn"). **Thiếu ảnh**: K126, K127, K130, K132, K137 (folder Drive không có ảnh), K138 (CG30 không có link ảnh) → Bỏ qua, báo người dùng.
+- Trước khi chạy 17/11, hỏi người dùng 3 điểm ở mục 4: Add Friend STT 1–8 bị xếp trùng (người đã gửi 26/10), SM02 có đăng group không (dòng 196), SM04 không có trình duyệt ở máy này (4 việc).
+- Pool Content SM dòng 2–7 = PC1–PC6 (caption phái sinh từ CG1, CG2), người dùng **đã duyệt** → L1-02 dùng từ lịch 18/11.
+- Repo cấp 2 `C:\smock-level2-copilot`: inbox trống, 2 việc thử đã vào `done/`. Chưa rõ người dùng đã tạo Task Scheduler cấp 2 (05:30) chưa → hỏi.
+- Commit cuối repo cấp 1: `cf7b953` (+ commit bàn giao này). Workflow trong n8n khớp repo (cài bằng `ops/cai_dat_n8n.py`).
+
 ## 1. Hệ thống đang chạy thế nào
 ```
 21:30  n8n L1-02 sinh Lịch SM ngày làm việc kế tiếp (tab Lịch SM, cột J ghi "luồng 1/2")

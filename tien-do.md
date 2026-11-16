@@ -6,6 +6,8 @@
 - Cầu nối cấp 2 chạy trọn lần đầu: 6 caption phái sinh CG1/CG2 vào Pool Content SM dòng 2–7, người dùng đã duyệt (PC1–PC6).
 - Mã bài kế tiếp do n8n tự tính từ Lịch SM (17/11 dùng K123–K138). Content KE đã xếp đến CG30.
 - Tồn đọng: Add Friend STT 1–15 đánh dấu đã gửi; SM02 "hạn chế group"?; SM04 không có trình duyệt máy này.
+- L1-03 đã gói 10/16 bài ngày 17/11 (48 ảnh). Thiếu ảnh: K126, K127, K130, K132, K137, K138.
+- **Dừng tối 16/11, tắt máy.** Sáng 17/11 đọc mục 0 của `ops/BAN-GIAO-CAP-3.md` trước khi chạy lịch.
 
 ## 2026-11-11
 Toàn bộ việc dở 10/11 (gồm SM02 — người dùng xác nhận SM02 **không** bị checkpoint/shadowban) đã dồn sang Lịch SM dòng **140–162**, 09:25–14:45; CG2 đổi sang group 2 (group 21 cấm quảng cáo). Dòng 110–139 ngày 10/11 còn "Chờ" là bản cũ, bỏ qua.

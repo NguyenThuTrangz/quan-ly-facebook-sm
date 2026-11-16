@@ -368,7 +368,7 @@ lich.forEach((r, i) => {
 });
 return out.length ? out : [{ json: { empty: true } }];"""
 caption_js = r"""const items = [];
-for (const it of $input.all()) {
+for (const it of $('Có bài?').all()) {
   if (it.json.empty) continue;
   items.push({ json: it.json, binary: { data: { data: Buffer.from(it.json.caption, 'utf8').toString('base64'), mimeType: 'text/plain', fileName: 'caption.txt' } } });
 }
@@ -389,6 +389,9 @@ nodes += [sched("22:00 Chủ nhật–Thứ sáu", "0 22 * * 0-5", [-1340, 300])
           gget("Đọc content KE", KE_RANGE, [-680, 300], sheet=KE_SHEET),
           code("Chọn bài cần gói", pick_js, [-460, 300]),
           iff("Có bài?", "{{ !$json.empty && !!$json.folderId }}", [-240, 300]),
+          node("Tạo thư mục gói", "n8n-nodes-base.executeCommand", 1, {
+              "command": "={{ $('Có bài?').all().map(i => i.json.dir.split('/').join('\\\\')).map(p => 'if not exist \"' + p + '\" mkdir \"' + p + '\"').join(' & ') }}",
+              "executeOnce": True}, [-130, 140], notes="n8n không tự tạo thư mục khi ghi file → tạo anh-dang-bai\\Kxxx trước (cmd, nối bằng &)."),
           code("Tạo caption.txt", caption_js, [-20, 140]),
           node("Ghi caption.txt", "n8n-nodes-base.readWriteFile", 1, {"operation": "write", "fileName": "={{ $json.dir + '/caption.txt' }}", "dataPropertyName": "data", "options": {}}, [200, 140]),
           node("Liệt kê ảnh trong folder Drive", "n8n-nodes-base.httpRequest", 4.2, {
@@ -412,7 +415,7 @@ return [{ json: { data, n: Object.keys(by).length } }];""", [860, 380]),
           gpost("Ghi trạng thái gói", "/values:batchUpdate", "{ valueInputOption: 'USER_ENTERED', data: $json.data }", [1080, 380])]
 for a, b, o in [("22:00 Chủ nhật–Thứ sáu", "Đọc Lịch SM", 0), ("Đọc Lịch SM", "Đọc Pool Content SM", 0), ("Đọc Pool Content SM", "Đọc content KE", 0),
                 ("Đọc content KE", "Chọn bài cần gói", 0), ("Chọn bài cần gói", "Có bài?", 0),
-                ("Có bài?", "Tạo caption.txt", 0), ("Có bài?", "Liệt kê ảnh trong folder Drive", 0), ("Tạo caption.txt", "Ghi caption.txt", 0),
+                ("Có bài?", "Tạo thư mục gói", 0), ("Có bài?", "Liệt kê ảnh trong folder Drive", 0), ("Tạo thư mục gói", "Tạo caption.txt", 0), ("Tạo caption.txt", "Ghi caption.txt", 0),
                 ("Liệt kê ảnh trong folder Drive", "Tách từng ảnh", 0), ("Tách từng ảnh", "Tải ảnh JPG 2048px", 0), ("Tải ảnh JPG 2048px", "Lưu ảnh vào gói", 0),
                 ("Lưu ảnh vào gói", "Gom kết quả theo bài", 0), ("Gom kết quả theo bài", "Ghi trạng thái gói", 0)]:
     link(c, a, b, o)

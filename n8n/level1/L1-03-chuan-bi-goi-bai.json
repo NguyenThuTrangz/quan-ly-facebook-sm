@@ -12,7 +12,7 @@
           ]
         }
       },
-      "id": "56bf714a-e2b3-4341-974d-611d95d6c233",
+      "id": "6a2fe376-8e76-40c4-b56d-9fd278a1c681",
       "name": "22:00 Chủ nhật–Thứ sáu",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -34,7 +34,7 @@
           }
         }
       },
-      "id": "38352206-689c-4394-96cc-21d2c99f206b",
+      "id": "68980de0-b45c-4742-b6ab-cb705444c99f",
       "name": "Đọc Lịch SM",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -61,7 +61,7 @@
           }
         }
       },
-      "id": "162a6f3c-5ba7-4c20-9505-63d38cb0699b",
+      "id": "5b22b2df-5b52-4202-b930-11870ecf406c",
       "name": "Đọc Pool Content SM",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -88,7 +88,7 @@
           }
         }
       },
-      "id": "5af3821b-2171-428d-ba72-c65a25d5e505",
+      "id": "0991c76c-dc78-4511-b1e5-d703dff9fe7a",
       "name": "Đọc content KE",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -106,7 +106,7 @@
       "parameters": {
         "jsCode": "// ===== Cấu hình chung cấp 1 (sửa ở đây) =====\nconst CFG = {\n  SHEET_ID: '1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0',\n  TOKEN: 'DOI_TOKEN_O_DAY',                 // trùng biến SMOCK_LOG_TOKEN trên máy cấp 3\n  PACK_DIR: 'C:/claude remote/anh-dang-bai', // thư mục gói bài cấp 3 đọc\n  L2_REPO: 'C:/smock-level2-copilot',        // bản clone repo cấp 2 trên máy này\n  OFFICE_START: '08:30', OFFICE_END: '17:00',\n  LUNCH_START: '11:45', LUNCH_END: '13:15',\n  NICK_GROUP_GAP_MIN: 60,       // 2 bài group của CÙNG 1 nick cách nhau tối thiểu (phút)\n  TEAM_GROUP_GAP_MIN: 6,        // 2 bài group bất kỳ của cả đội cách nhau tối thiểu (phút)\n  GROUP_REPOST_DAYS: 3,         // 1 nick không đăng lại cùng 1 group trong ngần này ngày; cả đội không trùng group trong ngày\n  TASK_GAP: [2, 4], BLOCK_GAP: [6, 12], // phút giữa 2 việc trong cụm / giữa 2 cụm\n  LANES: 2,                     // số luồng chạy song song: mỗi luồng = 1 phiên Claude cấp 3 + nhóm trình duyệt riêng\n  JG_COL: { SM01: 3, SM02: 4, SM03: 5, SM04: 8, SM05: 9, SM06: 10, SM07: 11, SM08: 12 }, // cột nick trong tab Join Group SM (D,E,F,I..M)\n  JG_TIER_COL: 6,               // cột G \"Tier\" tab Join Group SM — dùng khi tab Group Score chưa chấm\n  K_START: 122,                 // mã bài Kxxx lớn nhất đã dùng trước khi có n8n (Smock Radar)\n  CONTENT_REUSE_DAYS: 7,        // bộ ảnh được phái sinh caption mới sau ngần này ngày\n};\n// Kho content dùng tab có sẵn, KHÔNG cần tab riêng:\n//  - workbook KE, tab '3. CONTENT GROUP' (A STT, B TEXT, C MEDIA) → mã CG<STT>\n//  - tab 'Pool Content SM' (A STT, B Content, C Ảnh/Video, D Phân loại) → mã PC<STT>; Phân loại có \"chờ duyệt\" thì chưa dùng\n//  - content đã dùng / mã bài Kxxx: đọc từ cột F, J tab 'Lịch SM' (vd \"đăng group K123 (CG13) → group 5\")\nconst buildPool = (ke, pool) => {\n  const out = [];\n  // row = số dòng thật trên sheet (KE đọc từ A3, Pool Content SM đọc từ A2)\n  ke.forEach((r, i) => { const s = String(r[0] || '').trim(); if (/^\\d+$/.test(s) && String(r[1] || '').trim()) out.push({ id: 'CG' + s, caption: r[1], media: r[2] || '', kind: 'any', row: i + 3 }); });\n  pool.forEach((r, i) => { const s = String(r[0] || '').trim(); if (/^\\d+$/.test(s) && String(r[1] || '').trim() && !/chờ duyệt/i.test(r[3] || ''))\n    out.push({ id: 'PC' + s, caption: r[1], media: r[2] || '', kind: /tường|wall/i.test(r[3] || '') ? 'wall' : 'any', note: r[3] || '', row: i + 2 }); });\n  return out;\n};\nconst lichText = r => (r[5] || '') + ' ' + (r[9] || '');\nconst usedContent = lich => { const s = new Set(); for (const r of lich) for (const m of lichText(r).matchAll(/\\b(CG|PC)(\\d+)\\b/g)) s.add(m[1] + m[2]); return s; };\nconst maxKOf = (lich, start) => { let k = start; for (const r of lich) for (const m of lichText(r).matchAll(/\\bK(\\d{3,})\\b/g)) k = Math.max(k, +m[1]); return k; };\nconst vnNow = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));\nconst isoOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;\nconst vnOf = d => `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;\nconst sameDay = (s, d) => { s = String(s || '').trim(); return s.startsWith(isoOf(d)) || s.startsWith(vnOf(d)); };\n\n// Bài cần gói = dòng Lịch SM từ hôm nay trở đi, lệnh \"đăng … Kxxx (CGn|PCn)\", cột J chưa ghi \"Gói sẵn\"\nconst V = n => { try { return (($(n).first().json) || {}).values || []; } catch (e) { return []; } };\nconst lich = V('Đọc Lịch SM'); const pool = buildPool(V('Đọc content KE'), V('Đọc Pool Content SM'));\nconst byId = Object.fromEntries(pool.map(x => [x.id, x]));\nconst today = vnNow(); today.setHours(0, 0, 0, 0);\nconst parseDay = s => { s = String(s || ''); let m = /^(\\d{4})-(\\d{2})-(\\d{2})/.exec(s); if (m) return new Date(+m[1], +m[2] - 1, +m[3]);\n  m = /^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})/.exec(s); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; };\nconst out = [];\nlich.forEach((r, i) => {\n  const dd = parseDay(r[0]); if (!dd || dd < today || r[7] === 'Done') return;\n  const m = /\\b(K\\d{3,})\\b.*?\\b((?:CG|PC)\\d+)\\b/.exec(r[5] || ''); if (!m || /Gói sẵn/.test(r[9] || '')) return;\n  const code = m[1], src = byId[m[2]];\n  if (!src) { out.push({ json: { row: i + 2, code, note: r[9] || '', missing: m[2] } }); return; }\n  const link = src.media || ''; const f = /folders\\/([\\w-]+)/.exec(link) || /[?&]id=([\\w-]+)/.exec(link) || /\\/d\\/([\\w-]+)/.exec(link);\n  // Thay {{MA_BAI}} (caption phái sinh từ cấp 2) bằng mã bài thật; caption gốc chưa có mã thì thêm câu mời nhắn tin\n  let cap = String(src.caption).replace(/\\{\\{MA_BAI\\}\\}/g, code);\n  if (!new RegExp('\\\\b' + code + '\\\\b').test(cap)) cap += `\\n\\nDM or WhatsApp us code ${code} for the catalog.`;\n  out.push({ json: { row: i + 2, code, src: m[2], note: r[9] || '', caption: cap, folderId: f ? f[1] : null, dir: `${CFG.PACK_DIR}/${code}` } });\n});\nreturn out.length ? out : [{ json: { empty: true } }];"
       },
-      "id": "a89375d1-783e-4320-85c2-1a6ba59bc2a7",
+      "id": "6dff2379-c101-44cd-b903-dbbc098cf75b",
       "name": "Chọn bài cần gói",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -126,7 +126,7 @@
           },
           "conditions": [
             {
-              "id": "a785245e-3d18-423d-ae0b-7598c40e996d",
+              "id": "990c460d-dbf8-4258-807e-70052c77ba9e",
               "leftValue": "={{ !$json.empty && !!$json.folderId }}",
               "rightValue": true,
               "operator": {
@@ -140,7 +140,7 @@
         },
         "options": {}
       },
-      "id": "e075db47-d60f-483a-9bce-e0cea3ad10ea",
+      "id": "49dff355-2d32-4a2d-a7e3-fc0c7d66391c",
       "name": "Có bài?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
@@ -151,9 +151,24 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = [];\nfor (const it of $input.all()) {\n  if (it.json.empty) continue;\n  items.push({ json: it.json, binary: { data: { data: Buffer.from(it.json.caption, 'utf8').toString('base64'), mimeType: 'text/plain', fileName: 'caption.txt' } } });\n}\nreturn items;"
+        "command": "={{ $('Có bài?').all().map(i => i.json.dir.split('/').join('\\\\')).map(p => 'if not exist \"' + p + '\" mkdir \"' + p + '\"').join(' & ') }}",
+        "executeOnce": true
       },
-      "id": "64f3a955-4d1e-4238-9db9-4e9503393d9e",
+      "id": "f8e5da55-fa8f-4c3e-9f56-feb2fd896e35",
+      "name": "Tạo thư mục gói",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -130,
+        140
+      ],
+      "notes": "n8n không tự tạo thư mục khi ghi file → tạo anh-dang-bai\\Kxxx trước (cmd, nối bằng &)."
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = [];\nfor (const it of $('Có bài?').all()) {\n  if (it.json.empty) continue;\n  items.push({ json: it.json, binary: { data: { data: Buffer.from(it.json.caption, 'utf8').toString('base64'), mimeType: 'text/plain', fileName: 'caption.txt' } } });\n}\nreturn items;"
+      },
+      "id": "7f10baf2-f276-4ee8-a885-6fb16293d2a1",
       "name": "Tạo caption.txt",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -169,7 +184,7 @@
         "dataPropertyName": "data",
         "options": {}
       },
-      "id": "39734481-d1e9-4028-b465-ccd3eaaa4975",
+      "id": "6079f75b-2eac-4cbf-9b56-125734e031dc",
       "name": "Ghi caption.txt",
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1,
@@ -185,7 +200,7 @@
         "nodeCredentialType": "googleDriveOAuth2Api",
         "options": {}
       },
-      "id": "aa41f9e9-5516-4b53-b05d-172672dca19c",
+      "id": "c258fe53-1f35-44dd-9eb1-1b13b6d5b06e",
       "name": "Liệt kê ảnh trong folder Drive",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -201,7 +216,7 @@
       "parameters": {
         "jsCode": "// Mỗi bài → danh sách file trong folder (từ Drive API) → mỗi ảnh một item để tải bản JPG 2048px\n// Node Drive trả 1 item cho mỗi bài theo đúng thứ tự đầu vào → ghép với bài cùng vị trí ở nhánh \"Có bài?\"\nconst out = []; const metas = $('Có bài?').all();\n$input.all().forEach((it, k) => {\n  const meta = metas[k] ? metas[k].json : {};\n  const files = (it.json.files || []).filter(f => /^image\\//.test(f.mimeType || '')).sort((a, b) => String(a.name).localeCompare(String(b.name)));\n  files.forEach((f, i) => out.push({ json: { ...meta, fileId: f.id, idx: i + 1, total: files.length } }));\n});\nreturn out;"
       },
-      "id": "b3210cdc-af56-47f1-aed4-8be728838aa0",
+      "id": "c4324c19-65b7-44e6-a8f6-13033914ff2a",
       "name": "Tách từng ảnh",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -229,7 +244,7 @@
           }
         }
       },
-      "id": "35bf1a72-2fdc-416b-9f8d-b48134670b81",
+      "id": "f519d69e-a6d5-4ce2-8778-d26158c6de85",
       "name": "Tải ảnh JPG 2048px",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -248,7 +263,7 @@
         "dataPropertyName": "data",
         "options": {}
       },
-      "id": "9882566b-257b-46c9-ab94-20f1e192754e",
+      "id": "acc6a300-dd46-44d3-9363-45be8f2762d1",
       "name": "Lưu ảnh vào gói",
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1,
@@ -261,7 +276,7 @@
       "parameters": {
         "jsCode": "const by = {};\nfor (const it of $('Tách từng ảnh').all()) { const k = it.json.row; by[k] = by[k] || { row: k, code: it.json.code, note: it.json.note || '', total: it.json.total, saved: 0 }; }\nfor (const it of $input.all()) { const k = it.json.row; if (by[k]) by[k].saved++; }\n// Ghi kết quả vào cột J (Ghi chú) của chính dòng Lịch SM — cấp 3 đọc \"Gói sẵn\" là có thư mục anh-dang-bai/Kxxx\nconst tag = b => (b.saved > 0 && b.saved === b.total ? 'Gói sẵn' : 'Lỗi gói') + ` ${b.saved}/${b.total} ảnh`;\nconst data = Object.values(by).map(b => ({ range: `'Lịch SM'!J${b.row}`, values: [[(b.note ? b.note + ' · ' : '') + tag(b)]] }));\nreturn [{ json: { data, n: Object.keys(by).length } }];"
       },
-      "id": "4fbfca1d-4928-465f-a4d6-3e71d78d8d24",
+      "id": "2d508479-623e-49d4-8652-47c21d11c7cd",
       "name": "Gom kết quả theo bài",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -281,7 +296,7 @@
         "jsonBody": "={{ JSON.stringify({ valueInputOption: 'USER_ENTERED', data: $json.data }) }}",
         "options": {}
       },
-      "id": "f12265e5-c7a3-4c0f-bd95-95dd51d07f34",
+      "id": "9de4dc71-ce13-4838-9af5-c6b05452365c",
       "name": "Ghi trạng thái gói",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -355,12 +370,23 @@
       "main": [
         [
           {
-            "node": "Tạo caption.txt",
+            "node": "Tạo thư mục gói",
             "type": "main",
             "index": 0
           },
           {
             "node": "Liệt kê ảnh trong folder Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tạo thư mục gói": {
+      "main": [
+        [
+          {
+            "node": "Tạo caption.txt",
             "type": "main",
             "index": 0
           }

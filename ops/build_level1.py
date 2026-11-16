@@ -126,7 +126,7 @@ const tok = (req.headers || {})['x-smock-token'];
 if (tok !== CFG.TOKEN) errors.push('sai token');
 for (const k of Object.keys(body)) if (FORBID.includes(k.toLowerCase())) errors.push('không được gửi trường ' + k);
 const type = body.type || 'log';
-const today = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' }).slice(0, 10);
+const today = isoOf(vnNow());
 let out = { type, errors };
 if (type === 'log') {
   if (!/^SM0[1-8]$/.test(body.ma_tk || '')) errors.push('ma_tk phải là SM01..SM08');
@@ -423,7 +423,7 @@ save("L1-03-chuan-bi-goi-bai.json", "L1-03 Chuẩn bị gói bài (caption + ả
 report_js = CONFIG_JS + r"""
 const nk = ($('Đọc Nhật Ký SM').first().json.values || []), kpi = ($('Đọc Target + Workload').first().json.values || []),
       lich = ($('Đọc Lịch SM').first().json.values || []);
-const today = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' }).slice(0, 10);
+const today = isoOf(vnNow());
 const d = new Date(today); const todayVN = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
 const isToday = s => (s || '').startsWith(today) || (s || '').startsWith(todayVN);
 const quota = {}; for (const r of kpi) if (/^SM0\d$/.test(r[0])) quota[r[0]] = { wall: +r[3] || 0, grp: +r[6] || 0 };
@@ -508,7 +508,7 @@ export_js = CONFIG_JS + r"""
 const V = n => { try { return (($(n).first().json) || {}).values || []; } catch (e) { return []; } };
 const gs = V('Đọc Group Score'), lich = V('Đọc Lịch SM'), poolRaw = V('Đọc Pool Content SM');
 const pool = buildPool(V('Đọc content KE'), poolRaw);
-const stamp = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' }).slice(0, 10).replace(/-/g, '');
+const stamp = isoOf(vnNow()).replace(/-/g, '');
 let n = 0; const files = [];
 const id = p => `${p}-${stamp}-${String(++n).padStart(3, '0')}`;
 // Caption cần phái sinh: content gốc đã đăng ≥ CONTENT_REUSE_DAYS ngày trước, chưa có bản phái sinh trong Pool Content SM; tối đa 10 việc/đêm
@@ -581,7 +581,7 @@ nodes += [sched("22:15 đẩy việc sang cấp 2", "15 22 * * *", [-1340, 160])
           gget("Đọc Lead Hunter", "\"'Lead Hunter'!A2:N5000\"", [-350, 20]),
           code("Tạo file việc", export_js, [-240, 160], notes="Mỗi việc một file JSON có task_id duy nhất. File text group do cấp 3 lưu sẵn ở thư mục chung."),
           node("Ghi vào inbox repo cấp 2", "n8n-nodes-base.readWriteFile", 1, {"operation": "write", "fileName": "={{ 'C:/smock-level2-copilot/' + $json.path }}", "dataPropertyName": "data", "options": {}}, [-20, 160]),
-          node("git commit + push inbox", "n8n-nodes-base.executeCommand", 1, {"command": "=git -C \"C:/smock-level2-copilot\" pull --rebase && git -C \"C:/smock-level2-copilot\" add inbox data && git -C \"C:/smock-level2-copilot\" commit -m \"inbox {{ $now.toFormat('yyyy-MM-dd HH:mm') }}\" ; git -C \"C:/smock-level2-copilot\" push", "executeOnce": True}, [200, 160],
+          node("git commit + push inbox", "n8n-nodes-base.executeCommand", 1, {"command": "=git -C \"C:/smock-level2-copilot\" pull --rebase && git -C \"C:/smock-level2-copilot\" add inbox data && git -C \"C:/smock-level2-copilot\" commit -m \"inbox {{ $now.toFormat('yyyy-MM-dd HH:mm') }}\" & git -C \"C:/smock-level2-copilot\" push", "executeOnce": True}, [200, 160],
                notes="Cần bật node Execute Command (xem n8n/level1/README.md) và git đã đăng nhập trên máy."),
           sched("06:30 kéo kết quả cấp 2", "30 6 * * *", [-1120, 500]),
           gget("Đọc Pool Content SM (sáng)", POOL_RANGE, [-1010, 500]),
@@ -590,10 +590,10 @@ nodes += [sched("22:15 đẩy việc sang cấp 2", "15 22 * * *", [-1340, 160])
           node("Đọc file outbox", "n8n-nodes-base.readWriteFile", 1, {"fileSelector": "C:/smock-level2-copilot/outbox/*/*.json", "options": {}}, [-460, 500], alwaysOutputData=True),
           node("Đọc JSON", "n8n-nodes-base.extractFromFile", 1, {"operation": "fromJson", "options": {}}, [-240, 500], onError="continueRegularOutput", alwaysOutputData=True),
           code("Kiểm + chuyển thành lệnh ghi", import_js, [-20, 500], notes="Từ chối file sai task_id, thiếu điểm, hoặc có trường bị cấm (SĐT, email, mật khẩu)."),
-          gpost("Thêm caption phái sinh (Chờ duyệt)", "/values/{{ encodeURIComponent(\"'Pool Content SM'!A:F\") }}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS", "{ values: $json.appends.length ? $json.appends : [] }", [200, 440],
-                onError="continueRegularOutput", alwaysOutputData=True),
-          gpost("Cập nhật điểm group + trạng thái", "/values:batchUpdate", "{ valueInputOption: 'USER_ENTERED', data: $('Kiểm + chuyển thành lệnh ghi').first().json.updates }", [420, 440],
-                onError="continueRegularOutput", alwaysOutputData=True),
+          iff("Có caption?", "{{ $('Kiểm + chuyển thành lệnh ghi').first().json.appends.length > 0 }}", [90, 500]),
+          gpost("Thêm caption phái sinh (Chờ duyệt)", "/values/{{ encodeURIComponent(\"'Pool Content SM'!A:F\") }}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS", "{ values: $('Kiểm + chuyển thành lệnh ghi').first().json.appends }", [200, 400]),
+          iff("Có điểm group?", "{{ $('Kiểm + chuyển thành lệnh ghi').first().json.updates.length > 0 }}", [310, 500]),
+          gpost("Cập nhật điểm group + trạng thái", "/values:batchUpdate", "{ valueInputOption: 'USER_ENTERED', data: $('Kiểm + chuyển thành lệnh ghi').first().json.updates }", [420, 400]),
           node("Chuyển outbox đã xử lý sang done", "n8n-nodes-base.executeCommand", 1, {"command": "=powershell -NoProfile -Command \"cd 'C:/smock-level2-copilot'; New-Item -ItemType Directory -Force done | Out-Null; foreach ($i in @({{ $('Kiểm + chuyển thành lệnh ghi').first().json.ok_ids.map(x => \"'\" + x + \"'\").join(',') }})) { Get-ChildItem outbox -Recurse -Filter ($i + '.*') | ForEach-Object { git mv $_.FullName ('done/' + $_.Name) } }; git commit -m 'done'; git push\"", "executeOnce": True}, [640, 440],
                notes="Chỉ chuyển file đã nhận hợp lệ (ok_ids). File bị từ chối nằm lại outbox để cấp 2 sửa."),
           telegram("Báo lỗi file cấp 2", "{{ $('Kiểm + chuyển thành lệnh ghi').first().json.errors.length ? '⚠️ Cấp 2: ' + $('Kiểm + chuyển thành lệnh ghi').first().json.errors.join('; ') : '✅ Cấp 2: đã nhập kết quả' }}", [860, 440])]
@@ -601,9 +601,13 @@ for a, b in [("22:15 đẩy việc sang cấp 2", "Đọc Lịch SM"), ("Đọc 
              ("Đọc content KE", "Đọc Group Score"), ("Đọc Group Score", "Đọc Nhật Ký SM"), ("Đọc Nhật Ký SM", "Đọc Lead Hunter"), ("Đọc Lead Hunter", "Tạo file việc"),
              ("Tạo file việc", "Ghi vào inbox repo cấp 2"), ("Ghi vào inbox repo cấp 2", "git commit + push inbox"),
              ("06:30 kéo kết quả cấp 2", "Đọc Pool Content SM (sáng)"), ("Đọc Pool Content SM (sáng)", "Đọc content KE (sáng)"), ("Đọc content KE (sáng)", "git pull"), ("git pull", "Đọc file outbox"), ("Đọc file outbox", "Đọc JSON"), ("Đọc JSON", "Kiểm + chuyển thành lệnh ghi"),
-             ("Kiểm + chuyển thành lệnh ghi", "Thêm caption phái sinh (Chờ duyệt)"), ("Thêm caption phái sinh (Chờ duyệt)", "Cập nhật điểm group + trạng thái"),
-             ("Cập nhật điểm group + trạng thái", "Chuyển outbox đã xử lý sang done"), ("Chuyển outbox đã xử lý sang done", "Báo lỗi file cấp 2")]:
+             ("Chuyển outbox đã xử lý sang done", "Báo lỗi file cấp 2")]:
     link(c, a, b)
+# Chỉ gọi Google Sheets khi thật sự có dòng cần ghi
+for a, b, o in [("Kiểm + chuyển thành lệnh ghi", "Có caption?", 0), ("Có caption?", "Thêm caption phái sinh (Chờ duyệt)", 0), ("Có caption?", "Có điểm group?", 1),
+                ("Thêm caption phái sinh (Chờ duyệt)", "Có điểm group?", 0), ("Có điểm group?", "Cập nhật điểm group + trạng thái", 0),
+                ("Có điểm group?", "Chuyển outbox đã xử lý sang done", 1), ("Cập nhật điểm group + trạng thái", "Chuyển outbox đã xử lý sang done", 0)]:
+    link(c, a, b, o)
 save("L1-06-cau-noi-cap-2.json", "L1-06 Cầu nối cấp 2 (inbox tối, outbox sáng)", nodes, c,
      "Bàn giao cấp 1 ↔ cấp 2 bằng file JSON trong repo smock-level2-copilot. Caption phái sinh luôn vào 'Chờ duyệt caption', người duyệt mới dùng.")
 

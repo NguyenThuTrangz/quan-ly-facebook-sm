@@ -12,7 +12,7 @@
           ]
         }
       },
-      "id": "15d839f2-eeb6-4c80-9e83-149eda788d33",
+      "id": "3b90ac59-2519-4903-ba79-dcb0e6abda96",
       "name": "21:30 Chủ nhật–Thứ sáu",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -35,7 +35,7 @@
           }
         }
       },
-      "id": "2a38a704-82b1-49e5-92e6-e38daa2a2181",
+      "id": "a7ab5023-eae1-4bfa-887a-c4440965849d",
       "name": "Đọc Tài khoản",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -62,7 +62,7 @@
           }
         }
       },
-      "id": "3ccce129-d922-44f4-a256-b1f6f277a844",
+      "id": "cf312270-13ea-4827-811e-3c45056754c5",
       "name": "Đọc Target + Workload",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -89,7 +89,7 @@
           }
         }
       },
-      "id": "dddcc7b8-ffbe-42b2-805f-e3f4102c76e3",
+      "id": "e0246331-3c65-4b73-ad85-0b7cc60345b3",
       "name": "Đọc Join Group SM",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -116,7 +116,7 @@
           }
         }
       },
-      "id": "a7b84a7c-ed80-484a-9c56-e242470130b8",
+      "id": "1cd47562-ffd0-4176-8694-d4d245213a81",
       "name": "Đọc Add Friend",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -143,7 +143,7 @@
           }
         }
       },
-      "id": "fb72df0d-f9fe-4a09-b366-1fafd7c73ff3",
+      "id": "6878b3bc-4eaa-4733-aec5-56ccf5e4f19c",
       "name": "Đọc Lịch SM",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -170,7 +170,7 @@
           }
         }
       },
-      "id": "f7b30469-96f8-4ac9-8b2c-5d1eb4406520",
+      "id": "8226e0f0-0390-49d3-86e6-2538bc3604d7",
       "name": "Đọc Group Score",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -197,7 +197,7 @@
           }
         }
       },
-      "id": "1cb20dcc-afe9-4005-866d-29b48340e940",
+      "id": "961dc861-1cc8-4080-b994-25c30fc75c53",
       "name": "Đọc Pool Content SM",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -224,7 +224,7 @@
           }
         }
       },
-      "id": "6e5dbb4b-0d33-40a9-a6a1-0f72841ce3a5",
+      "id": "3ecbc49a-b55d-4954-9094-b24c218aff62",
       "name": "Đọc content KE",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -251,7 +251,7 @@
           }
         }
       },
-      "id": "a352e8fb-558b-44fc-8373-ab01b15b3c33",
+      "id": "368234f3-7b7d-4049-b6b3-c0e4139c7be6",
       "name": "Đọc Nhật Ký SM",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -267,9 +267,9 @@
     },
     {
       "parameters": {
-        "jsCode": "// ===== Cấu hình chung cấp 1 (sửa ở đây) =====\nconst CFG = {\n  SHEET_ID: '1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0',\n  TOKEN: 'DOI_TOKEN_O_DAY',                 // trùng biến SMOCK_LOG_TOKEN trên máy cấp 3\n  PACK_DIR: 'C:/claude remote/anh-dang-bai', // thư mục gói bài cấp 3 đọc\n  L2_REPO: 'C:/smock-level2-copilot',        // bản clone repo cấp 2 trên máy này\n  OFFICE_START: '08:30', OFFICE_END: '17:00',\n  LUNCH_START: '11:45', LUNCH_END: '13:15',\n  NICK_GROUP_GAP_MIN: 60,       // 2 bài group của CÙNG 1 nick cách nhau tối thiểu (phút)\n  TEAM_GROUP_GAP_MIN: 6,        // 2 bài group bất kỳ của cả đội cách nhau tối thiểu (phút)\n  GROUP_REPOST_DAYS: 3,         // 1 nick không đăng lại cùng 1 group trong ngần này ngày; cả đội không trùng group trong ngày\n  TASK_GAP: [2, 4], BLOCK_GAP: [6, 12], // phút giữa 2 việc trong cụm / giữa 2 cụm\n  LANES: 2,                     // số luồng chạy song song: mỗi luồng = 1 phiên Claude cấp 3 + nhóm trình duyệt riêng\n  JG_COL: { SM01: 3, SM02: 4, SM03: 5, SM04: 8, SM05: 9, SM06: 10, SM07: 11, SM08: 12 }, // cột nick trong tab Join Group SM (D,E,F,I..M)\n  JG_TIER_COL: 6,               // cột G \"Tier\" tab Join Group SM — dùng khi tab Group Score chưa chấm\n  K_START: 122,                 // mã bài Kxxx lớn nhất đã dùng trước khi có n8n (Smock Radar)\n  CONTENT_REUSE_DAYS: 7,        // bộ ảnh được phái sinh caption mới sau ngần này ngày\n};\n// Kho content dùng tab có sẵn, KHÔNG cần tab riêng:\n//  - workbook KE, tab '3. CONTENT GROUP' (A STT, B TEXT, C MEDIA) → mã CG<STT>\n//  - tab 'Pool Content SM' (A STT, B Content, C Ảnh/Video, D Phân loại) → mã PC<STT>; Phân loại có \"chờ duyệt\" thì chưa dùng\n//  - content đã dùng / mã bài Kxxx: đọc từ cột F, J tab 'Lịch SM' (vd \"đăng group K123 (CG13) → group 5\")\nconst buildPool = (ke, pool) => {\n  const out = [];\n  for (const r of ke) { const s = String(r[0] || '').trim(); if (/^\\d+$/.test(s) && String(r[1] || '').trim()) out.push({ id: 'CG' + s, caption: r[1], media: r[2] || '', kind: 'any' }); }\n  for (const r of pool) { const s = String(r[0] || '').trim(); if (/^\\d+$/.test(s) && String(r[1] || '').trim() && !/chờ duyệt/i.test(r[3] || ''))\n    out.push({ id: 'PC' + s, caption: r[1], media: r[2] || '', kind: /tường|wall/i.test(r[3] || '') ? 'wall' : 'any', note: r[3] || '' }); }\n  return out;\n};\nconst lichText = r => (r[5] || '') + ' ' + (r[9] || '');\nconst usedContent = lich => { const s = new Set(); for (const r of lich) for (const m of lichText(r).matchAll(/\\b(CG|PC)(\\d+)\\b/g)) s.add(m[1] + m[2]); return s; };\nconst maxKOf = (lich, start) => { let k = start; for (const r of lich) for (const m of lichText(r).matchAll(/\\bK(\\d{3,})\\b/g)) k = Math.max(k, +m[1]); return k; };\nconst vnNow = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));\nconst isoOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;\nconst vnOf = d => `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;\nconst sameDay = (s, d) => { s = String(s || '').trim(); return s.startsWith(isoOf(d)) || s.startsWith(vnOf(d)); };\n\n// Đầu vào: 6 lần đọc sheet ở các node trước. Sinh lịch NGÀY LÀM VIỆC KẾ TIẾP, giờ hành chính, gom việc theo cụm từng nick.\nconst V = n => { try { return (($(n).first().json) || {}).values || []; } catch (e) { return []; } };\nconst acc = V('Đọc Tài khoản'), kpi = V('Đọc Target + Workload'), jg = V('Đọc Join Group SM'),\n      af = V('Đọc Add Friend'), lich = V('Đọc Lịch SM'), gs = V('Đọc Group Score'),\n      pool = buildPool(V('Đọc content KE'), V('Đọc Pool Content SM')), nk = V('Đọc Nhật Ký SM');\n// Ngày làm việc kế tiếp (bỏ Chủ nhật)\nconst now = vnNow();\nconst d = new Date(now); d.setDate(d.getDate() + 1); if (d.getDay() === 0) d.setDate(d.getDate() + 1);\nconst day = isoOf(d);\nconst dayVN = day;   // tab Lịch SM đang ghi ngày dạng yyyy-mm-dd\n// Đã có lịch cho ngày đó thì dừng (chạy lại không sinh trùng)\nif (lich.some(r => sameDay(r[0], d))) return [{ json: { skip: true, reason: 'Đã có lịch ngày ' + day } }];\n// Nick hoạt động + tên\n// Cột F tab Tài khoản: \"Hoạt động\" = chạy; thêm chữ \"hạn chế group\" (vd \"Hoạt động - hạn chế group\") = chỉ đăng tường + tương tác\nconst nicks = acc.filter(r => /^SM0\\d$/.test(r[0]) && /Hoạt động/i.test(r[5] || '')).map(r => ({ id: r[0], name: r[1], noGroup: /hạn chế group|không group|no group/i.test(r[5] || '') }));\nconst quota = {}; for (const r of kpi) if (/^SM0\\d$/.test(r[0])) quota[r[0]] = { wall: +r[3] || 0, join: +r[4] || 0, fr: +r[5] || 0, grp: +r[6] || 0 };\n// Random có hạt giống theo ngày → chạy lại ra cùng kết quả\nlet seed = [...day].reduce((s, ch) => s * 31 + ch.charCodeAt(0), 7) >>> 0;\nconst rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);\nconst ri = (a, b) => a + Math.floor(rnd() * (b - a + 1));\nconst shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };\nconst pattern = n => Array.from({ length: n }, () => ri(1, 5)).join('/');\n// Group tier A/B theo Group Score (nếu chưa chấm thì KHÔNG xếp bài group)\nconst gsCol = { stt: 0, tier: 14, st: 16 };\nconst okGroup = new Set(gs.filter(r => ['A', 'B'].includes((r[gsCol.tier] || '').trim()) && ['Đã chấm', 'Đã duyệt'].includes(r[gsCol.st])).map(r => +r[gsCol.stt]));\n// Group Score chưa chấm group nào → dùng cột Tier của Join Group SM (A/B)\nif (!okGroup.size) for (const r of jg) if (/^(A|B)$/.test(String(r[CFG.JG_TIER_COL] || '').trim())) okGroup.add(+r[0]);\nconst jgCol = CFG.JG_COL;\n// Lịch sử đăng group N ngày gần nhất (chống đăng lại cùng group) — đọc từ tab Lịch SM (A ngày, C nick, F lệnh)\nconst parseDay = s => { s = String(s || ''); let m = /^(\\d{4})-(\\d{2})-(\\d{2})/.exec(s); if (m) return new Date(+m[1], +m[2] - 1, +m[3]);\n  m = /^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})/.exec(s); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; };\nconst dayDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());\nconst recent = {}; // nick -> Set(group)\nfor (const r of lich) { const dd = parseDay(r[0]); const g = /đăng group .*→ group (\\d+)/.exec(r[5] || '');\n  if (!dd || !g || !r[2]) continue; const age = (dayDate - dd) / 864e5;\n  if (age > 0 && age <= CFG.GROUP_REPOST_DAYS) (recent[r[2]] = recent[r[2]] || new Set()).add(+g[1]); }\n// Đèn sức khoẻ nick, tính thẳng từ Nhật Ký SM 2 ngày gần nhất (không cần tab báo cáo riêng):\n// Đỏ = có cảnh báo FB → không đăng group; Vàng = ≥ 2 việc \"Không làm được\" → tối đa 2 bài group\nconst light = {}; const nkRecent = nk.filter(r => { const dd = parseDay(r[0]); return dd && (now - dd) / 864e5 <= 2; });\nfor (const r of nkRecent) { const n = r[1]; if (!/^SM0\\d$/.test(n || '')) continue;\n  if (/checkpoint|identity|xác minh|can.?t use|bị gỡ|hạn chế/i.test((r[5] || '') + ' ' + (r[7] || ''))) light[n] = 'Đỏ';\n  else if (r[8] === 'Không làm được' && light[n] !== 'Đỏ') light[n] = (light[n] === 'Vàng1' || light[n] === 'Vàng') ? 'Vàng' : 'Vàng1'; }\nfor (const k of Object.keys(light)) if (light[k] === 'Vàng1') delete light[k];\nconst teamGroupsToday = new Set();\n// Kho content chưa dùng (KE + Pool Content SM, bỏ mã đã có trong Lịch SM) + mã bài kế tiếp\nconst usedIds = usedContent(lich);\nconst cqRows = pool.filter(x => !usedIds.has(x.id));\nlet maxK = maxKOf(lich, CFG.K_START);\nconst used = new Set();\nconst takeContent = (nick, kind) => {\n  const x = cqRows.find(x => !used.has(x.id) && (kind === 'group' ? x.kind !== 'wall' : true));\n  if (!x) return null; used.add(x.id); const code = 'K' + (++maxK);\n  return { code, content: x.id };\n};\n// Người kết bạn kế tiếp (cột C = 'Chưa Add')\nlet frIdx = 0; const frList = af.map((r, i) => ({ r, row: i + 2 })).filter(x => /Chưa Add/i.test(x.r[2] || ''));\nconst frReserve = [];\n// Dựng việc theo nick\nconst tasks = [];\nfor (const n of nicks) {\n  const q = quota[n.id] || { wall: 1, join: 1, fr: 1, grp: 0 };\n  const list = [];\n  list.push(['story tim', `story tim ${ri(1, 3)}/${ri(1, 4)}`]);\n  list.push(['lướt newfeed', `lướt newfeed ${ri(2, 4)}`]);\n  list.push(['chấp nhận All', 'chấp nhận All']);\n  list.push(['tương tác', `tương tác ${pattern(ri(3, 5))}`]);\n  const col = jgCol[n.id];\n  if (col !== undefined) {\n    const joined = jg.filter(r => /đã join/i.test(r[col] || '')).map(r => +r[0]);\n    if (joined.length) list.push(['tương tác group', `group ${joined[ri(0, joined.length - 1)]} tương tác ${pattern(ri(2, 3))}`]);\n    const toJoin = jg.filter(r => /chưa join/i.test(r[col] || '') && (okGroup.size === 0 || okGroup.has(+r[0]))).slice(0, Math.max(0, q.join)).map(r => +r[0]);\n    if (toJoin.length) list.push(['join group', `join group ${toJoin.join(', ')}`]);\n    const rec = recent[n.id] || new Set();\n    const canPost = shuffle(jg.filter(r => /đã join/i.test(r[col] || '') && okGroup.has(+r[0])).map(r => +r[0])\n      .filter(g => !rec.has(g) && !teamGroupsToday.has(g)));\n    let grp = q.grp; if (light[n.id] === 'Đỏ' || n.noGroup) grp = 0; else if (light[n.id] === 'Vàng') grp = Math.min(grp, 2);\n    for (let i = 0; i < Math.min(grp, canPost.length); i++) {\n      const c = takeContent(n.id, 'group'); if (!c) break;\n      teamGroupsToday.add(canPost[i]);\n      list.push(['đăng group', `đăng group ${c.code} (${c.content}) → group ${canPost[i]}`, 'group']);\n    }\n  }\n  for (let i = 0; i < q.wall; i++) { const c = takeContent(n.id, 'wall'); if (!c) break; list.push(['đăng tường', `đăng tường ${c.code} (${c.content})`]); }\n  const nf = Math.min(q.fr, frList.length - frIdx);\n  if (nf > 0) { const ids = frList.slice(frIdx, frIdx + nf); frIdx += nf; ids.forEach(x => frReserve.push({ row: x.row, nick: n.id }));\n    list.push(['kết bạn', `kết bạn ${ids.map(x => x.r[0]).join(', ')}`]); }\n  // 2 cụm mỗi nick: sáng và chiều (giảm chọn lại trình duyệt, vẫn rải trong ngày)\n  // Chia cụm: mỗi bài group 1 cụm riêng (tối thiểu 2 cụm/nick), việc khác rải đều vào các cụm\n  const lane = nicks.indexOf(n) % CFG.LANES; const groups = list.filter(x => x[2] === 'group'); const others = shuffle(list.filter(x => x[2] !== 'group'));\n  const k = Math.max(2, groups.length); const blocks = Array.from({ length: k }, (_, i) => (groups[i] ? [groups[i]] : []));\n  others.forEach((x, i) => blocks[i % k].push(x)); blocks.forEach((b, i) => { shuffle(b); tasks.push({ nick: n, lane, idx: i, items: b }); });\n}\n// Xếp giờ: mỗi luồng 1 dòng thời gian riêng (chạy song song); việc trong cụm cách TASK_GAP, giữa cụm BLOCK_GAP;\n// bài group: cùng nick cách ≥ NICK_GROUP_GAP_MIN, cả đội cách ≥ TEAM_GROUP_GAP_MIN (tính chung mọi luồng)\nconst toMin = s => +s.slice(0, 2) * 60 + +s.slice(3); const hhmm = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');\nconst S = toMin(CFG.OFFICE_START), E = toMin(CFG.OFFICE_END), L1 = toMin(CFG.LUNCH_START), L2 = toMin(CFG.LUNCH_END);\nconst rows = []; const overflow = []; const groupTimes = []; const lastNickGroup = {};\nconst fixGroup = (t, nick) => { t = Math.max(t, (lastNickGroup[nick] ?? -999) + CFG.NICK_GROUP_GAP_MIN);\n  for (let k = 0; k < 500; k++) { if (t >= L1 && t < L2) t = L2; const c = groupTimes.find(g => Math.abs(t - g) < CFG.TEAM_GROUP_GAP_MIN); if (!c) break; t = c + CFG.TEAM_GROUP_GAP_MIN; } return t; };\nfor (let lane = 0; lane < CFG.LANES; lane++) {\n  // Xếp vòng: cụm 1 của mọi nick trong luồng, rồi cụm 2... → 2 cụm liền nhau của cùng nick cách xa nhau\n  const mine = tasks.filter(x => x.lane === lane); const ln = shuffle([...new Set(mine.map(x => x.nick.id))]);\n  const maxIdx = Math.max(-1, ...mine.map(x => x.idx)); const order = [];\n  for (let i = 0; i <= maxIdx; i++) for (const id of ln) { const b = mine.find(x => x.nick.id === id && x.idx === i); if (b) order.push(b); }\n  let t = S + ri(0, 10);\n  for (const b of order) {\n    for (const it of b.items) {\n      if (t >= L1 && t < L2) t = L2 + ri(0, 10);\n      if (it[2] === 'group') t = fixGroup(t, b.nick.id);\n      if (t > E) { overflow.push(`${b.nick.id}: ${it[1]}`); continue; }\n      if (it[2] === 'group') { groupTimes.push(t); lastNickGroup[b.nick.id] = t; }\n      rows.push([dayVN, hhmm(t), b.nick.id, b.nick.name, it[0], it[1], 'Có', 'Chờ', '', `sinh bởi n8n L1-02 · luồng ${lane + 1}`]);\n      t += ri(CFG.TASK_GAP[0], CFG.TASK_GAP[1]);\n    }\n    t += ri(CFG.BLOCK_GAP[0], CFG.BLOCK_GAP[1]);\n  }\n}\nrows.sort((a, b) => a[1].localeCompare(b[1]));\nconst data = frReserve.map(x => ({ range: `'Add Friend'!C${x.row}`, values: [[`Đã xếp ${x.nick} ${dayVN}`]] }));\nconst nPost = rows.filter(r => /^đăng/.test(r[4])).length;\nreturn [{ json: { skip: false, day, rows, data, overflow, summary: `${rows.length} việc cho ${nicks.length} nick ngày ${dayVN}` + (overflow.length ? `; ${overflow.length} việc không vừa giờ` : '') + (okGroup.size ? '' : '; chưa có group A/B nên không xếp bài group') + (cqRows.length < nPost + 5 ? `; kho content sắp hết (còn ${cqRows.length - nPost})` : '') } }];\n"
+        "jsCode": "// ===== Cấu hình chung cấp 1 (sửa ở đây) =====\nconst CFG = {\n  SHEET_ID: '1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0',\n  TOKEN: 'DOI_TOKEN_O_DAY',                 // trùng biến SMOCK_LOG_TOKEN trên máy cấp 3\n  PACK_DIR: 'C:/claude remote/anh-dang-bai', // thư mục gói bài cấp 3 đọc\n  L2_REPO: 'C:/smock-level2-copilot',        // bản clone repo cấp 2 trên máy này\n  OFFICE_START: '08:30', OFFICE_END: '17:00',\n  LUNCH_START: '11:45', LUNCH_END: '13:15',\n  NICK_GROUP_GAP_MIN: 60,       // 2 bài group của CÙNG 1 nick cách nhau tối thiểu (phút)\n  TEAM_GROUP_GAP_MIN: 6,        // 2 bài group bất kỳ của cả đội cách nhau tối thiểu (phút)\n  GROUP_REPOST_DAYS: 3,         // 1 nick không đăng lại cùng 1 group trong ngần này ngày; cả đội không trùng group trong ngày\n  TASK_GAP: [2, 4], BLOCK_GAP: [6, 12], // phút giữa 2 việc trong cụm / giữa 2 cụm\n  LANES: 2,                     // số luồng chạy song song: mỗi luồng = 1 phiên Claude cấp 3 + nhóm trình duyệt riêng\n  JG_COL: { SM01: 3, SM02: 4, SM03: 5, SM04: 8, SM05: 9, SM06: 10, SM07: 11, SM08: 12 }, // cột nick trong tab Join Group SM (D,E,F,I..M)\n  JG_TIER_COL: 6,               // cột G \"Tier\" tab Join Group SM — dùng khi tab Group Score chưa chấm\n  K_START: 122,                 // mã bài Kxxx lớn nhất đã dùng trước khi có n8n (Smock Radar)\n  CONTENT_REUSE_DAYS: 7,        // bộ ảnh được phái sinh caption mới sau ngần này ngày\n};\n// Kho content dùng tab có sẵn, KHÔNG cần tab riêng:\n//  - workbook KE, tab '3. CONTENT GROUP' (A STT, B TEXT, C MEDIA) → mã CG<STT>\n//  - tab 'Pool Content SM' (A STT, B Content, C Ảnh/Video, D Phân loại) → mã PC<STT>; Phân loại có \"chờ duyệt\" thì chưa dùng\n//  - content đã dùng / mã bài Kxxx: đọc từ cột F, J tab 'Lịch SM' (vd \"đăng group K123 (CG13) → group 5\")\nconst buildPool = (ke, pool) => {\n  const out = [];\n  // row = số dòng thật trên sheet (KE đọc từ A3, Pool Content SM đọc từ A2)\n  ke.forEach((r, i) => { const s = String(r[0] || '').trim(); if (/^\\d+$/.test(s) && String(r[1] || '').trim()) out.push({ id: 'CG' + s, caption: r[1], media: r[2] || '', kind: 'any', row: i + 3 }); });\n  pool.forEach((r, i) => { const s = String(r[0] || '').trim(); if (/^\\d+$/.test(s) && String(r[1] || '').trim() && !/chờ duyệt/i.test(r[3] || ''))\n    out.push({ id: 'PC' + s, caption: r[1], media: r[2] || '', kind: /tường|wall/i.test(r[3] || '') ? 'wall' : 'any', note: r[3] || '', row: i + 2 }); });\n  return out;\n};\nconst lichText = r => (r[5] || '') + ' ' + (r[9] || '');\nconst usedContent = lich => { const s = new Set(); for (const r of lich) for (const m of lichText(r).matchAll(/\\b(CG|PC)(\\d+)\\b/g)) s.add(m[1] + m[2]); return s; };\nconst maxKOf = (lich, start) => { let k = start; for (const r of lich) for (const m of lichText(r).matchAll(/\\bK(\\d{3,})\\b/g)) k = Math.max(k, +m[1]); return k; };\nconst vnNow = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));\nconst isoOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;\nconst vnOf = d => `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;\nconst sameDay = (s, d) => { s = String(s || '').trim(); return s.startsWith(isoOf(d)) || s.startsWith(vnOf(d)); };\n\n// Đầu vào: 6 lần đọc sheet ở các node trước. Sinh lịch NGÀY LÀM VIỆC KẾ TIẾP, giờ hành chính, gom việc theo cụm từng nick.\nconst V = n => { try { return (($(n).first().json) || {}).values || []; } catch (e) { return []; } };\nconst acc = V('Đọc Tài khoản'), kpi = V('Đọc Target + Workload'), jg = V('Đọc Join Group SM'),\n      af = V('Đọc Add Friend'), lich = V('Đọc Lịch SM'), gs = V('Đọc Group Score'),\n      pool = buildPool(V('Đọc content KE'), V('Đọc Pool Content SM')), nk = V('Đọc Nhật Ký SM');\n// Ngày làm việc kế tiếp (bỏ Chủ nhật)\nconst now = vnNow();\nconst d = new Date(now); d.setDate(d.getDate() + 1); if (d.getDay() === 0) d.setDate(d.getDate() + 1);\nconst day = isoOf(d);\nconst dayVN = day;   // tab Lịch SM đang ghi ngày dạng yyyy-mm-dd\n// Đã có lịch cho ngày đó thì dừng (chạy lại không sinh trùng)\nif (lich.some(r => sameDay(r[0], d))) return [{ json: { skip: true, reason: 'Đã có lịch ngày ' + day } }];\n// Nick hoạt động + tên\n// Cột F tab Tài khoản: \"Hoạt động\" = chạy; thêm chữ \"hạn chế group\" (vd \"Hoạt động - hạn chế group\") = chỉ đăng tường + tương tác\nconst nicks = acc.filter(r => /^SM0\\d$/.test(r[0]) && /Hoạt động/i.test(r[5] || '')).map(r => ({ id: r[0], name: r[1], noGroup: /hạn chế group|không group|no group/i.test(r[5] || '') }));\nconst quota = {}; for (const r of kpi) if (/^SM0\\d$/.test(r[0])) quota[r[0]] = { wall: +r[3] || 0, join: +r[4] || 0, fr: +r[5] || 0, grp: +r[6] || 0 };\n// Random có hạt giống theo ngày → chạy lại ra cùng kết quả\nlet seed = [...day].reduce((s, ch) => s * 31 + ch.charCodeAt(0), 7) >>> 0;\nconst rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);\nconst ri = (a, b) => a + Math.floor(rnd() * (b - a + 1));\nconst shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };\nconst pattern = n => Array.from({ length: n }, () => ri(1, 5)).join('/');\n// Group tier A/B theo Group Score (nếu chưa chấm thì KHÔNG xếp bài group)\nconst gsCol = { stt: 0, tier: 14, st: 16 };\nconst okGroup = new Set(gs.filter(r => ['A', 'B'].includes((r[gsCol.tier] || '').trim()) && ['Đã chấm', 'Đã duyệt'].includes(r[gsCol.st])).map(r => +r[gsCol.stt]));\n// Group Score chưa chấm group nào → dùng cột Tier của Join Group SM (A/B)\nif (!okGroup.size) for (const r of jg) if (/^(A|B)$/.test(String(r[CFG.JG_TIER_COL] || '').trim())) okGroup.add(+r[0]);\nconst jgCol = CFG.JG_COL;\n// Lịch sử đăng group N ngày gần nhất (chống đăng lại cùng group) — đọc từ tab Lịch SM (A ngày, C nick, F lệnh)\nconst parseDay = s => { s = String(s || ''); let m = /^(\\d{4})-(\\d{2})-(\\d{2})/.exec(s); if (m) return new Date(+m[1], +m[2] - 1, +m[3]);\n  m = /^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})/.exec(s); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; };\nconst dayDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());\nconst recent = {}; // nick -> Set(group)\nfor (const r of lich) { const dd = parseDay(r[0]); const g = /đăng group .*→ group (\\d+)/.exec(r[5] || '');\n  if (!dd || !g || !r[2]) continue; const age = (dayDate - dd) / 864e5;\n  if (age > 0 && age <= CFG.GROUP_REPOST_DAYS) (recent[r[2]] = recent[r[2]] || new Set()).add(+g[1]); }\n// Đèn sức khoẻ nick, tính thẳng từ Nhật Ký SM 2 ngày gần nhất (không cần tab báo cáo riêng):\n// Đỏ = có cảnh báo FB → không đăng group; Vàng = ≥ 2 việc \"Không làm được\" → tối đa 2 bài group\nconst light = {}; const nkRecent = nk.filter(r => { const dd = parseDay(r[0]); return dd && (now - dd) / 864e5 <= 2; });\nfor (const r of nkRecent) { const n = r[1]; if (!/^SM0\\d$/.test(n || '')) continue;\n  if (/checkpoint|identity|xác minh|can.?t use|bị gỡ|hạn chế/i.test((r[5] || '') + ' ' + (r[7] || ''))) light[n] = 'Đỏ';\n  else if (r[8] === 'Không làm được' && light[n] !== 'Đỏ') light[n] = (light[n] === 'Vàng1' || light[n] === 'Vàng') ? 'Vàng' : 'Vàng1'; }\nfor (const k of Object.keys(light)) if (light[k] === 'Vàng1') delete light[k];\nconst teamGroupsToday = new Set();\n// Kho content chưa dùng (KE + Pool Content SM, bỏ mã đã có trong Lịch SM) + mã bài kế tiếp\nconst usedIds = usedContent(lich);\nconst cqRows = pool.filter(x => !usedIds.has(x.id));\nlet maxK = maxKOf(lich, CFG.K_START);\nconst used = new Set();\nconst takeContent = (nick, kind) => {\n  const x = cqRows.find(x => !used.has(x.id) && (kind === 'group' ? x.kind !== 'wall' : true));\n  if (!x) return null; used.add(x.id); const code = 'K' + (++maxK);\n  return { code, content: x.id };\n};\n// Người kết bạn kế tiếp (cột C = 'Chưa Add')\nlet frIdx = 0; const frList = af.map((r, i) => ({ r, row: i + 2 })).filter(x => /Chưa Add/i.test(x.r[2] || ''));\nconst frReserve = [];\n// Dựng việc theo nick\nconst tasks = [];\nfor (const n of nicks) {\n  const q = quota[n.id] || { wall: 1, join: 1, fr: 1, grp: 0 };\n  const list = [];\n  list.push(['story tim', `story tim ${ri(1, 3)}/${ri(1, 4)}`]);\n  list.push(['lướt newfeed', `lướt newfeed ${ri(2, 4)}`]);\n  list.push(['chấp nhận All', 'chấp nhận All']);\n  list.push(['tương tác', `tương tác ${pattern(ri(3, 5))}`]);\n  const col = jgCol[n.id];\n  if (col !== undefined) {\n    const joined = jg.filter(r => /đã join/i.test(r[col] || '')).map(r => +r[0]);\n    if (joined.length) list.push(['tương tác group', `group ${joined[ri(0, joined.length - 1)]} tương tác ${pattern(ri(2, 3))}`]);\n    const toJoin = jg.filter(r => /chưa join/i.test(r[col] || '') && (okGroup.size === 0 || okGroup.has(+r[0]))).slice(0, Math.max(0, q.join)).map(r => +r[0]);\n    if (toJoin.length) list.push(['join group', `join group ${toJoin.join(', ')}`]);\n    const rec = recent[n.id] || new Set();\n    const canPost = shuffle(jg.filter(r => /đã join/i.test(r[col] || '') && okGroup.has(+r[0])).map(r => +r[0])\n      .filter(g => !rec.has(g) && !teamGroupsToday.has(g)));\n    let grp = q.grp; if (light[n.id] === 'Đỏ' || n.noGroup) grp = 0; else if (light[n.id] === 'Vàng') grp = Math.min(grp, 2);\n    for (let i = 0; i < Math.min(grp, canPost.length); i++) {\n      const c = takeContent(n.id, 'group'); if (!c) break;\n      teamGroupsToday.add(canPost[i]);\n      list.push(['đăng group', `đăng group ${c.code} (${c.content}) → group ${canPost[i]}`, 'group']);\n    }\n  }\n  for (let i = 0; i < q.wall; i++) { const c = takeContent(n.id, 'wall'); if (!c) break; list.push(['đăng tường', `đăng tường ${c.code} (${c.content})`]); }\n  const nf = Math.min(q.fr, frList.length - frIdx);\n  if (nf > 0) { const ids = frList.slice(frIdx, frIdx + nf); frIdx += nf; ids.forEach(x => frReserve.push({ row: x.row, nick: n.id }));\n    list.push(['kết bạn', `kết bạn ${ids.map(x => x.r[0]).join(', ')}`]); }\n  // 2 cụm mỗi nick: sáng và chiều (giảm chọn lại trình duyệt, vẫn rải trong ngày)\n  // Chia cụm: mỗi bài group 1 cụm riêng (tối thiểu 2 cụm/nick), việc khác rải đều vào các cụm\n  const lane = nicks.indexOf(n) % CFG.LANES; const groups = list.filter(x => x[2] === 'group'); const others = shuffle(list.filter(x => x[2] !== 'group'));\n  const k = Math.max(2, groups.length); const blocks = Array.from({ length: k }, (_, i) => (groups[i] ? [groups[i]] : []));\n  others.forEach((x, i) => blocks[i % k].push(x)); blocks.forEach((b, i) => { shuffle(b); tasks.push({ nick: n, lane, idx: i, items: b }); });\n}\n// Xếp giờ: mỗi luồng 1 dòng thời gian riêng (chạy song song); việc trong cụm cách TASK_GAP, giữa cụm BLOCK_GAP;\n// bài group: cùng nick cách ≥ NICK_GROUP_GAP_MIN, cả đội cách ≥ TEAM_GROUP_GAP_MIN (tính chung mọi luồng)\nconst toMin = s => +s.slice(0, 2) * 60 + +s.slice(3); const hhmm = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');\nconst S = toMin(CFG.OFFICE_START), E = toMin(CFG.OFFICE_END), L1 = toMin(CFG.LUNCH_START), L2 = toMin(CFG.LUNCH_END);\nconst rows = []; const overflow = []; const groupTimes = []; const lastNickGroup = {};\nconst fixGroup = (t, nick) => { t = Math.max(t, (lastNickGroup[nick] ?? -999) + CFG.NICK_GROUP_GAP_MIN);\n  for (let k = 0; k < 500; k++) { if (t >= L1 && t < L2) t = L2; const c = groupTimes.find(g => Math.abs(t - g) < CFG.TEAM_GROUP_GAP_MIN); if (!c) break; t = c + CFG.TEAM_GROUP_GAP_MIN; } return t; };\nfor (let lane = 0; lane < CFG.LANES; lane++) {\n  // Xếp vòng: cụm 1 của mọi nick trong luồng, rồi cụm 2... → 2 cụm liền nhau của cùng nick cách xa nhau\n  const mine = tasks.filter(x => x.lane === lane); const ln = shuffle([...new Set(mine.map(x => x.nick.id))]);\n  const maxIdx = Math.max(-1, ...mine.map(x => x.idx)); const order = [];\n  for (let i = 0; i <= maxIdx; i++) for (const id of ln) { const b = mine.find(x => x.nick.id === id && x.idx === i); if (b) order.push(b); }\n  let t = S + ri(0, 10);\n  for (const b of order) {\n    for (const it of b.items) {\n      if (t >= L1 && t < L2) t = L2 + ri(0, 10);\n      if (it[2] === 'group') t = fixGroup(t, b.nick.id);\n      if (t > E) { overflow.push(`${b.nick.id}: ${it[1]}`); continue; }\n      if (it[2] === 'group') { groupTimes.push(t); lastNickGroup[b.nick.id] = t; }\n      rows.push([dayVN, hhmm(t), b.nick.id, b.nick.name, it[0], it[1], 'Có', 'Chờ', '', `sinh bởi n8n L1-02 · luồng ${lane + 1}`]);\n      t += ri(CFG.TASK_GAP[0], CFG.TASK_GAP[1]);\n    }\n    t += ri(CFG.BLOCK_GAP[0], CFG.BLOCK_GAP[1]);\n  }\n}\nrows.sort((a, b) => a[1].localeCompare(b[1]));\nconst data = frReserve.map(x => ({ range: `'Add Friend'!C${x.row}`, values: [[`Đã xếp ${x.nick} ${dayVN}`]] }));\nconst nPost = rows.filter(r => /^đăng/.test(r[4])).length;\nreturn [{ json: { skip: false, day, rows, data, overflow, summary: `${rows.length} việc cho ${nicks.length} nick ngày ${dayVN}` + (overflow.length ? `; ${overflow.length} việc không vừa giờ` : '') + (okGroup.size ? '' : '; chưa có group A/B nên không xếp bài group') + (cqRows.length < nPost + 5 ? `; kho content sắp hết (còn ${cqRows.length - nPost})` : '') } }];\n"
       },
-      "id": "3c5d7a28-b9fc-4970-8b1f-402a1b386701",
+      "id": "4621a9d3-2082-4aac-b57a-e4ad74d2fd58",
       "name": "Sinh lịch",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -290,7 +290,7 @@
           },
           "conditions": [
             {
-              "id": "05985c0e-b1b1-4468-9e6e-6b7bf3d8f943",
+              "id": "28bca26c-1bf8-4aa4-9dd4-c371eef06529",
               "leftValue": "={{ !$json.skip && $json.rows.length > 0 }}",
               "rightValue": true,
               "operator": {
@@ -304,7 +304,7 @@
         },
         "options": {}
       },
-      "id": "dc0a98e1-7d4f-4dd1-8880-1ebfb8c08cc5",
+      "id": "a71b752a-e0eb-4427-a4dc-932dc112d3c3",
       "name": "Có việc mới?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
@@ -324,7 +324,7 @@
         "jsonBody": "={{ JSON.stringify({ values: $json.rows }) }}",
         "options": {}
       },
-      "id": "0ea768e0-cbff-4634-b8c3-d31ebf8017c8",
+      "id": "5c5bbd56-a838-42f7-8376-08c56087fc9c",
       "name": "Ghi Lịch SM",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -348,7 +348,7 @@
           },
           "conditions": [
             {
-              "id": "586d3805-b51a-4129-b707-d03c63a8351d",
+              "id": "7cc6515a-65fa-4e51-aa0b-fe308a3bb0b5",
               "leftValue": "={{ $('Sinh lịch').first().json.data.length > 0 }}",
               "rightValue": true,
               "operator": {
@@ -362,7 +362,7 @@
         },
         "options": {}
       },
-      "id": "ad0c93f7-3913-4fed-98d2-9d0f3fc03d7a",
+      "id": "76c196e7-d61d-4995-9924-2df5e9cd8092",
       "name": "Có người kết bạn?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
@@ -382,7 +382,7 @@
         "jsonBody": "={{ JSON.stringify({ valueInputOption: 'USER_ENTERED', data: $('Sinh lịch').first().json.data }) }}",
         "options": {}
       },
-      "id": "4b791e2f-f152-4f1f-beea-a21227216672",
+      "id": "b62b858d-b64b-4486-a66b-65f9fc9c21d4",
       "name": "Giữ chỗ kết bạn",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -401,7 +401,7 @@
         "text": "={{ '🗓 ' + $('Sinh lịch').first().json.summary }}",
         "additionalFields": {}
       },
-      "id": "1b14492c-d7aa-453b-891d-90557263e665",
+      "id": "419a6e44-c0fb-4153-8548-a32826041e2e",
       "name": "Báo nhóm",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,

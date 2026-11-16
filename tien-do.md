@@ -1,5 +1,12 @@
 # Tiến độ chạy lịch SM
 
+## 2026-11-16 (bàn giao cấp 3 → xem `ops/BAN-GIAO-CAP-3.md`)
+- n8n 2.35.7 chạy ở máy này, tự mở khi đăng nhập (Task Scheduler "Smock n8n"). Bật L1-01…L1-07; Lead Hunter tắt (thiếu key).
+- **L1-02 đã bật → không tự lên lịch nữa.** Lịch 17/11 (dòng 193–234, 42 việc, 2 luồng) do n8n sinh. Log qua webhook (`ghi-log-webhook.ps1`), đã thử OK (dòng thử ở cuối Nhật Ký SM cần xoá).
+- Cầu nối cấp 2 chạy trọn lần đầu: 6 caption phái sinh CG1/CG2 vào Pool Content SM dòng 2–7, người dùng đã duyệt (PC1–PC6).
+- Mã bài kế tiếp do n8n tự tính từ Lịch SM (17/11 dùng K123–K138). Content KE đã xếp đến CG30.
+- Tồn đọng: Add Friend STT 1–15 đánh dấu đã gửi; SM02 "hạn chế group"?; SM04 không có trình duyệt máy này.
+
 ## 2026-11-11
 Toàn bộ việc dở 10/11 (gồm SM02 — người dùng xác nhận SM02 **không** bị checkpoint/shadowban) đã dồn sang Lịch SM dòng **140–162**, 09:25–14:45; CG2 đổi sang group 2 (group 21 cấm quảng cáo). Dòng 110–139 ngày 10/11 còn "Chờ" là bản cũ, bỏ qua.
 - 09:12–10:00 chạy dồn: Done 140–142, 144–150, 152–154, 156, 158. Bài: K117 (SM01 group 1 CG1), K118 (SM01 tường CG8), K119 (SM03 tường CG12 — folder ảnh LILY 2 bị từ chối truy cập).

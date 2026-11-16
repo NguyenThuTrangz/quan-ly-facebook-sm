@@ -520,8 +520,31 @@ const now = vnNow();
 pool.filter(x => /^CG/.test(x.id) && lastUse[x.id] && (now - lastUse[x.id]) / 864e5 >= CFG.CONTENT_REUSE_DAYS && !derived.has(x.id)).slice(0, 10)
   .forEach(x => files.push({ path: `inbox/captions/${id('CAP')}.json`, body: { task_id: null, kind: 'caption', sheet_row: x.row, source_code: x.id, source_caption: x.caption, type: 'group', image_link: x.media, variants: 3 } }));
 gs.forEach((r, i) => { if (r[16] === 'Chờ chấm' && r[4]) files.push({ path: `inbox/groups/${id('GRP')}.json`, body: { task_id: null, kind: 'group', sheet_row: i + 2, stt: +r[0], name: r[1], url: r[2], text_file: r[4] } }); });
-if (new Date().getDay() === 0) files.push({ path: `inbox/reports/${id('RPT')}.json`, body: { task_id: null, kind: 'weekly_report', week_ending: stamp } });
-return files.map(f => { f.body.task_id = f.path.split('/').pop().replace('.json', ''); return { json: f, binary: { data: { data: Buffer.from(JSON.stringify(f.body, null, 2)).toString('base64'), mimeType: 'application/json', fileName: f.path.split('/').pop() } } }; });"""
+const out = [];
+if (now.getDay() === 0) {
+  files.push({ path: `inbox/reports/${id('RPT')}.json`, body: { task_id: null, kind: 'weekly_report', week_ending: stamp } });
+  // Số liệu tuần cho scripts/weekly_numbers.py của cấp 2 (data/weekly/*.csv). Repo cấp 2 có thể public →
+  // chỉ xuất SỐ theo nick/ngày và trạng thái lead, không xuất tên, link hay nội dung của khách.
+  const nk = V('Đọc Nhật Ký SM'), lh = V('Đọc Lead Hunter');
+  const csv = rows => rows.map(r => r.map(v => { v = String(v ?? ''); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(',')).join('\n') + '\n';
+  const from = new Date(now); from.setDate(from.getDate() - 6); from.setHours(0, 0, 0, 0);
+  const per = {};
+  for (const r of nk) { const dd = parseDay(r[0]); if (!dd || dd < from || !/^SM0\d$/.test(r[1] || '')) continue;
+    const k = isoOf(dd) + '|' + r[1]; const p = per[k] = per[k] || { xong: 0, loi: 0, wall: 0, grp: 0, join: 0, fr: 0, tt: 0, red: false };
+    if (r[8] === 'Xong' || r[8] === 'Một phần') p.xong++; else p.loi++;
+    const sl = +r[9] || 0;
+    if (r[3] === 'Đăng bài') { if (/group/i.test(r[4] || '')) p.grp += sl; else p.wall += sl; }
+    if (r[3] === 'Join group') p.join += sl; if (r[3] === 'Kết bạn') p.fr += sl;
+    if (/^Tương tác/.test(r[3] || '') || r[3] === 'Tim story') p.tt += sl;
+    if (/checkpoint|identity|xác minh|can.?t use|bị gỡ|hạn chế/i.test((r[5] || '') + ' ' + (r[7] || ''))) p.red = true; }
+  const bc = [['Ngày', 'Nick', 'Việc xong', 'Việc lỗi', 'Bài tường', 'Bài group', 'Join', 'Kết bạn', 'Tương tác', 'Đèn', 'Ghi chú']]
+    .concat(Object.keys(per).sort().map(k => { const [dd, n] = k.split('|'); const p = per[k];
+      return [dd, n, p.xong, p.loi, p.wall, p.grp, p.join, p.fr, p.tt, p.red ? 'Đỏ' : p.loi > p.xong ? 'Vàng' : 'Xanh', '']; }));
+  const lead = [['Trạng thái']].concat(lh.filter(r => r[11]).map(r => [r[11]]));
+  for (const [p, rows] of [['data/weekly/bao-cao-ngay.csv', bc], ['data/weekly/lead-hunter.csv', lead]])
+    out.push({ json: { path: p }, binary: { data: { data: Buffer.from(csv(rows), 'utf8').toString('base64'), mimeType: 'text/csv', fileName: p.split('/').pop() } } });
+}
+return out.concat(files.map(f => { f.body.task_id = f.path.split('/').pop().replace('.json', ''); return { json: f, binary: { data: { data: Buffer.from(JSON.stringify(f.body, null, 2)).toString('base64'), mimeType: 'application/json', fileName: f.path.split('/').pop() } } }; }));"""
 import_js = CONFIG_JS + r"""
 const FORBID = %s;
 const rows = []; const errors = [];
@@ -531,7 +554,9 @@ let stt = 0; try { for (const r of ($('Đọc Pool Content SM (sáng)').first().
 const media = {}; try {
   for (const x of buildPool(($('Đọc content KE (sáng)').first().json.values || []), ($('Đọc Pool Content SM (sáng)').first().json.values || []))) media[x.id] = x.media;
 } catch (e) {}
+const okIds = [];
 for (const it of $input.all()) {
+  if (!it.json || !Object.keys(it.json).length || (it.json.error && !it.json.data)) continue;   // outbox trống / file không đọc được
   const o = it.json.data || it.json; const fname = it.json.fileName || '';
   if (!/^(CAP|GRP|RPT)-\d{8}-\d{3}$/.test(o.task_id || '')) { errors.push(`${fname}: thiếu/ sai task_id`); continue; }
   if (JSON.stringify(o).match(new RegExp('"(' + FORBID.join('|') + ')"', 'i'))) { errors.push(`${o.task_id}: có trường bị cấm`); continue; }
@@ -543,33 +568,37 @@ for (const it of $input.all()) {
     if (!keys.every(k => k in s)) { errors.push(`${o.task_id}: thiếu điểm`); continue; }
     rows.push({ update: { range: `'Group Score'!F${o.sheet_row}:Q${o.sheet_row}`, values: [[s.gates, s.icp, s.sell, s.active, s.engage, s.buyer, s.geo, s.spam, o.total, o.tier, String(o.evidence || '').slice(0, 1000), 'Đã chấm']] } });
   }
+  okIds.push(o.task_id);   // chỉ file nhận hợp lệ mới chuyển sang done/; file lỗi để lại cho cấp 2 làm lại
 }
-return [{ json: { appends: rows.filter(r => r.append).map(r => r.append), updates: rows.filter(r => r.update).map(r => r.update), errors } }];""" % FORBID
+return [{ json: { appends: rows.filter(r => r.append).map(r => r.append), updates: rows.filter(r => r.update).map(r => r.update), errors, ok_ids: okIds } }];""" % FORBID
 nodes, c = [], {}
 nodes += [sched("22:15 đẩy việc sang cấp 2", "15 22 * * *", [-1340, 160]),
           gget("Đọc Lịch SM", "\"'Lịch SM'!A2:J5000\"", [-1120, 160]),
           gget("Đọc Pool Content SM", POOL_RANGE, [-900, 160]),
           gget("Đọc content KE", KE_RANGE, [-680, 160], sheet=KE_SHEET),
           gget("Đọc Group Score", "\"'Group Score'!A2:R500\"", [-460, 160]),
+          gget("Đọc Nhật Ký SM", "\"'Nhật Ký SM'!A2:J8000\"", [-460, 20]),
+          gget("Đọc Lead Hunter", "\"'Lead Hunter'!A2:N5000\"", [-350, 20]),
           code("Tạo file việc", export_js, [-240, 160], notes="Mỗi việc một file JSON có task_id duy nhất. File text group do cấp 3 lưu sẵn ở thư mục chung."),
-          node("Ghi vào inbox repo cấp 2", "n8n-nodes-base.readWriteFile", 1, {"operation": "write", "fileName": "={{ $('Tạo file việc').item.json.path.startsWith('inbox') ? 'C:/smock-level2-copilot/' + $json.path : '' }}", "dataPropertyName": "data", "options": {}}, [-20, 160]),
-          node("git commit + push inbox", "n8n-nodes-base.executeCommand", 1, {"command": "=git -C \"C:/smock-level2-copilot\" pull --rebase && git -C \"C:/smock-level2-copilot\" add inbox && git -C \"C:/smock-level2-copilot\" commit -m \"inbox {{ $now.toFormat('yyyy-MM-dd HH:mm') }}\" ; git -C \"C:/smock-level2-copilot\" push", "executeOnce": True}, [200, 160],
+          node("Ghi vào inbox repo cấp 2", "n8n-nodes-base.readWriteFile", 1, {"operation": "write", "fileName": "={{ 'C:/smock-level2-copilot/' + $json.path }}", "dataPropertyName": "data", "options": {}}, [-20, 160]),
+          node("git commit + push inbox", "n8n-nodes-base.executeCommand", 1, {"command": "=git -C \"C:/smock-level2-copilot\" pull --rebase && git -C \"C:/smock-level2-copilot\" add inbox data && git -C \"C:/smock-level2-copilot\" commit -m \"inbox {{ $now.toFormat('yyyy-MM-dd HH:mm') }}\" ; git -C \"C:/smock-level2-copilot\" push", "executeOnce": True}, [200, 160],
                notes="Cần bật node Execute Command (xem n8n/level1/README.md) và git đã đăng nhập trên máy."),
           sched("06:30 kéo kết quả cấp 2", "30 6 * * *", [-1120, 500]),
           gget("Đọc Pool Content SM (sáng)", POOL_RANGE, [-1010, 500]),
           gget("Đọc content KE (sáng)", KE_RANGE, [-850, 620], sheet=KE_SHEET),
           node("git pull", "n8n-nodes-base.executeCommand", 1, {"command": "git -C \"C:/smock-level2-copilot\" pull --rebase", "executeOnce": True}, [-680, 500]),
           node("Đọc file outbox", "n8n-nodes-base.readWriteFile", 1, {"fileSelector": "C:/smock-level2-copilot/outbox/*/*.json", "options": {}}, [-460, 500], alwaysOutputData=True),
-          node("Đọc JSON", "n8n-nodes-base.extractFromFile", 1, {"operation": "fromJson", "options": {}}, [-240, 500]),
+          node("Đọc JSON", "n8n-nodes-base.extractFromFile", 1, {"operation": "fromJson", "options": {}}, [-240, 500], onError="continueRegularOutput", alwaysOutputData=True),
           code("Kiểm + chuyển thành lệnh ghi", import_js, [-20, 500], notes="Từ chối file sai task_id, thiếu điểm, hoặc có trường bị cấm (SĐT, email, mật khẩu)."),
           gpost("Thêm caption phái sinh (Chờ duyệt)", "/values/{{ encodeURIComponent(\"'Pool Content SM'!A:F\") }}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS", "{ values: $json.appends.length ? $json.appends : [] }", [200, 440],
                 onError="continueRegularOutput", alwaysOutputData=True),
           gpost("Cập nhật điểm group + trạng thái", "/values:batchUpdate", "{ valueInputOption: 'USER_ENTERED', data: $('Kiểm + chuyển thành lệnh ghi').first().json.updates }", [420, 440],
                 onError="continueRegularOutput", alwaysOutputData=True),
-          node("Chuyển outbox đã xử lý sang done", "n8n-nodes-base.executeCommand", 1, {"command": "powershell -NoProfile -Command \"cd 'C:/smock-level2-copilot'; New-Item -ItemType Directory -Force done | Out-Null; Get-ChildItem outbox -Recurse -Filter *.json | ForEach-Object { git mv $_.FullName ('done/' + $_.Name) }; git commit -m 'done'; git push\""}, [640, 440]),
+          node("Chuyển outbox đã xử lý sang done", "n8n-nodes-base.executeCommand", 1, {"command": "=powershell -NoProfile -Command \"cd 'C:/smock-level2-copilot'; New-Item -ItemType Directory -Force done | Out-Null; foreach ($i in @({{ $('Kiểm + chuyển thành lệnh ghi').first().json.ok_ids.map(x => \"'\" + x + \"'\").join(',') }})) { Get-ChildItem outbox -Recurse -Filter ($i + '.*') | ForEach-Object { git mv $_.FullName ('done/' + $_.Name) } }; git commit -m 'done'; git push\"", "executeOnce": True}, [640, 440],
+               notes="Chỉ chuyển file đã nhận hợp lệ (ok_ids). File bị từ chối nằm lại outbox để cấp 2 sửa."),
           telegram("Báo lỗi file cấp 2", "{{ $('Kiểm + chuyển thành lệnh ghi').first().json.errors.length ? '⚠️ Cấp 2: ' + $('Kiểm + chuyển thành lệnh ghi').first().json.errors.join('; ') : '✅ Cấp 2: đã nhập kết quả' }}", [860, 440])]
 for a, b in [("22:15 đẩy việc sang cấp 2", "Đọc Lịch SM"), ("Đọc Lịch SM", "Đọc Pool Content SM"), ("Đọc Pool Content SM", "Đọc content KE"),
-             ("Đọc content KE", "Đọc Group Score"), ("Đọc Group Score", "Tạo file việc"),
+             ("Đọc content KE", "Đọc Group Score"), ("Đọc Group Score", "Đọc Nhật Ký SM"), ("Đọc Nhật Ký SM", "Đọc Lead Hunter"), ("Đọc Lead Hunter", "Tạo file việc"),
              ("Tạo file việc", "Ghi vào inbox repo cấp 2"), ("Ghi vào inbox repo cấp 2", "git commit + push inbox"),
              ("06:30 kéo kết quả cấp 2", "Đọc Pool Content SM (sáng)"), ("Đọc Pool Content SM (sáng)", "Đọc content KE (sáng)"), ("Đọc content KE (sáng)", "git pull"), ("git pull", "Đọc file outbox"), ("Đọc file outbox", "Đọc JSON"), ("Đọc JSON", "Kiểm + chuyển thành lệnh ghi"),
              ("Kiểm + chuyển thành lệnh ghi", "Thêm caption phái sinh (Chờ duyệt)"), ("Thêm caption phái sinh (Chờ duyệt)", "Cập nhật điểm group + trạng thái"),

@@ -1,5 +1,12 @@
 # Tiến độ chạy lịch SM
 
+## 2026-11-17 — SM04, SM05 mới (việc dở cho agent sau)
+- Nick nhận từ HR: **SM04** Chrome profile "SM04", FB **Jenny Smocking** `profile.php?id=61595904006414`; **SM05** Chrome profile "SM05", FB đang tên **Thanh Chi Lê** `profile.php?id=61595814087257`.
+- Mẫu chuẩn: sheet **SMOCK's Information** `1Y9xyKErb3sMZvdgPVXCUWyk7GOt6Y7Qp32i5F8jtV8s`, tab SM04/SM05 (dòng 1–20 = mẫu, dòng 22–26 = hiện trạng + việc đã chốt).
+- Người dùng chốt: Bio/Intro theo mẫu SM, Workplace K-Embroidery, xoá SĐT/Gmail tuyển dụng + trường ĐH + "Công ty K-Global"; **SM05 đổi tên → Olivia Smocking**; avatar/ảnh bìa để sau.
+- Việc agent sau: (1) người dùng cài + Connect tiện ích Claude ở 2 profile Chrome; (2) ghi deviceId vào mục "Máy này" CLAUDE.md + shortcut; (3) sửa profile theo sheet; (4) ghi log.
+- Lưu ý: WhatsApp trong sheet là +84 83 333 3061, còn bio FB thật của SM03 là +84 886 421 089 → hỏi người dùng số nào đúng trước khi sửa.
+
 ## 2026-11-17 — luồng 1 (SM01, SM03; xong 14:25)
 - Bắt đầu 09:45 (trễ) → người dùng duyệt **làm bù xen kẽ**. Lịch luồng 1 dòng 193–234: **xong hết**, log webhook OK.
 - Bài: SM03 **K133** g30 (chờ duyệt, 13:38 vẫn pending), **K134** g15 (lên ngay), **K135** g29 (chờ duyệt), **K136** g12 14 ảnh (chờ duyệt), tường **K138** (= CG6 thay CG30 thiếu ảnh). SM01 **K123** g5 (chờ duyệt), **K124** g25 (chờ duyệt), **K125** g1 (đổi từ g32 resale, lên ngay), tường **K129**, **K128**. Tất cả đã đăng ký Radar.

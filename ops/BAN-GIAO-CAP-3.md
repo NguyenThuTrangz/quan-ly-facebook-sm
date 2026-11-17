@@ -28,7 +28,7 @@ Agent mới đọc file này **sau** `CLAUDE.md` và `tien-do.md`. Trả lời n
 | Cấp 3 chạy lịch | 08:30 "chạy lịch luồng 1" | ~08:35 (đợi cột J "Gói sẵn") |
 - Máy: Sleep/Hibernate = không bao giờ (đã kiểm). n8n: Task Scheduler "Smock n8n" (khi đăng nhập). Copilot: "Smock Copilot cap 2" 05:30, chạy khi người dùng đang đăng nhập.
 - Lượt nào đã chạy thì lượt bù tự bỏ qua (lịch đã có, bài đã "Gói sẵn", việc đã gửi).
-- Kiểm nhanh buổi sáng: `http://localhost:5678/healthz` = ok; `C:\smock-level2-copilot\logs\run-*.log` mới nhất có "Đã đẩy n kết quả" hoặc "Có 0 việc".
+- Kiểm nhanh bất cứ lúc nào: gõ **`trang-thai`** trong cmd/PowerShell (`tools/trang-thai.py`, chỉ đọc): n8n, 2 tác vụ Task Scheduler, lần chạy gần nhất từng workflow, inbox/outbox cấp 2, việc người dùng cần làm theo giờ.
 
 ## 1. Hệ thống đang chạy thế nào
 ```

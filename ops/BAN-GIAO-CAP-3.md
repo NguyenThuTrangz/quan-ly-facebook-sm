@@ -17,6 +17,19 @@ Agent mới đọc file này **sau** `CLAUDE.md` và `tien-do.md`. Trả lời n
 - Người dùng không cần bấm Execute các workflow theo thứ tự; chúng tự chạy theo giờ. Bấm tay chỉ để thử.
 - **Lượt bù giờ hành chính (máy tắt qua đêm)**: 08:20 L1-02 sinh lịch HÔM NAY nếu chưa có · 08:25 L1-03 gói bài · 08:35 L1-06 gửi việc cấp 2 · L1-06 kéo kết quả 06:30, 09:30, 11:30, 14:30, 16:30. Người dùng gõ "tiếp tục công việc" cho Copilot sau 08:35; cấp 3 bắt đầu chạy lịch từ ~08:30 (đợi L1-03 xong, cột J có "Gói sẵn").
 
+## 0c. Luồng 2 phương án (chốt 17/11)
+| | **A. Máy bật qua đêm** | **B. Máy tắt qua đêm (dự phòng)** |
+|---|---|---|
+| Lịch ngày mai | 21:30 L1-02 | 08:20 L1-02 sinh lịch hôm nay |
+| Gói bài | 22:00 L1-03 | 08:25 L1-03 |
+| Gửi việc cấp 2 | 22:15 L1-06 | 08:35 L1-06 |
+| Copilot viết caption | 05:30 Task Scheduler "Smock Copilot cap 2" | Lúc bật máy (StartWhenAvailable) hoặc người dùng gõ "tiếp tục công việc" |
+| Caption về sheet | 06:30 L1-06 | 09:30 / 11:30 / 14:30 / 16:30 L1-06 |
+| Cấp 3 chạy lịch | 08:30 "chạy lịch luồng 1" | ~08:35 (đợi cột J "Gói sẵn") |
+- Máy: Sleep/Hibernate = không bao giờ (đã kiểm). n8n: Task Scheduler "Smock n8n" (khi đăng nhập). Copilot: "Smock Copilot cap 2" 05:30, chạy khi người dùng đang đăng nhập.
+- Lượt nào đã chạy thì lượt bù tự bỏ qua (lịch đã có, bài đã "Gói sẵn", việc đã gửi).
+- Kiểm nhanh buổi sáng: `http://localhost:5678/healthz` = ok; `C:\smock-level2-copilot\logs\run-*.log` mới nhất có "Đã đẩy n kết quả" hoặc "Có 0 việc".
+
 ## 1. Hệ thống đang chạy thế nào
 ```
 21:30  n8n L1-02 sinh Lịch SM ngày làm việc kế tiếp (tab Lịch SM, cột J ghi "luồng 1/2")

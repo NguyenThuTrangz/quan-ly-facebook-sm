@@ -1,5 +1,10 @@
 # Tiến độ chạy lịch SM
 
+## 2026-11-17 17:55 — Máy bật 24/24 (phương án A, `ops/BAN-GIAO-CAP-3.md` mục 0c)
+- Người dùng để máy treo 24/24 từ 17/11 tối. Đã kiểm `trang-thai`: n8n chạy, L1-01…L1-07 bật, Copilot cấp 2 lần tới 05:30 18/11, Sleep = không bao giờ. Đêm nay: 18:00 L1-04 → 21:30 L1-02 lịch 18/11 → 22:00 L1-03 → 22:15 L1-06 → 05:30 Copilot → 06:30 L1-06 kéo caption. Sáng 18/11 cấp 3 chạy lịch từ 08:30.
+- **Nick mới chưa vào n8n/Copilot**: tab Tài khoản cột F của SM04, SM05, SM07 = "Chờ chuẩn hoá profile (chưa chạy lịch, chờ người dùng bảo set)" → L1-02 bỏ qua (chỉ lấy nick có chữ "Hoạt động"). SM06, SM08 để trống.
+- **Khi người dùng bảo "set nick mới"** (chỉ lúc đó): (1) người dùng nối tiện ích Claude ở profile Chrome → ghi deviceId vào mục "Máy này" CLAUDE.md; (2) sửa cột F = "Hoạt động - hạn chế group" cho tới khi nick join ≥ 15 group A/B (code n8n chưa có luật ≥ 15, chỉ xếp vào group đã join), đủ thì đổi về "Hoạt động"; (3) có số WA riêng ở sheet SMOCK's Information; (4) kiểm Join Group SM cột I–M, tab Target + Workload có dòng nick; (5) chạy thử `node ops/test_level1.js`. Không cần sửa code n8n (CFG đã có SM04–SM08).
+
 ## 2026-11-17 — SM04, SM05, SM07 mới (việc dở cho agent sau)
 - **SM07** Chrome profile "SM07", FB đang tên **Phan Thị Ngọc Anh** → đổi tên **Maily Smock** theo sheet (tab SM07 dòng 22–26), cùng cách làm như SM04/SM05.
 - **WhatsApp (chốt lại 17/11): mỗi nick 1 số WA riêng, người dùng cấp sau.** Chưa có số riêng thì KHÔNG đưa WA lên bio/intro FB của SM04/05/07 (số 3061 trong sheet chỉ là tạm; ghi chú dòng 27 các tab). SM03 giữ số riêng +84 886 421 089, không sửa.

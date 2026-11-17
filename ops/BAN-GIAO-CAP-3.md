@@ -11,6 +11,11 @@ Agent mới đọc file này **sau** `CLAUDE.md` và `tien-do.md`. Trả lời n
 - Repo cấp 2 `C:\smock-level2-copilot`: inbox trống, 2 việc thử đã vào `done/`. Chưa rõ người dùng đã tạo Task Scheduler cấp 2 (05:30) chưa → hỏi.
 - Commit cuối repo cấp 1: `cf7b953` (+ commit bàn giao này). Workflow trong n8n khớp repo (cài bằng `ops/cai_dat_n8n.py`).
 
+## 0b. Cập nhật 17/11 sáng
+- L1-03 sửa lỗi tạo thư mục (cmd `if … & if …` bỏ qua phần sau khi thư mục đầu đã có → dùng 1 lệnh `mkdir` nhiều thư mục). Đã gói lịch 18/11: K139–K144 (PC1–PC6). Nếu n8n vừa cài lại workflow mà cần khởi động lại: dừng tiến trình node n8n → `Start-ScheduledTask 'Smock n8n'`.
+- Copilot cấp 2: người dùng chỉ gõ **`tiếp tục công việc`** (hoặc `/tiep-tuc`) trong VS Code mở `C:\smock-level2-copilot`. Quy trình nằm trong `.github/copilot-instructions.md` + `.github/prompts/tiep-tuc.prompt.md` của repo cấp 2.
+- Người dùng không cần bấm Execute các workflow theo thứ tự; chúng tự chạy theo giờ. Bấm tay chỉ để thử.
+
 ## 1. Hệ thống đang chạy thế nào
 ```
 21:30  n8n L1-02 sinh Lịch SM ngày làm việc kế tiếp (tab Lịch SM, cột J ghi "luồng 1/2")

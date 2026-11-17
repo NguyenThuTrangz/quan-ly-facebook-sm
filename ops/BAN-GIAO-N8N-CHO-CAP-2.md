@@ -1,3 +1,5 @@
+# ⚠️ ĐÃ CŨ (13/11) — KHÔNG LÀM THEO. n8n đã cài xong; workflow cài tự động bằng `ops/cai_dat_n8n.py`. Xem `ops/BAN-GIAO-CAP-3.md`.
+
 # Bàn giao cài đặt n8n cấp 1 (cho agent cấp 2 hướng dẫn tạm, 13/11/2026)
 
 ## Hiện trạng máy ADMIN

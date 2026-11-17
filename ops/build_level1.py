@@ -394,8 +394,9 @@ nodes += [sched("22:00 Chủ nhật–Thứ sáu", "0 22 * * 0-5", [-1340, 300])
           code("Chọn bài cần gói", pick_js, [-460, 300]),
           iff("Có bài?", "{{ !$json.empty && !!$json.folderId }}", [-240, 300]),
           node("Tạo thư mục gói", "n8n-nodes-base.executeCommand", 1, {
-              "command": "={{ $('Có bài?').all().map(i => i.json.dir.split('/').join('\\\\')).map(p => 'if not exist \"' + p + '\" mkdir \"' + p + '\"').join(' & ') }}",
-              "executeOnce": True}, [-130, 140], notes="n8n không tự tạo thư mục khi ghi file → tạo anh-dang-bai\\Kxxx trước (cmd, nối bằng &)."),
+              "command": "=mkdir {{ $('Có bài?').all().map(i => '\"' + i.json.dir.split('/').join('\\\\') + '\"').join(' ') }} 2>nul & exit /b 0",
+              "executeOnce": True},
+              [-130, 140], notes="n8n không tự tạo thư mục khi ghi file → 1 lệnh mkdir nhiều thư mục; thư mục đã có thì mkdir báo lỗi nhưng vẫn tạo các thư mục còn lại. KHÔNG dùng 'if not exist … & if …' (cmd gộp phần sau & vào if đầu)."),
           code("Tạo caption.txt", caption_js, [-20, 140]),
           node("Ghi caption.txt", "n8n-nodes-base.readWriteFile", 1, {"operation": "write", "fileName": "={{ $json.dir + '/caption.txt' }}", "dataPropertyName": "data", "options": {}}, [200, 140]),
           node("Liệt kê ảnh trong folder Drive", "n8n-nodes-base.httpRequest", 4.2, {

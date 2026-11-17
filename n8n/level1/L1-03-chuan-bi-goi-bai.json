@@ -12,7 +12,7 @@
           ]
         }
       },
-      "id": "af17eeec-1a6d-4c09-9f89-27fa1a66ec10",
+      "id": "75bb99f9-45b7-48cc-af6e-b0673751d543",
       "name": "22:00 Chủ nhật–Thứ sáu",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -20,6 +20,27 @@
         -1340,
         300
       ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "25 8 * * 1-6"
+            }
+          ]
+        }
+      },
+      "id": "82ca22c7-87b6-4caf-a3ce-2c2333018193",
+      "name": "08:25 Thứ 2–7 (bù)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1340,
+        480
+      ],
+      "notes": "Gói bài của lịch hôm nay nếu tối qua máy tắt (bài đã Gói sẵn thì bỏ qua)."
     },
     {
       "parameters": {
@@ -34,7 +55,7 @@
           }
         }
       },
-      "id": "485b058e-650f-48c3-987e-716479c6a89e",
+      "id": "87c9d173-49b6-4221-9103-ba83141ad6da",
       "name": "Đọc Lịch SM",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -61,7 +82,7 @@
           }
         }
       },
-      "id": "3d9e8f02-17d4-4e92-a2ab-84223fe6bf2e",
+      "id": "56339faf-bb0a-429e-acbd-4eb05c730020",
       "name": "Đọc Pool Content SM",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -88,7 +109,7 @@
           }
         }
       },
-      "id": "0b917a22-d027-4e26-bea5-134e8e8500f2",
+      "id": "b86f7378-d443-40f6-bbde-0f0568d4a278",
       "name": "Đọc content KE",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -106,7 +127,7 @@
       "parameters": {
         "jsCode": "// ===== Cấu hình chung cấp 1 (sửa ở đây) =====\nconst CFG = {\n  SHEET_ID: '1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0',\n  TOKEN: 'DOI_TOKEN_O_DAY',                 // trùng biến SMOCK_LOG_TOKEN trên máy cấp 3\n  PACK_DIR: 'C:/claude remote/anh-dang-bai', // thư mục gói bài cấp 3 đọc\n  L2_REPO: 'C:/smock-level2-copilot',        // bản clone repo cấp 2 trên máy này\n  OFFICE_START: '08:30', OFFICE_END: '17:00',\n  LUNCH_START: '11:45', LUNCH_END: '13:15',\n  NICK_GROUP_GAP_MIN: 60,       // 2 bài group của CÙNG 1 nick cách nhau tối thiểu (phút)\n  TEAM_GROUP_GAP_MIN: 6,        // 2 bài group bất kỳ của cả đội cách nhau tối thiểu (phút)\n  GROUP_REPOST_DAYS: 3,         // 1 nick không đăng lại cùng 1 group trong ngần này ngày; cả đội không trùng group trong ngày\n  TASK_GAP: [2, 4], BLOCK_GAP: [6, 12], // phút giữa 2 việc trong cụm / giữa 2 cụm\n  LANES: 2,                     // số luồng chạy song song: mỗi luồng = 1 phiên Claude cấp 3 + nhóm trình duyệt riêng\n  JG_COL: { SM01: 3, SM02: 4, SM03: 5, SM04: 8, SM05: 9, SM06: 10, SM07: 11, SM08: 12 }, // cột nick trong tab Join Group SM (D,E,F,I..M)\n  JG_TIER_COL: 6,               // cột G \"Tier\" tab Join Group SM — dùng khi tab Group Score chưa chấm\n  K_START: 122,                 // mã bài Kxxx lớn nhất đã dùng trước khi có n8n (Smock Radar)\n  CONTENT_REUSE_DAYS: 7,        // bộ ảnh được phái sinh caption mới sau ngần này ngày\n};\n// Kho content dùng tab có sẵn, KHÔNG cần tab riêng:\n//  - workbook KE, tab '3. CONTENT GROUP' (A STT, B TEXT, C MEDIA) → mã CG<STT>\n//  - tab 'Pool Content SM' (A STT, B Content, C Ảnh/Video, D Phân loại) → mã PC<STT>; Phân loại có \"chờ duyệt\" thì chưa dùng\n//  - content đã dùng / mã bài Kxxx: đọc từ cột F, J tab 'Lịch SM' (vd \"đăng group K123 (CG13) → group 5\")\nconst buildPool = (ke, pool) => {\n  const out = [];\n  // row = số dòng thật trên sheet (KE đọc từ A3, Pool Content SM đọc từ A2)\n  ke.forEach((r, i) => { const s = String(r[0] || '').trim(); if (/^\\d+$/.test(s) && String(r[1] || '').trim()) out.push({ id: 'CG' + s, caption: r[1], media: r[2] || '', kind: 'any', row: i + 3 }); });\n  pool.forEach((r, i) => { const s = String(r[0] || '').trim(); if (/^\\d+$/.test(s) && String(r[1] || '').trim() && !/chờ duyệt/i.test(r[3] || ''))\n    out.push({ id: 'PC' + s, caption: r[1], media: r[2] || '', kind: /tường|wall/i.test(r[3] || '') ? 'wall' : 'any', note: r[3] || '', row: i + 2 }); });\n  return out;\n};\nconst lichText = r => (r[5] || '') + ' ' + (r[9] || '');\nconst usedContent = lich => { const s = new Set(); for (const r of lich) for (const m of lichText(r).matchAll(/\\b(CG|PC)(\\d+)\\b/g)) s.add(m[1] + m[2]); return s; };\nconst maxKOf = (lich, start) => { let k = start; for (const r of lich) for (const m of lichText(r).matchAll(/\\bK(\\d{3,})\\b/g)) k = Math.max(k, +m[1]); return k; };\nconst vnNow = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));\nconst isoOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;\nconst vnOf = d => `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;\nconst sameDay = (s, d) => { s = String(s || '').trim(); return s.startsWith(isoOf(d)) || s.startsWith(vnOf(d)); };\n\n// Bài cần gói = dòng Lịch SM từ hôm nay trở đi, lệnh \"đăng … Kxxx (CGn|PCn)\", cột J chưa ghi \"Gói sẵn\"\nconst V = n => { try { return (($(n).first().json) || {}).values || []; } catch (e) { return []; } };\nconst lich = V('Đọc Lịch SM'); const pool = buildPool(V('Đọc content KE'), V('Đọc Pool Content SM'));\nconst byId = Object.fromEntries(pool.map(x => [x.id, x]));\nconst today = vnNow(); today.setHours(0, 0, 0, 0);\nconst parseDay = s => { s = String(s || ''); let m = /^(\\d{4})-(\\d{2})-(\\d{2})/.exec(s); if (m) return new Date(+m[1], +m[2] - 1, +m[3]);\n  m = /^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})/.exec(s); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; };\nconst out = [];\nlich.forEach((r, i) => {\n  const dd = parseDay(r[0]); if (!dd || dd < today || r[7] === 'Done') return;\n  const m = /\\b(K\\d{3,})\\b.*?\\b((?:CG|PC)\\d+)\\b/.exec(r[5] || ''); if (!m || /Gói sẵn/.test(r[9] || '')) return;\n  const code = m[1], src = byId[m[2]];\n  if (!src) { out.push({ json: { row: i + 2, code, note: r[9] || '', missing: m[2] } }); return; }\n  const link = src.media || ''; const f = /folders\\/([\\w-]+)/.exec(link) || /[?&]id=([\\w-]+)/.exec(link) || /\\/d\\/([\\w-]+)/.exec(link);\n  // Thay {{MA_BAI}} (caption phái sinh từ cấp 2) bằng mã bài thật; caption gốc chưa có mã thì thêm câu mời nhắn tin\n  let cap = String(src.caption).replace(/\\{\\{MA_BAI\\}\\}/g, code);\n  if (!new RegExp('\\\\b' + code + '\\\\b').test(cap)) cap += `\\n\\nDM or WhatsApp us code ${code} for the catalog.`;\n  out.push({ json: { row: i + 2, code, src: m[2], note: r[9] || '', caption: cap, folderId: f ? f[1] : null, dir: `${CFG.PACK_DIR}/${code}` } });\n});\nreturn out.length ? out : [{ json: { empty: true } }];"
       },
-      "id": "5299ddf8-7d10-4e25-9f69-4dd4d1dd505a",
+      "id": "2aa11b4f-c8ab-4074-8ba9-8a71b61752e6",
       "name": "Chọn bài cần gói",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -126,7 +147,7 @@
           },
           "conditions": [
             {
-              "id": "a5685228-58d8-4c79-8438-99deb0f87c6c",
+              "id": "f8772be5-315f-408d-8a50-6a6d2fb514f3",
               "leftValue": "={{ !$json.empty && !!$json.folderId }}",
               "rightValue": true,
               "operator": {
@@ -140,7 +161,7 @@
         },
         "options": {}
       },
-      "id": "c9e7f417-0025-4bff-a6a9-e5bf19eebafe",
+      "id": "5d7fdb89-46ff-4e87-9ccb-e9172df95a08",
       "name": "Có bài?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
@@ -154,7 +175,7 @@
         "command": "=mkdir {{ $('Có bài?').all().map(i => '\"' + i.json.dir.split('/').join('\\\\') + '\"').join(' ') }} 2>nul & exit /b 0",
         "executeOnce": true
       },
-      "id": "7e860a2b-2199-43ed-b4cf-00a887528ade",
+      "id": "d5f10b5b-f66c-4de2-a0b1-72c35661042e",
       "name": "Tạo thư mục gói",
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
@@ -168,7 +189,7 @@
       "parameters": {
         "jsCode": "const items = [];\nfor (const it of $('Có bài?').all()) {\n  if (it.json.empty) continue;\n  items.push({ json: it.json, binary: { data: { data: Buffer.from(it.json.caption, 'utf8').toString('base64'), mimeType: 'text/plain', fileName: 'caption.txt' } } });\n}\nreturn items;"
       },
-      "id": "cc7990f6-f99f-4ddb-85b4-2ebb310373ee",
+      "id": "924d2786-f3ec-4acc-a9ec-1206dbc9bf19",
       "name": "Tạo caption.txt",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -184,7 +205,7 @@
         "dataPropertyName": "data",
         "options": {}
       },
-      "id": "6ce3786d-f019-481b-bc18-8d7c0d1e98b7",
+      "id": "5f7ec63e-d932-4f08-9ed3-10c86f7795d0",
       "name": "Ghi caption.txt",
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1,
@@ -200,7 +221,7 @@
         "nodeCredentialType": "googleDriveOAuth2Api",
         "options": {}
       },
-      "id": "16a3712c-018f-4e4f-ab81-a92ecb2a902b",
+      "id": "20c54b2f-a9bd-4e7e-88d4-7a37d4659dbe",
       "name": "Liệt kê ảnh trong folder Drive",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -216,7 +237,7 @@
       "parameters": {
         "jsCode": "// Mỗi bài → danh sách file trong folder (từ Drive API) → mỗi ảnh một item để tải bản JPG 2048px\n// Node Drive trả 1 item cho mỗi bài theo đúng thứ tự đầu vào → ghép với bài cùng vị trí ở nhánh \"Có bài?\"\nconst out = []; const metas = $('Có bài?').all();\n$input.all().forEach((it, k) => {\n  const meta = metas[k] ? metas[k].json : {};\n  const files = (it.json.files || []).filter(f => /^image\\//.test(f.mimeType || '')).sort((a, b) => String(a.name).localeCompare(String(b.name)));\n  // Tải qua Drive API: ảnh thường lấy bản gốc (alt=media); HEIC lấy thumbnail 2048px (JPG) để FB nhận được\n  files.forEach((f, i) => { const heic = /heic|heif/i.test(f.mimeType || '') || /\\.hei[cf]$/i.test(f.name || '');\n    const url = heic && f.thumbnailLink ? f.thumbnailLink.replace(/=s\\d+$/, '=s2048')\n      : `https://www.googleapis.com/drive/v3/files/${f.id}?alt=media&supportsAllDrives=true`;\n    out.push({ json: { ...meta, fileId: f.id, url, idx: i + 1, total: files.length } }); });\n});\nreturn out;"
       },
-      "id": "d20ee043-d9d7-4d8f-af89-172fb7e31144",
+      "id": "3f751374-9498-4917-b765-811971382a22",
       "name": "Tách từng ảnh",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -245,7 +266,7 @@
           }
         }
       },
-      "id": "fcfc21b1-528f-47ba-851b-9628d07d3435",
+      "id": "4dbf2dd9-66f4-4bc1-bf9c-84f7e4f4ac38",
       "name": "Tải ảnh JPG 2048px",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -264,7 +285,7 @@
         "dataPropertyName": "data",
         "options": {}
       },
-      "id": "36fb8032-b0f1-41b1-88c4-6e49cc7b4586",
+      "id": "50cd7011-a8bb-4cc5-8fcc-b9bb1f110e15",
       "name": "Lưu ảnh vào gói",
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1,
@@ -277,7 +298,7 @@
       "parameters": {
         "jsCode": "const by = {};\n// Bài nào folder không có ảnh (video, thư mục con, trống) cũng phải ghi \"Lỗi gói 0/0 ảnh\"\nfor (const it of $('Có bài?').all()) { const k = it.json.row; by[k] = { row: k, code: it.json.code, note: it.json.note || '', total: 0, saved: 0 }; }\nfor (const it of $('Tách từng ảnh').all()) { const k = it.json.row; by[k] = by[k] || { row: k, code: it.json.code, note: it.json.note || '', saved: 0 }; by[k].total = it.json.total; }\nfor (const it of $input.all()) { const k = it.json.row; if (by[k]) by[k].saved++; }\n// Ghi kết quả vào cột J (Ghi chú) của chính dòng Lịch SM — cấp 3 đọc \"Gói sẵn\" là có thư mục anh-dang-bai/Kxxx\nconst tag = b => (b.saved > 0 && b.saved === b.total ? 'Gói sẵn' : 'Lỗi gói') + ` ${b.saved}/${b.total} ảnh`;\nconst data = Object.values(by).map(b => ({ range: `'Lịch SM'!J${b.row}`, values: [[(b.note ? b.note + ' · ' : '') + tag(b)]] }));\nreturn [{ json: { data, n: Object.keys(by).length } }];"
       },
-      "id": "92aed698-6ada-450b-b494-cf49d66de5ca",
+      "id": "201021c8-f3a6-471f-b4d3-26cc3de9b503",
       "name": "Gom kết quả theo bài",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -297,7 +318,7 @@
         "jsonBody": "={{ JSON.stringify({ valueInputOption: 'USER_ENTERED', data: $json.data }) }}",
         "options": {}
       },
-      "id": "436f4ad2-e72d-40ba-a2cc-0e59d46a2b05",
+      "id": "6ed40284-7bd4-409f-aa0f-8a6e9b56fa5d",
       "name": "Ghi trạng thái gói",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -313,6 +334,17 @@
   ],
   "connections": {
     "22:00 Chủ nhật–Thứ sáu": {
+      "main": [
+        [
+          {
+            "node": "Đọc Lịch SM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08:25 Thứ 2–7 (bù)": {
       "main": [
         [
           {

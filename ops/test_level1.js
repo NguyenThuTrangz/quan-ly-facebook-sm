@@ -94,7 +94,10 @@ ok(new Set(gIds).size === gIds.length, 'cả đội không đăng trùng 1 group
 ok(r8.rows.every(x => x[1] >= '08:30' && x[1] <= '17:00' && !(x[1] >= '11:45' && x[1] < '13:15')), 'vẫn trong giờ hành chính, bỏ giờ trưa');
 ok(new Set(r8.rows.map(x => x[9])).size === 2, 'chia 2 luồng chạy song song (ghi ở cột Ghi chú)');
 // Lịch sử: hôm qua SM01 đã đăng group 1..25 → hôm nay SM01 chỉ được vào group > 25
-const d0 = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' })); const yest = `${d0.getDate()}/${d0.getMonth() + 1}/${d0.getFullYear()}`;
+const d0 = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+// Ngày đích giống bộ sinh lịch: sáng → hôm nay, chiều/tối → ngày làm việc kế tiếp; lịch sử = ngày trước ngày đích
+const tgt = new Date(d0); if (d0.getHours() >= 12 || d0.getDay() === 0) tgt.setDate(tgt.getDate() + 1); if (tgt.getDay() === 0) tgt.setDate(tgt.getDate() + 1);
+const hd = new Date(tgt); hd.setDate(hd.getDate() - 1); const yest = `${hd.getDate()}/${hd.getMonth() + 1}/${hd.getFullYear()}`;
 const hist = Array.from({ length: 25 }, (_, i) => [yest, '09:00', 'SM01', 'Nick 1', 'đăng group', `đăng group K1 (CG1) → group ${i + 1}`]);
 const rH = run(g, { nodes: { ...base8, 'Đọc Lịch SM': { values: hist } } })[0].json;
 ok(rH.rows.filter(x => x[2] === 'SM01' && x[4] === 'đăng group').every(x => +/→ group (\d+)/.exec(x[5])[1] > 25), 'không đăng lại group đã đăng trong 3 ngày');
@@ -153,6 +156,11 @@ const ex = run(exp, { nodes: { 'Đọc Lịch SM': { values: [[oldIso, '09:00', 
 const b = ex.length && ex[0].json.body;
 ok(ex.length === 1 && b.source_code === 'CG2' && b.sheet_row === 4 && b.type === 'group' && /^CAP-\d{8}-\d{3}$/.test(b.task_id),
    'việc caption gửi cấp 2 có sheet_row, type, task_id đúng schema repo cấp 2; chỉ bài đã đăng ≥ 7 ngày');
+const stamp0 = b.task_id.slice(4, 12);
+const ctx6 = { 'Đọc Lịch SM': { values: [[oldIso, '09:00', 'SM01', 'x', 'đăng group', 'đăng group K140 (CG2) → group 1'], [oldIso, '10:00', 'SM01', 'x', 'đăng group', 'đăng group K141 (CG1) → group 2']] },
+  'Đọc content KE': { values: [['1', 'a'.repeat(50), 'L1'], ['2', 'b'.repeat(50), 'L2']] }, 'Đọc Pool Content SM': { values: [] }, 'Đọc Group Score': { values: [] } };
+const ex2 = run(exp, { nodes: ctx6, all: { 'Đọc JSON đã gửi': [{ json: { data: { task_id: `CAP-${stamp0}-004`, kind: 'caption', source_code: 'CG2' } } }] } });
+ok(ex2.length === 1 && ex2[0].json.body.source_code === 'CG1' && ex2[0].json.body.task_id === `CAP-${stamp0}-005`, 'lượt gửi thứ 2 trong ngày: không gửi lại bài gốc đã gửi, đánh số nối tiếp');
 ok(r.appends.length === 3 && r.appends.every(a => a.length === 6 && /Phái sinh từ CG4.*chờ duyệt/.test(a[3])) && r.appends.map(a => a[0]).join() === '6,7,8',
    '3 caption phái sinh ghi vào Pool Content SM (STT 6–8), Phân loại "… chờ duyệt"');
 ok(r.updates.some(u => u.range.includes("'Group Score'!F3:Q3") && u.values[0][11] === 'Đã chấm'), 'điểm group ghi đúng dòng, trạng thái Đã chấm');

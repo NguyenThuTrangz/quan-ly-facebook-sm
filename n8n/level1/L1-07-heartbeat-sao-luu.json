@@ -12,7 +12,7 @@
           ]
         }
       },
-      "id": "af05279a-2e0c-492f-abe7-f9d13b87ca37",
+      "id": "6c7d3b67-0e7e-4137-95b1-9d5a23b3f542",
       "name": "Mỗi 10 phút",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -28,7 +28,7 @@
           "timeout": 10000
         }
       },
-      "id": "e4233b9b-a7b7-40f4-a086-43c2c0d52fbd",
+      "id": "4cef367e-7d31-4415-8a0a-ea05ff80f58e",
       "name": "Ping healthchecks",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -51,7 +51,7 @@
           ]
         }
       },
-      "id": "ddb76eaa-5eb0-4b6f-b8d3-23cb11dcf580",
+      "id": "ff829090-9a86-4d8d-9620-60ae441530a6",
       "name": "00:15 hằng ngày",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -64,7 +64,7 @@
       "parameters": {
         "command": "=set N8N_RUNNERS_BROKER_PORT=5689&& set N8N_PORT=5699&& C:\\n8n\\bin\\n8n.cmd export:workflow --all --separate --output=\"C:/n8n-backup/{{ $now.toFormat('yyyy-MM-dd') }}\""
       },
-      "id": "6c6fdde7-c73a-4b04-bec8-a1607267ca95",
+      "id": "d166b356-df8c-4987-9e83-4ff0bc40c631",
       "name": "Xuất toàn bộ workflow",
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
@@ -78,7 +78,7 @@
       "parameters": {
         "command": "powershell -NoProfile -Command \"Get-ChildItem 'C:/n8n-backup' -Directory | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-30) } | Remove-Item -Recurse -Force\""
       },
-      "id": "c0c6f768-fd0d-4d2d-a6f2-d434f6d45701",
+      "id": "7bec0f87-b086-42bd-be28-3fd5a401e2d8",
       "name": "Xoá bản sao lưu > 30 ngày",
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,

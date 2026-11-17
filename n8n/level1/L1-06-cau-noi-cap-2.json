@@ -12,7 +12,7 @@
           ]
         }
       },
-      "id": "e730845b-4c50-416c-b449-8fa2886376b7",
+      "id": "c8c1b131-509e-4495-aae0-a0353e2e24a9",
       "name": "22:15 đẩy việc sang cấp 2",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -20,6 +20,27 @@
         -1340,
         160
       ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "35 8 * * 1-6"
+            }
+          ]
+        }
+      },
+      "id": "90e830f0-55a6-42d8-b06f-5df7518d21d3",
+      "name": "08:35 Thứ 2–7 đẩy việc (bù)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1340,
+        20
+      ],
+      "notes": "Máy tắt đêm thì sáng đẩy việc; người dùng gõ 'tiếp tục công việc' cho Copilot sau 08:35."
     },
     {
       "parameters": {
@@ -34,7 +55,7 @@
           }
         }
       },
-      "id": "9f6e512b-45d2-496c-962b-88cf66a93e21",
+      "id": "80563b38-1676-4fb6-8077-86742836613b",
       "name": "Đọc Lịch SM",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -61,7 +82,7 @@
           }
         }
       },
-      "id": "bdae9737-eb4a-43be-a1df-95d709b61d02",
+      "id": "83c9451c-2bf7-41e5-94e8-8022e07bd911",
       "name": "Đọc Pool Content SM",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -88,7 +109,7 @@
           }
         }
       },
-      "id": "45b49108-820a-42a1-aa74-a7e7e45272ce",
+      "id": "da71b0c6-4ed7-4e84-b58d-354e4f987117",
       "name": "Đọc content KE",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -115,7 +136,7 @@
           }
         }
       },
-      "id": "a80cc1a5-10ae-4173-bb88-6f73117ecd32",
+      "id": "84180b9a-825d-45fd-9f54-e7b3df6f2853",
       "name": "Đọc Group Score",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -142,7 +163,7 @@
           }
         }
       },
-      "id": "a55ea006-2c8d-4e85-875d-bc90bead32a2",
+      "id": "ccf646e4-475e-453c-9775-58c15404f440",
       "name": "Đọc Nhật Ký SM",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -169,7 +190,7 @@
           }
         }
       },
-      "id": "0672310a-f350-4a29-a25e-f355fbc220e4",
+      "id": "67933601-3221-4359-9744-7de6c1e640bd",
       "name": "Đọc Lead Hunter",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -185,9 +206,54 @@
     },
     {
       "parameters": {
-        "jsCode": "// ===== Cấu hình chung cấp 1 (sửa ở đây) =====\nconst CFG = {\n  SHEET_ID: '1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0',\n  TOKEN: 'DOI_TOKEN_O_DAY',                 // trùng biến SMOCK_LOG_TOKEN trên máy cấp 3\n  PACK_DIR: 'C:/claude remote/anh-dang-bai', // thư mục gói bài cấp 3 đọc\n  L2_REPO: 'C:/smock-level2-copilot',        // bản clone repo cấp 2 trên máy này\n  OFFICE_START: '08:30', OFFICE_END: '17:00',\n  LUNCH_START: '11:45', LUNCH_END: '13:15',\n  NICK_GROUP_GAP_MIN: 60,       // 2 bài group của CÙNG 1 nick cách nhau tối thiểu (phút)\n  TEAM_GROUP_GAP_MIN: 6,        // 2 bài group bất kỳ của cả đội cách nhau tối thiểu (phút)\n  GROUP_REPOST_DAYS: 3,         // 1 nick không đăng lại cùng 1 group trong ngần này ngày; cả đội không trùng group trong ngày\n  TASK_GAP: [2, 4], BLOCK_GAP: [6, 12], // phút giữa 2 việc trong cụm / giữa 2 cụm\n  LANES: 2,                     // số luồng chạy song song: mỗi luồng = 1 phiên Claude cấp 3 + nhóm trình duyệt riêng\n  JG_COL: { SM01: 3, SM02: 4, SM03: 5, SM04: 8, SM05: 9, SM06: 10, SM07: 11, SM08: 12 }, // cột nick trong tab Join Group SM (D,E,F,I..M)\n  JG_TIER_COL: 6,               // cột G \"Tier\" tab Join Group SM — dùng khi tab Group Score chưa chấm\n  K_START: 122,                 // mã bài Kxxx lớn nhất đã dùng trước khi có n8n (Smock Radar)\n  CONTENT_REUSE_DAYS: 7,        // bộ ảnh được phái sinh caption mới sau ngần này ngày\n};\n// Kho content dùng tab có sẵn, KHÔNG cần tab riêng:\n//  - workbook KE, tab '3. CONTENT GROUP' (A STT, B TEXT, C MEDIA) → mã CG<STT>\n//  - tab 'Pool Content SM' (A STT, B Content, C Ảnh/Video, D Phân loại) → mã PC<STT>; Phân loại có \"chờ duyệt\" thì chưa dùng\n//  - content đã dùng / mã bài Kxxx: đọc từ cột F, J tab 'Lịch SM' (vd \"đăng group K123 (CG13) → group 5\")\nconst buildPool = (ke, pool) => {\n  const out = [];\n  // row = số dòng thật trên sheet (KE đọc từ A3, Pool Content SM đọc từ A2)\n  ke.forEach((r, i) => { const s = String(r[0] || '').trim(); if (/^\\d+$/.test(s) && String(r[1] || '').trim()) out.push({ id: 'CG' + s, caption: r[1], media: r[2] || '', kind: 'any', row: i + 3 }); });\n  pool.forEach((r, i) => { const s = String(r[0] || '').trim(); if (/^\\d+$/.test(s) && String(r[1] || '').trim() && !/chờ duyệt/i.test(r[3] || ''))\n    out.push({ id: 'PC' + s, caption: r[1], media: r[2] || '', kind: /tường|wall/i.test(r[3] || '') ? 'wall' : 'any', note: r[3] || '', row: i + 2 }); });\n  return out;\n};\nconst lichText = r => (r[5] || '') + ' ' + (r[9] || '');\nconst usedContent = lich => { const s = new Set(); for (const r of lich) for (const m of lichText(r).matchAll(/\\b(CG|PC)(\\d+)\\b/g)) s.add(m[1] + m[2]); return s; };\nconst maxKOf = (lich, start) => { let k = start; for (const r of lich) for (const m of lichText(r).matchAll(/\\bK(\\d{3,})\\b/g)) k = Math.max(k, +m[1]); return k; };\nconst vnNow = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));\nconst isoOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;\nconst vnOf = d => `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;\nconst sameDay = (s, d) => { s = String(s || '').trim(); return s.startsWith(isoOf(d)) || s.startsWith(vnOf(d)); };\n\nconst V = n => { try { return (($(n).first().json) || {}).values || []; } catch (e) { return []; } };\nconst gs = V('Đọc Group Score'), lich = V('Đọc Lịch SM'), poolRaw = V('Đọc Pool Content SM');\nconst pool = buildPool(V('Đọc content KE'), poolRaw);\nconst stamp = isoOf(vnNow()).replace(/-/g, '');\nlet n = 0; const files = [];\nconst id = p => `${p}-${stamp}-${String(++n).padStart(3, '0')}`;\n// Caption cần phái sinh: content gốc đã đăng ≥ CONTENT_REUSE_DAYS ngày trước, chưa có bản phái sinh trong Pool Content SM; tối đa 10 việc/đêm\nconst parseDay = s => { s = String(s || ''); let m = /^(\\d{4})-(\\d{2})-(\\d{2})/.exec(s); if (m) return new Date(+m[1], +m[2] - 1, +m[3]);\n  m = /^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})/.exec(s); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; };\nconst lastUse = {}; for (const r of lich) { const dd = parseDay(r[0]); if (!dd) continue; for (const m of lichText(r).matchAll(/\\b((?:CG|PC)\\d+)\\b/g)) if (!lastUse[m[1]] || lastUse[m[1]] < dd) lastUse[m[1]] = dd; }\nconst derived = new Set(); for (const r of poolRaw) { const m = /Phái sinh từ ((?:CG|PC)\\d+)/i.exec(r[3] || ''); if (m) derived.add(m[1]); }\nconst now = vnNow();\npool.filter(x => /^CG/.test(x.id) && lastUse[x.id] && (now - lastUse[x.id]) / 864e5 >= CFG.CONTENT_REUSE_DAYS && !derived.has(x.id)).slice(0, 10)\n  .forEach(x => files.push({ path: `inbox/captions/${id('CAP')}.json`, body: { task_id: null, kind: 'caption', sheet_row: x.row, source_code: x.id, source_caption: x.caption, type: 'group', image_link: x.media, variants: 3 } }));\ngs.forEach((r, i) => { if (r[16] === 'Chờ chấm' && r[4]) files.push({ path: `inbox/groups/${id('GRP')}.json`, body: { task_id: null, kind: 'group', sheet_row: i + 2, stt: +r[0], name: r[1], url: r[2], text_file: r[4] } }); });\nconst out = [];\nif (now.getDay() === 0) {\n  files.push({ path: `inbox/reports/${id('RPT')}.json`, body: { task_id: null, kind: 'weekly_report', week_ending: stamp } });\n  // Số liệu tuần cho scripts/weekly_numbers.py của cấp 2 (data/weekly/*.csv). Repo cấp 2 có thể public →\n  // chỉ xuất SỐ theo nick/ngày và trạng thái lead, không xuất tên, link hay nội dung của khách.\n  const nk = V('Đọc Nhật Ký SM'), lh = V('Đọc Lead Hunter');\n  const csv = rows => rows.map(r => r.map(v => { v = String(v ?? ''); return /[\",\\n]/.test(v) ? '\"' + v.replace(/\"/g, '\"\"') + '\"' : v; }).join(',')).join('\\n') + '\\n';\n  const from = new Date(now); from.setDate(from.getDate() - 6); from.setHours(0, 0, 0, 0);\n  const per = {};\n  for (const r of nk) { const dd = parseDay(r[0]); if (!dd || dd < from || !/^SM0\\d$/.test(r[1] || '')) continue;\n    const k = isoOf(dd) + '|' + r[1]; const p = per[k] = per[k] || { xong: 0, loi: 0, wall: 0, grp: 0, join: 0, fr: 0, tt: 0, red: false };\n    if (r[8] === 'Xong' || r[8] === 'Một phần') p.xong++; else p.loi++;\n    const sl = +r[9] || 0;\n    if (r[3] === 'Đăng bài') { if (/group/i.test(r[4] || '')) p.grp += sl; else p.wall += sl; }\n    if (r[3] === 'Join group') p.join += sl; if (r[3] === 'Kết bạn') p.fr += sl;\n    if (/^Tương tác/.test(r[3] || '') || r[3] === 'Tim story') p.tt += sl;\n    if (/checkpoint|identity|xác minh|can.?t use|bị gỡ|hạn chế/i.test((r[5] || '') + ' ' + (r[7] || ''))) p.red = true; }\n  const bc = [['Ngày', 'Nick', 'Việc xong', 'Việc lỗi', 'Bài tường', 'Bài group', 'Join', 'Kết bạn', 'Tương tác', 'Đèn', 'Ghi chú']]\n    .concat(Object.keys(per).sort().map(k => { const [dd, n] = k.split('|'); const p = per[k];\n      return [dd, n, p.xong, p.loi, p.wall, p.grp, p.join, p.fr, p.tt, p.red ? 'Đỏ' : p.loi > p.xong ? 'Vàng' : 'Xanh', '']; }));\n  const lead = [['Trạng thái']].concat(lh.filter(r => r[11]).map(r => [r[11]]));\n  for (const [p, rows] of [['data/weekly/bao-cao-ngay.csv', bc], ['data/weekly/lead-hunter.csv', lead]])\n    out.push({ json: { path: p }, binary: { data: { data: Buffer.from(csv(rows), 'utf8').toString('base64'), mimeType: 'text/csv', fileName: p.split('/').pop() } } });\n}\nreturn out.concat(files.map(f => { f.body.task_id = f.path.split('/').pop().replace('.json', ''); return { json: f, binary: { data: { data: Buffer.from(JSON.stringify(f.body, null, 2)).toString('base64'), mimeType: 'application/json', fileName: f.path.split('/').pop() } } }; }));"
+        "command": "git -C \"C:/smock-level2-copilot\" pull --rebase",
+        "executeOnce": true
       },
-      "id": "95f79a9f-d584-4f74-b450-312c6a698f73",
+      "id": "9c55b284-6502-47da-88f6-ec12e7753d9f",
+      "name": "git pull (trước khi gửi)",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -350,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "fileSelector": "C:/smock-level2-copilot/**/CAP-*.json",
+        "options": {}
+      },
+      "id": "380dec14-fc0b-4354-baf9-de89b2a11009",
+      "name": "Đọc việc đã gửi",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -120
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "id": "7cf007ec-a9d7-4524-a66e-665334c3d398",
+      "name": "Đọc JSON đã gửi",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -130,
+        -120
+      ],
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===== Cấu hình chung cấp 1 (sửa ở đây) =====\nconst CFG = {\n  SHEET_ID: '1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0',\n  TOKEN: 'DOI_TOKEN_O_DAY',                 // trùng biến SMOCK_LOG_TOKEN trên máy cấp 3\n  PACK_DIR: 'C:/claude remote/anh-dang-bai', // thư mục gói bài cấp 3 đọc\n  L2_REPO: 'C:/smock-level2-copilot',        // bản clone repo cấp 2 trên máy này\n  OFFICE_START: '08:30', OFFICE_END: '17:00',\n  LUNCH_START: '11:45', LUNCH_END: '13:15',\n  NICK_GROUP_GAP_MIN: 60,       // 2 bài group của CÙNG 1 nick cách nhau tối thiểu (phút)\n  TEAM_GROUP_GAP_MIN: 6,        // 2 bài group bất kỳ của cả đội cách nhau tối thiểu (phút)\n  GROUP_REPOST_DAYS: 3,         // 1 nick không đăng lại cùng 1 group trong ngần này ngày; cả đội không trùng group trong ngày\n  TASK_GAP: [2, 4], BLOCK_GAP: [6, 12], // phút giữa 2 việc trong cụm / giữa 2 cụm\n  LANES: 2,                     // số luồng chạy song song: mỗi luồng = 1 phiên Claude cấp 3 + nhóm trình duyệt riêng\n  JG_COL: { SM01: 3, SM02: 4, SM03: 5, SM04: 8, SM05: 9, SM06: 10, SM07: 11, SM08: 12 }, // cột nick trong tab Join Group SM (D,E,F,I..M)\n  JG_TIER_COL: 6,               // cột G \"Tier\" tab Join Group SM — dùng khi tab Group Score chưa chấm\n  K_START: 122,                 // mã bài Kxxx lớn nhất đã dùng trước khi có n8n (Smock Radar)\n  CONTENT_REUSE_DAYS: 7,        // bộ ảnh được phái sinh caption mới sau ngần này ngày\n};\n// Kho content dùng tab có sẵn, KHÔNG cần tab riêng:\n//  - workbook KE, tab '3. CONTENT GROUP' (A STT, B TEXT, C MEDIA) → mã CG<STT>\n//  - tab 'Pool Content SM' (A STT, B Content, C Ảnh/Video, D Phân loại) → mã PC<STT>; Phân loại có \"chờ duyệt\" thì chưa dùng\n//  - content đã dùng / mã bài Kxxx: đọc từ cột F, J tab 'Lịch SM' (vd \"đăng group K123 (CG13) → group 5\")\nconst buildPool = (ke, pool) => {\n  const out = [];\n  // row = số dòng thật trên sheet (KE đọc từ A3, Pool Content SM đọc từ A2)\n  ke.forEach((r, i) => { const s = String(r[0] || '').trim(); if (/^\\d+$/.test(s) && String(r[1] || '').trim()) out.push({ id: 'CG' + s, caption: r[1], media: r[2] || '', kind: 'any', row: i + 3 }); });\n  pool.forEach((r, i) => { const s = String(r[0] || '').trim(); if (/^\\d+$/.test(s) && String(r[1] || '').trim() && !/chờ duyệt/i.test(r[3] || ''))\n    out.push({ id: 'PC' + s, caption: r[1], media: r[2] || '', kind: /tường|wall/i.test(r[3] || '') ? 'wall' : 'any', note: r[3] || '', row: i + 2 }); });\n  return out;\n};\nconst lichText = r => (r[5] || '') + ' ' + (r[9] || '');\nconst usedContent = lich => { const s = new Set(); for (const r of lich) for (const m of lichText(r).matchAll(/\\b(CG|PC)(\\d+)\\b/g)) s.add(m[1] + m[2]); return s; };\nconst maxKOf = (lich, start) => { let k = start; for (const r of lich) for (const m of lichText(r).matchAll(/\\bK(\\d{3,})\\b/g)) k = Math.max(k, +m[1]); return k; };\nconst vnNow = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));\nconst isoOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;\nconst vnOf = d => `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;\nconst sameDay = (s, d) => { s = String(s || '').trim(); return s.startsWith(isoOf(d)) || s.startsWith(vnOf(d)); };\n\nconst V = n => { try { return (($(n).first().json) || {}).values || []; } catch (e) { return []; } };\nconst gs = V('Đọc Group Score'), lich = V('Đọc Lịch SM'), poolRaw = V('Đọc Pool Content SM');\nconst pool = buildPool(V('Đọc content KE'), poolRaw);\nconst stamp = isoOf(vnNow()).replace(/-/g, '');\n// Việc đã gửi (inbox/outbox/done của repo cấp 2) → không gửi trùng bài gốc, đánh số tiếp trong ngày\nlet sentRaw = []; try { sentRaw = $('Đọc JSON đã gửi').all().map(x => (x.json && (x.json.data || x.json)) || {}); } catch (e) {}\nconst sentSrc = new Set(sentRaw.filter(o => o.kind === 'caption').map(o => o.source_code));\nlet n = 0; for (const o of sentRaw) { const m = new RegExp('^[A-Z]{3}-' + stamp + '-(\\\\d{3})$').exec(o.task_id || ''); if (m) n = Math.max(n, +m[1]); }\nconst files = [];\nconst id = p => `${p}-${stamp}-${String(++n).padStart(3, '0')}`;\n// Caption cần phái sinh: content gốc đã đăng ≥ CONTENT_REUSE_DAYS ngày trước, chưa có bản phái sinh trong Pool Content SM; tối đa 10 việc/đêm\nconst parseDay = s => { s = String(s || ''); let m = /^(\\d{4})-(\\d{2})-(\\d{2})/.exec(s); if (m) return new Date(+m[1], +m[2] - 1, +m[3]);\n  m = /^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})/.exec(s); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; };\nconst lastUse = {}; for (const r of lich) { const dd = parseDay(r[0]); if (!dd) continue; for (const m of lichText(r).matchAll(/\\b((?:CG|PC)\\d+)\\b/g)) if (!lastUse[m[1]] || lastUse[m[1]] < dd) lastUse[m[1]] = dd; }\nconst derived = new Set(); for (const r of poolRaw) { const m = /Phái sinh từ ((?:CG|PC)\\d+)/i.exec(r[3] || ''); if (m) derived.add(m[1]); }\nconst now = vnNow();\npool.filter(x => /^CG/.test(x.id) && lastUse[x.id] && (now - lastUse[x.id]) / 864e5 >= CFG.CONTENT_REUSE_DAYS && !derived.has(x.id) && !sentSrc.has(x.id)).slice(0, 10)\n  .forEach(x => files.push({ path: `inbox/captions/${id('CAP')}.json`, body: { task_id: null, kind: 'caption', sheet_row: x.row, source_code: x.id, source_caption: x.caption, type: 'group', image_link: x.media, variants: 3 } }));\ngs.forEach((r, i) => { if (r[16] === 'Chờ chấm' && r[4]) files.push({ path: `inbox/groups/${id('GRP')}.json`, body: { task_id: null, kind: 'group', sheet_row: i + 2, stt: +r[0], name: r[1], url: r[2], text_file: r[4] } }); });\nconst out = [];\nif (now.getDay() === 0) {\n  files.push({ path: `inbox/reports/${id('RPT')}.json`, body: { task_id: null, kind: 'weekly_report', week_ending: stamp } });\n  // Số liệu tuần cho scripts/weekly_numbers.py của cấp 2 (data/weekly/*.csv). Repo cấp 2 có thể public →\n  // chỉ xuất SỐ theo nick/ngày và trạng thái lead, không xuất tên, link hay nội dung của khách.\n  const nk = V('Đọc Nhật Ký SM'), lh = V('Đọc Lead Hunter');\n  const csv = rows => rows.map(r => r.map(v => { v = String(v ?? ''); return /[\",\\n]/.test(v) ? '\"' + v.replace(/\"/g, '\"\"') + '\"' : v; }).join(',')).join('\\n') + '\\n';\n  const from = new Date(now); from.setDate(from.getDate() - 6); from.setHours(0, 0, 0, 0);\n  const per = {};\n  for (const r of nk) { const dd = parseDay(r[0]); if (!dd || dd < from || !/^SM0\\d$/.test(r[1] || '')) continue;\n    const k = isoOf(dd) + '|' + r[1]; const p = per[k] = per[k] || { xong: 0, loi: 0, wall: 0, grp: 0, join: 0, fr: 0, tt: 0, red: false };\n    if (r[8] === 'Xong' || r[8] === 'Một phần') p.xong++; else p.loi++;\n    const sl = +r[9] || 0;\n    if (r[3] === 'Đăng bài') { if (/group/i.test(r[4] || '')) p.grp += sl; else p.wall += sl; }\n    if (r[3] === 'Join group') p.join += sl; if (r[3] === 'Kết bạn') p.fr += sl;\n    if (/^Tương tác/.test(r[3] || '') || r[3] === 'Tim story') p.tt += sl;\n    if (/checkpoint|identity|xác minh|can.?t use|bị gỡ|hạn chế/i.test((r[5] || '') + ' ' + (r[7] || ''))) p.red = true; }\n  const bc = [['Ngày', 'Nick', 'Việc xong', 'Việc lỗi', 'Bài tường', 'Bài group', 'Join', 'Kết bạn', 'Tương tác', 'Đèn', 'Ghi chú']]\n    .concat(Object.keys(per).sort().map(k => { const [dd, n] = k.split('|'); const p = per[k];\n      return [dd, n, p.xong, p.loi, p.wall, p.grp, p.join, p.fr, p.tt, p.red ? 'Đỏ' : p.loi > p.xong ? 'Vàng' : 'Xanh', '']; }));\n  const lead = [['Trạng thái']].concat(lh.filter(r => r[11]).map(r => [r[11]]));\n  for (const [p, rows] of [['data/weekly/bao-cao-ngay.csv', bc], ['data/weekly/lead-hunter.csv', lead]])\n    out.push({ json: { path: p }, binary: { data: { data: Buffer.from(csv(rows), 'utf8').toString('base64'), mimeType: 'text/csv', fileName: p.split('/').pop() } } });\n}\nreturn out.concat(files.map(f => { f.body.task_id = f.path.split('/').pop().replace('.json', ''); return { json: f, binary: { data: { data: Buffer.from(JSON.stringify(f.body, null, 2)).toString('base64'), mimeType: 'application/json', fileName: f.path.split('/').pop() } } }; }));"
+      },
+      "id": "25e9c795-c64c-417d-aff5-1a748c0908b5",
       "name": "Tạo file việc",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -204,7 +270,7 @@
         "dataPropertyName": "data",
         "options": {}
       },
-      "id": "ed41997f-428f-4b38-b30e-bfa584bc8147",
+      "id": "68b92ff6-1acf-4e00-91cf-c62169211d6d",
       "name": "Ghi vào inbox repo cấp 2",
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1,
@@ -218,7 +284,7 @@
         "command": "=git -C \"C:/smock-level2-copilot\" pull --rebase && git -C \"C:/smock-level2-copilot\" add inbox data && git -C \"C:/smock-level2-copilot\" commit -m \"inbox {{ $now.toFormat('yyyy-MM-dd HH:mm') }}\" & git -C \"C:/smock-level2-copilot\" push",
         "executeOnce": true
       },
-      "id": "51253035-e190-4ca1-b715-1cc2fb5e5f6f",
+      "id": "81fffe95-7f51-4881-8800-855e643bb279",
       "name": "git commit + push inbox",
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
@@ -234,19 +300,20 @@
           "interval": [
             {
               "field": "cronExpression",
-              "expression": "30 6 * * *"
+              "expression": "30 6,9,11,14,16 * * *"
             }
           ]
         }
       },
-      "id": "110f812b-c13b-4f19-8c6d-6cf0111f8ee7",
+      "id": "04504f4e-fa36-4ecc-b9fd-5b0a9fac26df",
       "name": "06:30 kéo kết quả cấp 2",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
         -1120,
         500
-      ]
+      ],
+      "notes": "06:30 + 09:30, 11:30, 14:30, 16:30: Copilot chạy giờ hành chính thì kết quả về sheet trong ≤ 2 tiếng."
     },
     {
       "parameters": {
@@ -261,7 +328,7 @@
           }
         }
       },
-      "id": "7d02a09c-e6c1-43f5-acd6-0aa63126a2f8",
+      "id": "304b92d9-666c-45b6-b905-2cf17c5a41d1",
       "name": "Đọc Pool Content SM (sáng)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -288,7 +355,7 @@
           }
         }
       },
-      "id": "ebd42490-3536-4259-bb99-9f600a30d70f",
+      "id": "780bdaa3-3433-47d8-a277-979b59a9e196",
       "name": "Đọc content KE (sáng)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -307,7 +374,7 @@
         "command": "git -C \"C:/smock-level2-copilot\" pull --rebase",
         "executeOnce": true
       },
-      "id": "298db2f4-ef59-445c-9d8e-5ea4aff47324",
+      "id": "d52aef3a-04b4-4fcc-bec1-747e7a942602",
       "name": "git pull",
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
@@ -321,7 +388,7 @@
         "fileSelector": "C:/smock-level2-copilot/outbox/*/*.json",
         "options": {}
       },
-      "id": "679a589d-7882-4293-944b-a4f23cd28fd9",
+      "id": "240bd4e8-c4b3-4a3b-b057-4bad79f4dad6",
       "name": "Đọc file outbox",
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1,
@@ -336,7 +403,7 @@
         "operation": "fromJson",
         "options": {}
       },
-      "id": "5f48119b-a154-43b5-b207-ed7fc3ac85d9",
+      "id": "79642658-d0a5-470c-b2de-8379782c3c2c",
       "name": "Đọc JSON",
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1,
@@ -351,7 +418,7 @@
       "parameters": {
         "jsCode": "// ===== Cấu hình chung cấp 1 (sửa ở đây) =====\nconst CFG = {\n  SHEET_ID: '1k7Jl7EzZPI7O0t8Mjfkko4gu_7aWymzfNdjFMXVrnu0',\n  TOKEN: 'DOI_TOKEN_O_DAY',                 // trùng biến SMOCK_LOG_TOKEN trên máy cấp 3\n  PACK_DIR: 'C:/claude remote/anh-dang-bai', // thư mục gói bài cấp 3 đọc\n  L2_REPO: 'C:/smock-level2-copilot',        // bản clone repo cấp 2 trên máy này\n  OFFICE_START: '08:30', OFFICE_END: '17:00',\n  LUNCH_START: '11:45', LUNCH_END: '13:15',\n  NICK_GROUP_GAP_MIN: 60,       // 2 bài group của CÙNG 1 nick cách nhau tối thiểu (phút)\n  TEAM_GROUP_GAP_MIN: 6,        // 2 bài group bất kỳ của cả đội cách nhau tối thiểu (phút)\n  GROUP_REPOST_DAYS: 3,         // 1 nick không đăng lại cùng 1 group trong ngần này ngày; cả đội không trùng group trong ngày\n  TASK_GAP: [2, 4], BLOCK_GAP: [6, 12], // phút giữa 2 việc trong cụm / giữa 2 cụm\n  LANES: 2,                     // số luồng chạy song song: mỗi luồng = 1 phiên Claude cấp 3 + nhóm trình duyệt riêng\n  JG_COL: { SM01: 3, SM02: 4, SM03: 5, SM04: 8, SM05: 9, SM06: 10, SM07: 11, SM08: 12 }, // cột nick trong tab Join Group SM (D,E,F,I..M)\n  JG_TIER_COL: 6,               // cột G \"Tier\" tab Join Group SM — dùng khi tab Group Score chưa chấm\n  K_START: 122,                 // mã bài Kxxx lớn nhất đã dùng trước khi có n8n (Smock Radar)\n  CONTENT_REUSE_DAYS: 7,        // bộ ảnh được phái sinh caption mới sau ngần này ngày\n};\n// Kho content dùng tab có sẵn, KHÔNG cần tab riêng:\n//  - workbook KE, tab '3. CONTENT GROUP' (A STT, B TEXT, C MEDIA) → mã CG<STT>\n//  - tab 'Pool Content SM' (A STT, B Content, C Ảnh/Video, D Phân loại) → mã PC<STT>; Phân loại có \"chờ duyệt\" thì chưa dùng\n//  - content đã dùng / mã bài Kxxx: đọc từ cột F, J tab 'Lịch SM' (vd \"đăng group K123 (CG13) → group 5\")\nconst buildPool = (ke, pool) => {\n  const out = [];\n  // row = số dòng thật trên sheet (KE đọc từ A3, Pool Content SM đọc từ A2)\n  ke.forEach((r, i) => { const s = String(r[0] || '').trim(); if (/^\\d+$/.test(s) && String(r[1] || '').trim()) out.push({ id: 'CG' + s, caption: r[1], media: r[2] || '', kind: 'any', row: i + 3 }); });\n  pool.forEach((r, i) => { const s = String(r[0] || '').trim(); if (/^\\d+$/.test(s) && String(r[1] || '').trim() && !/chờ duyệt/i.test(r[3] || ''))\n    out.push({ id: 'PC' + s, caption: r[1], media: r[2] || '', kind: /tường|wall/i.test(r[3] || '') ? 'wall' : 'any', note: r[3] || '', row: i + 2 }); });\n  return out;\n};\nconst lichText = r => (r[5] || '') + ' ' + (r[9] || '');\nconst usedContent = lich => { const s = new Set(); for (const r of lich) for (const m of lichText(r).matchAll(/\\b(CG|PC)(\\d+)\\b/g)) s.add(m[1] + m[2]); return s; };\nconst maxKOf = (lich, start) => { let k = start; for (const r of lich) for (const m of lichText(r).matchAll(/\\bK(\\d{3,})\\b/g)) k = Math.max(k, +m[1]); return k; };\nconst vnNow = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));\nconst isoOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;\nconst vnOf = d => `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;\nconst sameDay = (s, d) => { s = String(s || '').trim(); return s.startsWith(isoOf(d)) || s.startsWith(vnOf(d)); };\n\nconst FORBID = [\"phone\", \"email\", \"sdt\", \"so_dien_thoai\", \"password\", \"mat_khau\", \"2fa\"];\nconst rows = []; const errors = [];\n// STT kế tiếp của tab Pool Content SM (caption phái sinh ghi vào đây, Phân loại = \"Phái sinh từ CGn – chờ duyệt\"; người duyệt xoá chữ \"chờ duyệt\" là được dùng)\nlet stt = 0; try { for (const r of ($('Đọc Pool Content SM (sáng)').first().json.values || [])) stt = Math.max(stt, +r[0] || 0); } catch (e) {}\n// Kết quả cấp 2 có thể không mang image_link → tra lại theo mã bài gốc (CGn trong KE, PCn trong Pool Content SM)\nconst media = {}; try {\n  for (const x of buildPool(($('Đọc content KE (sáng)').first().json.values || []), ($('Đọc Pool Content SM (sáng)').first().json.values || []))) media[x.id] = x.media;\n} catch (e) {}\nconst okIds = [];\nfor (const it of $input.all()) {\n  if (!it.json || !Object.keys(it.json).length || (it.json.error && !it.json.data)) continue;   // outbox trống / file không đọc được\n  const o = it.json.data || it.json; const fname = it.json.fileName || '';\n  if (!/^(CAP|GRP|RPT)-\\d{8}-\\d{3}$/.test(o.task_id || '')) { errors.push(`${fname}: thiếu/ sai task_id`); continue; }\n  if (JSON.stringify(o).match(new RegExp('\"(' + FORBID.join('|') + ')\"', 'i'))) { errors.push(`${o.task_id}: có trường bị cấm`); continue; }\n  if (o.kind === 'caption') {\n    if (!Array.isArray(o.variants) || !o.variants.length) { errors.push(`${o.task_id}: không có variants`); continue; }\n    o.variants.forEach((v, k) => rows.push({ append: [++stt, v.caption, o.image_link || media[o.source_code] || '', `Phái sinh từ ${o.source_code} (v${k + 1}) – chờ duyệt`, '', `Cấp 2 ${o.task_id}`] }));\n  } else if (o.kind === 'group') {\n    const s = o.scores || {}; const keys = ['gates', 'icp', 'sell', 'active', 'engage', 'buyer', 'geo', 'spam'];\n    if (!keys.every(k => k in s)) { errors.push(`${o.task_id}: thiếu điểm`); continue; }\n    rows.push({ update: { range: `'Group Score'!F${o.sheet_row}:Q${o.sheet_row}`, values: [[s.gates, s.icp, s.sell, s.active, s.engage, s.buyer, s.geo, s.spam, o.total, o.tier, String(o.evidence || '').slice(0, 1000), 'Đã chấm']] } });\n  }\n  okIds.push(o.task_id);   // chỉ file nhận hợp lệ mới chuyển sang done/; file lỗi để lại cho cấp 2 làm lại\n}\nreturn [{ json: { appends: rows.filter(r => r.append).map(r => r.append), updates: rows.filter(r => r.update).map(r => r.update), errors, ok_ids: okIds } }];"
       },
-      "id": "daf37076-2105-4797-b465-3844e1e2c42b",
+      "id": "9465df45-b90d-4823-a9f8-199cb78c4bb5",
       "name": "Kiểm + chuyển thành lệnh ghi",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -372,7 +439,7 @@
           },
           "conditions": [
             {
-              "id": "d6d21f60-64ae-4221-8fd7-b44eb1734ca1",
+              "id": "f161d1bf-c0c9-4f15-99f6-0ecb9e63254d",
               "leftValue": "={{ $('Kiểm + chuyển thành lệnh ghi').first().json.appends.length > 0 }}",
               "rightValue": true,
               "operator": {
@@ -386,7 +453,7 @@
         },
         "options": {}
       },
-      "id": "6dc44df1-fd7d-487f-a0d0-7c601c4f9c11",
+      "id": "31c1c71e-4c98-4e21-a27c-24df4e24adca",
       "name": "Có caption?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
@@ -406,7 +473,7 @@
         "jsonBody": "={{ JSON.stringify({ values: $('Kiểm + chuyển thành lệnh ghi').first().json.appends }) }}",
         "options": {}
       },
-      "id": "fdc97bae-5819-4f8c-a10b-cfbf07ae49bb",
+      "id": "c9e762c5-bdfe-46f6-958f-55fdc6241e70",
       "name": "Thêm caption phái sinh (Chờ duyệt)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -430,7 +497,7 @@
           },
           "conditions": [
             {
-              "id": "725417b7-fbe4-4e74-8f8c-6a14dd7ee4c4",
+              "id": "2013f609-abd2-44b3-9a98-1e02f6e5267e",
               "leftValue": "={{ $('Kiểm + chuyển thành lệnh ghi').first().json.updates.length > 0 }}",
               "rightValue": true,
               "operator": {
@@ -444,7 +511,7 @@
         },
         "options": {}
       },
-      "id": "a64b2473-a46f-4c85-9752-65d9fddf8779",
+      "id": "35741614-d54b-43eb-8c92-644f348b41fc",
       "name": "Có điểm group?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
@@ -464,7 +531,7 @@
         "jsonBody": "={{ JSON.stringify({ valueInputOption: 'USER_ENTERED', data: $('Kiểm + chuyển thành lệnh ghi').first().json.updates }) }}",
         "options": {}
       },
-      "id": "42fa7cd7-bb9f-4b62-809e-452aedd06d7a",
+      "id": "d0ff6231-5ed8-4cbd-a22b-246dc28f4afb",
       "name": "Cập nhật điểm group + trạng thái",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -482,7 +549,7 @@
         "command": "=powershell -NoProfile -Command \"cd 'C:/smock-level2-copilot'; New-Item -ItemType Directory -Force done | Out-Null; foreach ($i in @({{ $('Kiểm + chuyển thành lệnh ghi').first().json.ok_ids.map(x => \"'\" + x + \"'\").join(',') }})) { Get-ChildItem outbox -Recurse -Filter ($i + '.*') | ForEach-Object { git mv $_.FullName ('done/' + $_.Name) } }; git commit -m 'done'; git push\"",
         "executeOnce": true
       },
-      "id": "151fc13a-d4fb-4201-ab19-b1ec38e13627",
+      "id": "031a3dd7-1ea7-444b-99af-6b640be73d31",
       "name": "Chuyển outbox đã xử lý sang done",
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
@@ -498,7 +565,7 @@
         "text": "={{ $('Kiểm + chuyển thành lệnh ghi').first().json.errors.length ? '⚠️ Cấp 2: ' + $('Kiểm + chuyển thành lệnh ghi').first().json.errors.join('; ') : '✅ Cấp 2: đã nhập kết quả' }}",
         "additionalFields": {}
       },
-      "id": "ec5a9a05-ac0b-430f-ba39-0b0bcd139a4d",
+      "id": "cb9cdaaa-f294-4477-9d61-cff050a3c26d",
       "name": "Báo lỗi file cấp 2",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -512,6 +579,17 @@
   ],
   "connections": {
     "22:15 đẩy việc sang cấp 2": {
+      "main": [
+        [
+          {
+            "node": "Đọc Lịch SM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08:35 Thứ 2–7 đẩy việc (bù)": {
       "main": [
         [
           {
@@ -578,6 +656,39 @@
       ]
     },
     "Đọc Lead Hunter": {
+      "main": [
+        [
+          {
+            "node": "git pull (trước khi gửi)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "git pull (trước khi gửi)": {
+      "main": [
+        [
+          {
+            "node": "Đọc việc đã gửi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đọc việc đã gửi": {
+      "main": [
+        [
+          {
+            "node": "Đọc JSON đã gửi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đọc JSON đã gửi": {
       "main": [
         [
           {

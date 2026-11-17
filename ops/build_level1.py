@@ -207,9 +207,9 @@ const V = n => { try { return (($(n).first().json) || {}).values || []; } catch 
 const acc = V('Đọc Tài khoản'), kpi = V('Đọc Target + Workload'), jg = V('Đọc Join Group SM'),
       af = V('Đọc Add Friend'), lich = V('Đọc Lịch SM'), gs = V('Đọc Group Score'),
       pool = buildPool(V('Đọc content KE'), V('Đọc Pool Content SM')), nk = V('Đọc Nhật Ký SM');
-// Ngày làm việc kế tiếp (bỏ Chủ nhật)
+// Chạy buổi sáng (lượt bù 08:20, máy tắt qua đêm) → sinh lịch HÔM NAY nếu chưa có; chạy chiều/tối → ngày làm việc kế tiếp (bỏ Chủ nhật)
 const now = vnNow();
-const d = new Date(now); d.setDate(d.getDate() + 1); if (d.getDay() === 0) d.setDate(d.getDate() + 1);
+const d = new Date(now); if (now.getHours() >= 12 || now.getDay() === 0) d.setDate(d.getDate() + 1); if (d.getDay() === 0) d.setDate(d.getDate() + 1);
 const day = isoOf(d);
 const dayVN = day;   // tab Lịch SM đang ghi ngày dạng yyyy-mm-dd
 // Đã có lịch cho ngày đó thì dừng (chạy lại không sinh trùng)
@@ -330,6 +330,8 @@ reads = [("Đọc Tài khoản", "\"'Tài khoản'!A2:I20\""), ("Đọc Target +
          ("Đọc Lịch SM", "\"'Lịch SM'!A2:J5000\""), ("Đọc Group Score", "\"'Group Score'!A2:R500\""),
          ("Đọc Pool Content SM", POOL_RANGE), ("Đọc content KE", KE_RANGE, KE_SHEET), ("Đọc Nhật Ký SM", "\"'Nhật Ký SM'!A2:J8000\"")]
 nodes.append(sched("21:30 Chủ nhật–Thứ sáu", "30 21 * * 0-5", [-1200, 300], notes="Sinh lịch cho ngày làm việc kế tiếp (thứ 2–7)."))
+nodes.append(sched("08:20 Thứ 2–7 (bù khi máy tắt đêm)", "20 8 * * 1-6", [-1200, 480], notes="Máy tắt qua đêm thì 21:30 bị lỡ → sáng sinh lịch HÔM NAY (đã có thì bỏ qua)."))
+link(c, "08:20 Thứ 2–7 (bù khi máy tắt đêm)", reads[0][0])
 prev = "21:30 Chủ nhật–Thứ sáu"
 for i, rd in enumerate(reads):
     nodes.append(gget(rd[0], rd[1], [-980 + i * 160, 300], sheet=rd[2] if len(rd) > 2 else None)); link(c, prev, rd[0]); prev = rd[0]
@@ -388,6 +390,7 @@ $input.all().forEach((it, k) => {
 return out;"""
 nodes, c = [], {}
 nodes += [sched("22:00 Chủ nhật–Thứ sáu", "0 22 * * 0-5", [-1340, 300]),
+          sched("08:25 Thứ 2–7 (bù)", "25 8 * * 1-6", [-1340, 480], notes="Gói bài của lịch hôm nay nếu tối qua máy tắt (bài đã Gói sẵn thì bỏ qua)."),
           gget("Đọc Lịch SM", "\"'Lịch SM'!A2:J5000\"", [-1120, 300]),
           gget("Đọc Pool Content SM", POOL_RANGE, [-900, 300]),
           gget("Đọc content KE", KE_RANGE, [-680, 300], sheet=KE_SHEET),
@@ -420,7 +423,7 @@ const tag = b => (b.saved > 0 && b.saved === b.total ? 'Gói sẵn' : 'Lỗi gó
 const data = Object.values(by).map(b => ({ range: `'Lịch SM'!J${b.row}`, values: [[(b.note ? b.note + ' · ' : '') + tag(b)]] }));
 return [{ json: { data, n: Object.keys(by).length } }];""", [860, 380]),
           gpost("Ghi trạng thái gói", "/values:batchUpdate", "{ valueInputOption: 'USER_ENTERED', data: $json.data }", [1080, 380])]
-for a, b, o in [("22:00 Chủ nhật–Thứ sáu", "Đọc Lịch SM", 0), ("Đọc Lịch SM", "Đọc Pool Content SM", 0), ("Đọc Pool Content SM", "Đọc content KE", 0),
+for a, b, o in [("22:00 Chủ nhật–Thứ sáu", "Đọc Lịch SM", 0), ("08:25 Thứ 2–7 (bù)", "Đọc Lịch SM", 0), ("Đọc Lịch SM", "Đọc Pool Content SM", 0), ("Đọc Pool Content SM", "Đọc content KE", 0),
                 ("Đọc content KE", "Chọn bài cần gói", 0), ("Chọn bài cần gói", "Có bài?", 0),
                 ("Có bài?", "Tạo thư mục gói", 0), ("Có bài?", "Liệt kê ảnh trong folder Drive", 0), ("Tạo thư mục gói", "Tạo caption.txt", 0), ("Tạo caption.txt", "Ghi caption.txt", 0),
                 ("Liệt kê ảnh trong folder Drive", "Tách từng ảnh", 0), ("Tách từng ảnh", "Tải ảnh JPG 2048px", 0), ("Tải ảnh JPG 2048px", "Lưu ảnh vào gói", 0),
@@ -519,7 +522,11 @@ const V = n => { try { return (($(n).first().json) || {}).values || []; } catch 
 const gs = V('Đọc Group Score'), lich = V('Đọc Lịch SM'), poolRaw = V('Đọc Pool Content SM');
 const pool = buildPool(V('Đọc content KE'), poolRaw);
 const stamp = isoOf(vnNow()).replace(/-/g, '');
-let n = 0; const files = [];
+// Việc đã gửi (inbox/outbox/done của repo cấp 2) → không gửi trùng bài gốc, đánh số tiếp trong ngày
+let sentRaw = []; try { sentRaw = $('Đọc JSON đã gửi').all().map(x => (x.json && (x.json.data || x.json)) || {}); } catch (e) {}
+const sentSrc = new Set(sentRaw.filter(o => o.kind === 'caption').map(o => o.source_code));
+let n = 0; for (const o of sentRaw) { const m = new RegExp('^[A-Z]{3}-' + stamp + '-(\\d{3})$').exec(o.task_id || ''); if (m) n = Math.max(n, +m[1]); }
+const files = [];
 const id = p => `${p}-${stamp}-${String(++n).padStart(3, '0')}`;
 // Caption cần phái sinh: content gốc đã đăng ≥ CONTENT_REUSE_DAYS ngày trước, chưa có bản phái sinh trong Pool Content SM; tối đa 10 việc/đêm
 const parseDay = s => { s = String(s || ''); let m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s); if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
@@ -527,7 +534,7 @@ const parseDay = s => { s = String(s || ''); let m = /^(\d{4})-(\d{2})-(\d{2})/.
 const lastUse = {}; for (const r of lich) { const dd = parseDay(r[0]); if (!dd) continue; for (const m of lichText(r).matchAll(/\b((?:CG|PC)\d+)\b/g)) if (!lastUse[m[1]] || lastUse[m[1]] < dd) lastUse[m[1]] = dd; }
 const derived = new Set(); for (const r of poolRaw) { const m = /Phái sinh từ ((?:CG|PC)\d+)/i.exec(r[3] || ''); if (m) derived.add(m[1]); }
 const now = vnNow();
-pool.filter(x => /^CG/.test(x.id) && lastUse[x.id] && (now - lastUse[x.id]) / 864e5 >= CFG.CONTENT_REUSE_DAYS && !derived.has(x.id)).slice(0, 10)
+pool.filter(x => /^CG/.test(x.id) && lastUse[x.id] && (now - lastUse[x.id]) / 864e5 >= CFG.CONTENT_REUSE_DAYS && !derived.has(x.id) && !sentSrc.has(x.id)).slice(0, 10)
   .forEach(x => files.push({ path: `inbox/captions/${id('CAP')}.json`, body: { task_id: null, kind: 'caption', sheet_row: x.row, source_code: x.id, source_caption: x.caption, type: 'group', image_link: x.media, variants: 3 } }));
 gs.forEach((r, i) => { if (r[16] === 'Chờ chấm' && r[4]) files.push({ path: `inbox/groups/${id('GRP')}.json`, body: { task_id: null, kind: 'group', sheet_row: i + 2, stt: +r[0], name: r[1], url: r[2], text_file: r[4] } }); });
 const out = [];
@@ -583,17 +590,21 @@ for (const it of $input.all()) {
 return [{ json: { appends: rows.filter(r => r.append).map(r => r.append), updates: rows.filter(r => r.update).map(r => r.update), errors, ok_ids: okIds } }];""" % FORBID
 nodes, c = [], {}
 nodes += [sched("22:15 đẩy việc sang cấp 2", "15 22 * * *", [-1340, 160]),
+          sched("08:35 Thứ 2–7 đẩy việc (bù)", "35 8 * * 1-6", [-1340, 20], notes="Máy tắt đêm thì sáng đẩy việc; người dùng gõ 'tiếp tục công việc' cho Copilot sau 08:35."),
           gget("Đọc Lịch SM", "\"'Lịch SM'!A2:J5000\"", [-1120, 160]),
           gget("Đọc Pool Content SM", POOL_RANGE, [-900, 160]),
           gget("Đọc content KE", KE_RANGE, [-680, 160], sheet=KE_SHEET),
           gget("Đọc Group Score", "\"'Group Score'!A2:R500\"", [-460, 160]),
           gget("Đọc Nhật Ký SM", "\"'Nhật Ký SM'!A2:J8000\"", [-460, 20]),
           gget("Đọc Lead Hunter", "\"'Lead Hunter'!A2:N5000\"", [-350, 20]),
+          node("git pull (trước khi gửi)", "n8n-nodes-base.executeCommand", 1, {"command": "git -C \"C:/smock-level2-copilot\" pull --rebase", "executeOnce": True}, [-350, -120]),
+          node("Đọc việc đã gửi", "n8n-nodes-base.readWriteFile", 1, {"fileSelector": "C:/smock-level2-copilot/**/CAP-*.json", "options": {}}, [-240, -120], alwaysOutputData=True),
+          node("Đọc JSON đã gửi", "n8n-nodes-base.extractFromFile", 1, {"operation": "fromJson", "options": {}}, [-130, -120], onError="continueRegularOutput", alwaysOutputData=True),
           code("Tạo file việc", export_js, [-240, 160], notes="Mỗi việc một file JSON có task_id duy nhất. File text group do cấp 3 lưu sẵn ở thư mục chung."),
           node("Ghi vào inbox repo cấp 2", "n8n-nodes-base.readWriteFile", 1, {"operation": "write", "fileName": "={{ 'C:/smock-level2-copilot/' + $json.path }}", "dataPropertyName": "data", "options": {}}, [-20, 160]),
           node("git commit + push inbox", "n8n-nodes-base.executeCommand", 1, {"command": "=git -C \"C:/smock-level2-copilot\" pull --rebase && git -C \"C:/smock-level2-copilot\" add inbox data && git -C \"C:/smock-level2-copilot\" commit -m \"inbox {{ $now.toFormat('yyyy-MM-dd HH:mm') }}\" & git -C \"C:/smock-level2-copilot\" push", "executeOnce": True}, [200, 160],
                notes="Cần bật node Execute Command (xem n8n/level1/README.md) và git đã đăng nhập trên máy."),
-          sched("06:30 kéo kết quả cấp 2", "30 6 * * *", [-1120, 500]),
+          sched("06:30 kéo kết quả cấp 2", "30 6,9,11,14,16 * * *", [-1120, 500], notes="06:30 + 09:30, 11:30, 14:30, 16:30: Copilot chạy giờ hành chính thì kết quả về sheet trong ≤ 2 tiếng."),
           gget("Đọc Pool Content SM (sáng)", POOL_RANGE, [-1010, 500]),
           gget("Đọc content KE (sáng)", KE_RANGE, [-850, 620], sheet=KE_SHEET),
           node("git pull", "n8n-nodes-base.executeCommand", 1, {"command": "git -C \"C:/smock-level2-copilot\" pull --rebase", "executeOnce": True}, [-680, 500]),
@@ -607,8 +618,9 @@ nodes += [sched("22:15 đẩy việc sang cấp 2", "15 22 * * *", [-1340, 160])
           node("Chuyển outbox đã xử lý sang done", "n8n-nodes-base.executeCommand", 1, {"command": "=powershell -NoProfile -Command \"cd 'C:/smock-level2-copilot'; New-Item -ItemType Directory -Force done | Out-Null; foreach ($i in @({{ $('Kiểm + chuyển thành lệnh ghi').first().json.ok_ids.map(x => \"'\" + x + \"'\").join(',') }})) { Get-ChildItem outbox -Recurse -Filter ($i + '.*') | ForEach-Object { git mv $_.FullName ('done/' + $_.Name) } }; git commit -m 'done'; git push\"", "executeOnce": True}, [640, 440],
                notes="Chỉ chuyển file đã nhận hợp lệ (ok_ids). File bị từ chối nằm lại outbox để cấp 2 sửa."),
           telegram("Báo lỗi file cấp 2", "{{ $('Kiểm + chuyển thành lệnh ghi').first().json.errors.length ? '⚠️ Cấp 2: ' + $('Kiểm + chuyển thành lệnh ghi').first().json.errors.join('; ') : '✅ Cấp 2: đã nhập kết quả' }}", [860, 440])]
-for a, b in [("22:15 đẩy việc sang cấp 2", "Đọc Lịch SM"), ("Đọc Lịch SM", "Đọc Pool Content SM"), ("Đọc Pool Content SM", "Đọc content KE"),
-             ("Đọc content KE", "Đọc Group Score"), ("Đọc Group Score", "Đọc Nhật Ký SM"), ("Đọc Nhật Ký SM", "Đọc Lead Hunter"), ("Đọc Lead Hunter", "Tạo file việc"),
+for a, b in [("22:15 đẩy việc sang cấp 2", "Đọc Lịch SM"), ("08:35 Thứ 2–7 đẩy việc (bù)", "Đọc Lịch SM"), ("Đọc Lịch SM", "Đọc Pool Content SM"), ("Đọc Pool Content SM", "Đọc content KE"),
+             ("Đọc content KE", "Đọc Group Score"), ("Đọc Group Score", "Đọc Nhật Ký SM"), ("Đọc Nhật Ký SM", "Đọc Lead Hunter"), ("Đọc Lead Hunter", "git pull (trước khi gửi)"),
+             ("git pull (trước khi gửi)", "Đọc việc đã gửi"), ("Đọc việc đã gửi", "Đọc JSON đã gửi"), ("Đọc JSON đã gửi", "Tạo file việc"),
              ("Tạo file việc", "Ghi vào inbox repo cấp 2"), ("Ghi vào inbox repo cấp 2", "git commit + push inbox"),
              ("06:30 kéo kết quả cấp 2", "Đọc Pool Content SM (sáng)"), ("Đọc Pool Content SM (sáng)", "Đọc content KE (sáng)"), ("Đọc content KE (sáng)", "git pull"), ("git pull", "Đọc file outbox"), ("Đọc file outbox", "Đọc JSON"), ("Đọc JSON", "Kiểm + chuyển thành lệnh ghi"),
              ("Chuyển outbox đã xử lý sang done", "Báo lỗi file cấp 2")]:

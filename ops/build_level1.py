@@ -29,6 +29,26 @@ const CFG = {
   JG_TIER_COL: 6,               // cột G "Tier" tab Join Group SM — dùng khi tab Group Score chưa chấm
   K_START: 122,                 // mã bài Kxxx lớn nhất đã dùng trước khi có n8n (Smock Radar)
   CONTENT_REUSE_DAYS: 7,        // bộ ảnh được phái sinh caption mới sau ngần này ngày
+  // ---- Trần cứng chống spam (chế độ nào cũng không vượt) ----
+  MAX_GROUP_PER_NICK: 5,        // bài group/nick/ngày tối đa, dù cột G tab Target ghi cao hơn
+  MAX_WALL_PER_NICK: 3,         // bài tường/nick/ngày tối đa (lưới an toàn nếu cột D gõ nhầm)
+  GROUP_RAMP_START: '',         // vd '2026-11-23' = tuần 1 của lộ trình 3→4→5; để trống = chỉ theo cột G (≤ MAX_GROUP_PER_NICK)
+  GROUP_RAMP: [3, 4, 5],        // trần bài group/nick theo tuần thứ 1, 2, 3+ kể từ GROUP_RAMP_START
+  // ---- Kiểm tồn kho content (L1-02 xếp bài, L1-06 gửi việc cấp 2, L1-04 báo cáo) ----
+  STOCK_FULL_DAYS: 7,           // tồn > ngần này ngày → "Đầy": lấp đủ slot, ưu tiên content gốc cũ/đúng mùa, giảm phái sinh
+  STOCK_LOW_DAYS: 2,            // tồn < ngần này ngày → "Ít": vẫn bình thường, đẩy mạnh phái sinh cấp 2, báo ở L1-04
+  L2_CAPTION_JOBS: { 'Đầy': 3, 'Vừa': 10, 'Ít': 15 }, // số việc phái sinh caption L1-06 gửi mỗi lượt theo chế độ kho
+  RECLAIM_UNPOSTED: true,       // content đã xếp lịch nhưng KHÔNG đăng (H ≠ Done, I trống, Nhật Ký không có) → trả lại kho để xếp bù
+  RECLAIM_AFTER_DAYS: 2,        // chỉ lấy lại dòng lịch cũ hơn ngày đích ngần này ngày (chờ log/webhook trễ, tránh đăng trùng)
+  PERSONA_IN_POOL: false,       // caption persona GRACIE/CATHIE/LILY/EMILY: chưa có node đọc → chưa tính vào kho
+  // Chế độ "Đầy": ưu tiên caption có từ khoá đúng mùa theo THÁNG của ngày đích (cuối năm khách làm collection đầu năm + hè)
+  SEASON: {
+    11: "valentine|st\\.? ?patrick|easter|mother'?s day|summer|spring",
+    12: "valentine|st\\.? ?patrick|easter|mother'?s day|summer|spring",
+    1: "st\\.? ?patrick|easter|mother'?s day|summer|spring",
+    2: "easter|mother'?s day|summer|spring|4th of july",
+    3: "mother'?s day|summer|4th of july|back to school",
+  },
 };
 // Kho content dùng tab có sẵn, KHÔNG cần tab riêng:
 //  - workbook KE, tab '3. CONTENT GROUP' (A STT, B TEXT, C MEDIA) → mã CG<STT>
@@ -49,6 +69,59 @@ const vnNow = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asi
 const isoOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const vnOf = d => `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
 const sameDay = (s, d) => { s = String(s || '').trim(); return s.startsWith(isoOf(d)) || s.startsWith(vnOf(d)); };
+const pDay = s => { s = String(s || ''); let m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s); if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+  m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; };
+// Ngày làm việc đích: chạy sáng (trước 12h, không phải CN) → hôm nay; chiều/tối → ngày kế tiếp; bỏ Chủ nhật
+const targetDayOf = now => { const d = new Date(now); if (now.getHours() >= 12 || now.getDay() === 0) d.setDate(d.getDate() + 1); if (d.getDay() === 0) d.setDate(d.getDate() + 1); return d; };
+// Trần bài group/nick theo lộ trình tuần (GROUP_RAMP_START trống = không giới hạn thêm)
+const rampCap = d => { const s = pDay(CFG.GROUP_RAMP_START); if (!s) return Infinity;
+  const w = Math.max(0, Math.floor((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - s) / (7 * 864e5))); return CFG.GROUP_RAMP[Math.min(w, CFG.GROUP_RAMP.length - 1)]; };
+const isNoGroup = st => /hạn chế group|không group|no group/i.test(st || '');
+// Số bài cần mỗi ngày theo KPI hiện tại (tab Target + Workload), đã áp trần cứng; nick không "Hoạt động" không tính
+const dailyNeed = (acc, kpi, d) => { const q = {}; for (const r of kpi) if (/^SM0\d$/.test(r[0])) q[r[0]] = r; let n = 0;
+  for (const a of acc) { if (!/^SM0\d$/.test(a[0]) || !/Hoạt động/i.test(a[5] || '')) continue; const r = q[a[0]];
+    n += r ? Math.min(+r[3] || 0, CFG.MAX_WALL_PER_NICK) : 1;
+    if (r && !isNoGroup(a[5])) n += Math.min(+r[6] || 0, CFG.MAX_GROUP_PER_NICK, rampCap(d)); }
+  return n; };
+// Content có ảnh = có link Drive (folder / file). Thiếu link → không đăng được, không tính tồn
+const hasImg = x => /drive\.google\.com|\/folders\/[\w-]+|[?&]id=[\w-]+|\/d\/[\w-]+/.test(String(x.media || ''));
+// Kiểm tồn kho: content chưa dùng có ảnh / số bài cần mỗi ngày → chế độ Đầy / Vừa / Ít
+//  - đã đăng: dòng Lịch SM có H Done/Đang làm hoặc có URL (cột I), hoặc Nhật Ký SM "Đăng bài" Xong có mã Kxxx/CGn/PCn
+//  - đang chờ: dòng lịch chưa đăng nhưng còn mới (≥ ngày đích − RECLAIM_AFTER_DAYS) → giữ chỗ, không xếp lại
+//  - lỗi ảnh: L1-03 ghi "Lỗi gói 0/0" (folder không có ảnh) → loại khỏi kho
+//  - còn lại (lịch cũ bị bỏ qua/không kịp làm) → trả lại kho, xếp bù
+const stockOf = ({ ke, pool, lich, nk, acc, kpi, d }) => {
+  const all = buildPool(ke || [], pool || []);
+  const day0 = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const postedNk = new Set();
+  for (const r of nk || []) if (r[3] === 'Đăng bài' && /^(Xong|Một phần)$/.test(r[8] || ''))
+    for (const m of ((r[4] || '') + ' ' + (r[5] || '')).matchAll(/\b(K\d{3,}|CG\d+|PC\d+)\b/g)) postedNk.add(m[1]);
+  const posted = new Set(), pending = new Set(), noImg = new Set(), seen = new Set();
+  for (const r of lich || []) {
+    const ids = [...lichText(r).matchAll(/\b(CG|PC)(\d+)\b/g)].map(m => m[1] + m[2]); if (!ids.length) continue;
+    const k = (/\bK\d{3,}\b/.exec(r[5] || '') || [])[0]; const dd = pDay(r[0]); const st = String(r[7] || '').trim();
+    const done = /^(Done|Đang làm|Đã đăng)$/i.test(st) || !!String(r[8] || '').trim() || (k && postedNk.has(k)) || ids.some(i => postedNk.has(i));
+    const old = CFG.RECLAIM_UNPOSTED && dd && (day0 - dd) / 864e5 >= CFG.RECLAIM_AFTER_DAYS;
+    for (const id of ids) { seen.add(id);
+      if (done) posted.add(id); else if (/Lỗi gói 0\/0/.test(r[9] || '')) noImg.add(id); else if (!old) pending.add(id); }
+  }
+  const blocked = id => posted.has(id) || pending.has(id) || noImg.has(id);
+  let list = all.filter(x => !blocked(x.id) && hasImg(x));
+  const reclaimed = list.filter(x => seen.has(x.id)).length;
+  const need = dailyNeed(acc || [], kpi || [], d);
+  const days = need > 0 ? list.length / need : null;
+  const mode = days === null ? 'Vừa' : days > CFG.STOCK_FULL_DAYS ? 'Đầy' : days < CFG.STOCK_LOW_DAYS ? 'Ít' : 'Vừa';
+  if (mode === 'Đầy') {   // hấp thụ: đúng mùa trước, content gốc KE trước phái sinh, số nhỏ (cũ) trước
+    const s = CFG.SEASON[d.getMonth() + 1]; const re = s ? new RegExp(s, 'i') : null;
+    const key = x => [re && re.test(x.caption) ? 0 : 1, /^CG/.test(x.id) ? 0 : 1, +x.id.slice(2)];
+    list = list.map((x, i) => ({ x, k: key(x), i })).sort((a, b) => a.k[0] - b.k[0] || a.k[1] - b.k[1] || a.k[2] - b.k[2] || a.i - b.i).map(o => o.x);
+  }
+  const daysTxt = days === null ? '—' : days.toFixed(1).replace('.', ',');
+  const missing = all.filter(x => !posted.has(x.id) && (!hasImg(x) || noImg.has(x.id))).length;
+  const tag = `kho ${mode} ${daysTxt} ngày (${list.length} bài có ảnh chưa đăng, cần ${need}/ngày` + (reclaimed ? `, ${reclaimed} bài lịch cũ xếp bù` : '')
+    + (missing ? `, ${missing} bài thiếu ảnh` : '') + ')';
+  return { list, unused: list.length, need, days, mode, reclaimed, missing, tag };
+};
 """ % SHEET
 KE_SHEET = "1mY_7HeFFokARzxwS9xCeby46cYGC5QpA_ju4jl5f-UA"
 KE_RANGE = "\"'3. CONTENT GROUP'!A3:D2000\""
@@ -209,7 +282,7 @@ const acc = V('Đọc Tài khoản'), kpi = V('Đọc Target + Workload'), jg = 
       pool = buildPool(V('Đọc content KE'), V('Đọc Pool Content SM')), nk = V('Đọc Nhật Ký SM');
 // Chạy buổi sáng (lượt bù 08:20, máy tắt qua đêm) → sinh lịch HÔM NAY nếu chưa có; chạy chiều/tối → ngày làm việc kế tiếp (bỏ Chủ nhật)
 const now = vnNow();
-const d = new Date(now); if (now.getHours() >= 12 || now.getDay() === 0) d.setDate(d.getDate() + 1); if (d.getDay() === 0) d.setDate(d.getDate() + 1);
+const d = targetDayOf(now);
 const day = isoOf(d);
 const dayVN = day;   // tab Lịch SM đang ghi ngày dạng yyyy-mm-dd
 // Đã có lịch cho ngày đó thì dừng (chạy lại không sinh trùng)
@@ -246,9 +319,10 @@ for (const r of nkRecent) { const n = r[1]; if (!/^SM0\d$/.test(n || '')) contin
   else if (r[8] === 'Không làm được' && light[n] !== 'Đỏ') light[n] = (light[n] === 'Vàng1' || light[n] === 'Vàng') ? 'Vàng' : 'Vàng1'; }
 for (const k of Object.keys(light)) if (light[k] === 'Vàng1') delete light[k];
 const teamGroupsToday = new Set();
-// Kho content chưa dùng (KE + Pool Content SM, bỏ mã đã có trong Lịch SM) + mã bài kế tiếp
-const usedIds = usedContent(lich);
-const cqRows = pool.filter(x => !usedIds.has(x.id));
+// Kiểm tồn kho trước khi xếp bài: content có ảnh chưa đăng (KE + Pool Content SM đã duyệt; lịch cũ không đăng được → xếp bù)
+// Đầy → thứ tự hấp thụ (đúng mùa, gốc KE, cũ trước); Vừa/Ít → thứ tự sheet như cũ. Chế độ KHÔNG nới trần nào bên dưới.
+const stock = stockOf({ ke: V('Đọc content KE'), pool: V('Đọc Pool Content SM'), lich, nk, acc, kpi, d });
+const cqRows = stock.list;
 let maxK = maxKOf(lich, CFG.K_START);
 const used = new Set();
 const takeContent = (nick, kind) => {
@@ -277,14 +351,14 @@ for (const n of nicks) {
     const rec = recent[n.id] || new Set();
     const canPost = shuffle(jg.filter(r => /đã join/i.test(r[col] || '') && okGroup.has(+r[0])).map(r => +r[0])
       .filter(g => !rec.has(g) && !teamGroupsToday.has(g)));
-    let grp = q.grp; if (light[n.id] === 'Đỏ' || n.noGroup) grp = 0; else if (light[n.id] === 'Vàng') grp = Math.min(grp, 2);
+    let grp = Math.min(q.grp, CFG.MAX_GROUP_PER_NICK, rampCap(d)); if (light[n.id] === 'Đỏ' || n.noGroup) grp = 0; else if (light[n.id] === 'Vàng') grp = Math.min(grp, 2);
     for (let i = 0; i < Math.min(grp, canPost.length); i++) {
       const c = takeContent(n.id, 'group'); if (!c) break;
       teamGroupsToday.add(canPost[i]);
       list.push(['đăng group', `đăng group ${c.code} (${c.content}) → group ${canPost[i]}`, 'group']);
     }
   }
-  for (let i = 0; i < q.wall; i++) { const c = takeContent(n.id, 'wall'); if (!c) break; list.push(['đăng tường', `đăng tường ${c.code} (${c.content})`]); }
+  for (let i = 0; i < Math.min(q.wall, CFG.MAX_WALL_PER_NICK); i++) { const c = takeContent(n.id, 'wall'); if (!c) break; list.push(['đăng tường', `đăng tường ${c.code} (${c.content})`]); }
   const nf = Math.min(q.fr, frList.length - frIdx);
   if (nf > 0) { const ids = frList.slice(frIdx, frIdx + nf); frIdx += nf; ids.forEach(x => frReserve.push({ row: x.row, nick: n.id }));
     list.push(['kết bạn', `kết bạn ${ids.map(x => x.r[0]).join(', ')}`]); }
@@ -320,9 +394,14 @@ for (let lane = 0; lane < CFG.LANES; lane++) {
   }
 }
 rows.sort((a, b) => a[1].localeCompare(b[1]));
+// Ghi chế độ kho + số ngày tồn vào cột J dòng đầu ngày (tab có sẵn, cấp 3 vẫn đọc "luồng n" như cũ)
+if (rows.length) rows[0][9] += ' · ' + stock.tag;
 const data = frReserve.map(x => ({ range: `'Add Friend'!C${x.row}`, values: [[`Đã xếp ${x.nick} ${dayVN}`]] }));
 const nPost = rows.filter(r => /^đăng/.test(r[4])).length;
-return [{ json: { skip: false, day, rows, data, overflow, summary: `${rows.length} việc cho ${nicks.length} nick ngày ${dayVN}` + (overflow.length ? `; ${overflow.length} việc không vừa giờ` : '') + (okGroup.size ? '' : '; chưa có group A/B nên không xếp bài group') + (cqRows.length < nPost + 5 ? `; kho content sắp hết (còn ${cqRows.length - nPost})` : '') } }];
+const left = stock.unused - nPost;
+return [{ json: { skip: false, day, rows, data, overflow, stock: { mode: stock.mode, days: stock.days, unused: stock.unused, need: stock.need, reclaimed: stock.reclaimed, missing: stock.missing },
+  summary: `${rows.length} việc cho ${nicks.length} nick ngày ${dayVN}` + (overflow.length ? `; ${overflow.length} việc không vừa giờ` : '') + (okGroup.size ? '' : '; chưa có group A/B nên không xếp bài group')
+    + `; ${stock.tag}` + (stock.mode === 'Ít' || left < stock.need ? `; kho sắp hết (sau hôm nay còn ${Math.max(0, left)}) → đẩy phái sinh cấp 2, duyệt Pool Content SM` : '') } }];
 """
 nodes, c = [], {}
 reads = [("Đọc Tài khoản", "\"'Tài khoản'!A2:I20\""), ("Đọc Target + Workload", "\"'Target + Workload'!A4:K11\""),
@@ -335,7 +414,7 @@ link(c, "08:20 Thứ 2–7 (bù khi máy tắt đêm)", reads[0][0])
 prev = "21:30 Chủ nhật–Thứ sáu"
 for i, rd in enumerate(reads):
     nodes.append(gget(rd[0], rd[1], [-980 + i * 160, 300], sheet=rd[2] if len(rd) > 2 else None)); link(c, prev, rd[0]); prev = rd[0]
-nodes += [code("Sinh lịch", gen_js, [420, 300], notes="Luật: giờ hành chính, 2 luồng song song, bài group chỉ vào group A/B đã join; cùng nick cách ≥60 phút, cả đội cách ≥6 phút; không đăng lại 1 group trong 3 ngày; đèn Đỏ → 0 bài group, Vàng → ≤2; mỗi content 1 lần."),
+nodes += [code("Sinh lịch", gen_js, [420, 300], notes="Luật: giờ hành chính, 2 luồng song song, bài group chỉ vào group A/B đã join; cùng nick cách ≥60 phút, cả đội cách ≥6 phút; không đăng lại 1 group trong 3 ngày; đèn Đỏ → 0 bài group, Vàng → ≤2; mỗi content 1 lần. Kiểm tồn kho trước khi xếp: Đầy (>7 ngày) hấp thụ/xếp bù, Vừa bình thường, Ít (<2 ngày) báo + đẩy phái sinh; trần cứng ≤5 group, ≤3 tường/nick/ngày."),
           iff("Có việc mới?", "{{ !$json.skip && $json.rows.length > 0 }}", [640, 300]),
           gpost("Ghi Lịch SM", "/values/{{ encodeURIComponent(\"'Lịch SM'!A:J\") }}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS", "{ values: $json.rows }", [860, 220]),
           iff("Có người kết bạn?", "{{ $('Sinh lịch').first().json.data.length > 0 }}", [1080, 220]),
@@ -456,17 +535,28 @@ const rows = Object.entries(per).map(([n, p]) => {
   const den = p.red ? 'Đỏ' : (p.loi > p.xong || p.wall < q.wall || p.grp < q.grp) ? 'Vàng' : 'Xanh';
   return [today, n, p.xong, p.loi, p.wall, p.grp, p.join, p.fr, p.tt, den, left.filter(r => r[2] === n).length + ' việc còn Chờ'];
 });
-const text = '📊 Smock ' + today + '\n' + rows.map(r => `${r[1]} ${r[9] === 'Đỏ' ? '🔴' : r[9] === 'Vàng' ? '🟡' : '🟢'} xong ${r[2]}, lỗi ${r[3]}, tường ${r[4]}, group ${r[5]}`).join('\n') + (left.length ? `\nCòn ${left.length} việc Chờ` : '');
-return [{ json: { rows, text } }];"""
+// Tồn kho content cho ngày làm việc kế tiếp (cùng công thức L1-02 / L1-06)
+const V = n => { try { return (($(n).first().json) || {}).values || []; } catch (e) { return []; } };
+const stock = stockOf({ ke: V('Đọc content KE'), pool: V('Đọc Pool Content SM'), lich, nk, acc: V('Đọc Tài khoản'), kpi, d: targetDayOf(vnNow()) });
+const stockLine = (stock.mode === 'Ít' ? '⚠️ ' : '📦 ') + stock.tag.replace(/^kho/, 'Kho content:')
+  + (stock.mode === 'Ít' ? ' → L1-06 đẩy ' + CFG.L2_CAPTION_JOBS['Ít'] + ' việc phái sinh/lượt; cần duyệt caption ở Pool Content SM / bổ sung KE'
+     : stock.mode === 'Đầy' ? ' → chế độ hấp thụ: lấp đủ slot, phái sinh giảm còn ' + CFG.L2_CAPTION_JOBS['Đầy'] + ' việc/lượt' : '');
+const text = '📊 Smock ' + today + '\n' + rows.map(r => `${r[1]} ${r[9] === 'Đỏ' ? '🔴' : r[9] === 'Vàng' ? '🟡' : '🟢'} xong ${r[2]}, lỗi ${r[3]}, tường ${r[4]}, group ${r[5]}`).join('\n') + (left.length ? `\nCòn ${left.length} việc Chờ` : '')
+  + '\n' + stockLine;
+return [{ json: { rows, text, stock: { mode: stock.mode, days: stock.days, unused: stock.unused, need: stock.need } } }];"""
 nodes, c = [], {}
 nodes += [sched("18:00 Thứ 2–7", "0 18 * * 1-6", [-900, 300]),
           gget("Đọc Nhật Ký SM", "\"'Nhật Ký SM'!A2:K5000\"", [-680, 300]),
           gget("Đọc Target + Workload", "\"'Target + Workload'!A4:K11\"", [-460, 300]),
           gget("Đọc Lịch SM", "\"'Lịch SM'!A2:J5000\"", [-240, 300]),
-          code("Tính báo cáo + đèn", report_js, [-20, 300], notes="Đèn: Đỏ nếu có cảnh báo FB trong log; Vàng nếu lỗi nhiều hơn xong hoặc thiếu bài so với KPI ngày. Không ghi tab riêng: tab Báo cáo SM đã tự tính từ Nhật Ký SM; L1-02 tự tính đèn từ Nhật Ký SM."),
+          gget("Đọc Tài khoản", "\"'Tài khoản'!A2:I20\"", [-240, 460]),
+          gget("Đọc Pool Content SM", POOL_RANGE, [-130, 460]),
+          gget("Đọc content KE", KE_RANGE, [-20, 460], sheet=KE_SHEET),
+          code("Tính báo cáo + đèn", report_js, [-20, 300], notes="Đèn: Đỏ nếu có cảnh báo FB trong log; Vàng nếu lỗi nhiều hơn xong hoặc thiếu bài so với KPI ngày. Thêm dòng tồn kho content (Đầy/Vừa/Ít). Không ghi tab riêng: tab Báo cáo SM đã tự tính từ Nhật Ký SM; L1-02 tự tính đèn từ Nhật Ký SM."),
           telegram("Gửi nhóm", "{{ $('Tính báo cáo + đèn').first().json.text }}", [200, 300])]
 for a, b in [("18:00 Thứ 2–7", "Đọc Nhật Ký SM"), ("Đọc Nhật Ký SM", "Đọc Target + Workload"), ("Đọc Target + Workload", "Đọc Lịch SM"),
-             ("Đọc Lịch SM", "Tính báo cáo + đèn"), ("Tính báo cáo + đèn", "Gửi nhóm")]:
+             ("Đọc Lịch SM", "Đọc Tài khoản"), ("Đọc Tài khoản", "Đọc Pool Content SM"), ("Đọc Pool Content SM", "Đọc content KE"),
+             ("Đọc content KE", "Tính báo cáo + đèn"), ("Tính báo cáo + đèn", "Gửi nhóm")]:
     link(c, a, b)
 save("L1-04-bao-cao-ngay.json", "L1-04 Báo cáo ngày + đèn sức khỏe", nodes, c, "Tóm tắt cuối ngày gửi nhóm (bật node Telegram nếu dùng). Số liệu chi tiết xem tab Báo cáo SM.")
 
@@ -531,10 +621,15 @@ const id = p => `${p}-${stamp}-${String(++n).padStart(3, '0')}`;
 // Caption cần phái sinh: content gốc đã đăng ≥ CONTENT_REUSE_DAYS ngày trước, chưa có bản phái sinh trong Pool Content SM; tối đa 10 việc/đêm
 const parseDay = s => { s = String(s || ''); let m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s); if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
   m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; };
-const lastUse = {}; for (const r of lich) { const dd = parseDay(r[0]); if (!dd) continue; for (const m of lichText(r).matchAll(/\b((?:CG|PC)\d+)\b/g)) if (!lastUse[m[1]] || lastUse[m[1]] < dd) lastUse[m[1]] = dd; }
+// Chỉ tính ngày ĐÃ ĐĂNG thật (H Done / có URL): bài xếp lịch mà không đăng thì chưa "dùng" bộ ảnh
+const lastUse = {}; for (const r of lich) { const dd = parseDay(r[0]); if (!dd || !(/^(Done|Đã đăng)$/i.test(String(r[7] || '').trim()) || String(r[8] || '').trim())) continue;
+  for (const m of lichText(r).matchAll(/\b((?:CG|PC)\d+)\b/g)) if (!lastUse[m[1]] || lastUse[m[1]] < dd) lastUse[m[1]] = dd; }
 const derived = new Set(); for (const r of poolRaw) { const m = /Phái sinh từ ((?:CG|PC)\d+)/i.exec(r[3] || ''); if (m) derived.add(m[1]); }
 const now = vnNow();
-pool.filter(x => /^CG/.test(x.id) && lastUse[x.id] && (now - lastUse[x.id]) / 864e5 >= CFG.CONTENT_REUSE_DAYS && !derived.has(x.id) && !sentSrc.has(x.id)).slice(0, 10)
+// Kiểm tồn kho → số việc phái sinh lượt này: Đầy gửi ít (đang dư content gốc), Ít gửi nhiều
+const stock = stockOf({ ke: V('Đọc content KE'), pool: poolRaw, lich, nk: V('Đọc Nhật Ký SM'), acc: V('Đọc Tài khoản'), kpi: V('Đọc Target + Workload'), d: targetDayOf(now) });
+const capJobs = CFG.L2_CAPTION_JOBS[stock.mode] ?? 10;
+pool.filter(x => /^CG/.test(x.id) && lastUse[x.id] && (now - lastUse[x.id]) / 864e5 >= CFG.CONTENT_REUSE_DAYS && !derived.has(x.id) && !sentSrc.has(x.id)).slice(0, capJobs)
   .forEach(x => files.push({ path: `inbox/captions/${id('CAP')}.json`, body: { task_id: null, kind: 'caption', sheet_row: x.row, source_code: x.id, source_caption: x.caption, type: 'group', image_link: x.media, variants: 3 } }));
 gs.forEach((r, i) => { if (r[16] === 'Chờ chấm' && r[4]) files.push({ path: `inbox/groups/${id('GRP')}.json`, body: { task_id: null, kind: 'group', sheet_row: i + 2, stt: +r[0], name: r[1], url: r[2], text_file: r[4] } }); });
 const out = [];
@@ -597,10 +692,12 @@ nodes += [sched("22:15 đẩy việc sang cấp 2", "15 22 * * *", [-1340, 160])
           gget("Đọc Group Score", "\"'Group Score'!A2:R500\"", [-460, 160]),
           gget("Đọc Nhật Ký SM", "\"'Nhật Ký SM'!A2:J8000\"", [-460, 20]),
           gget("Đọc Lead Hunter", "\"'Lead Hunter'!A2:N5000\"", [-350, 20]),
+          gget("Đọc Tài khoản", "\"'Tài khoản'!A2:I20\"", [-460, -260]),
+          gget("Đọc Target + Workload", "\"'Target + Workload'!A4:K11\"", [-350, -260], notes="Tính tồn kho content (số bài cần/ngày) → số việc phái sinh gửi cấp 2."),
           node("git pull (trước khi gửi)", "n8n-nodes-base.executeCommand", 1, {"command": "git -C \"C:/smock-level2-copilot\" pull --rebase", "executeOnce": True}, [-350, -120]),
           node("Đọc việc đã gửi", "n8n-nodes-base.readWriteFile", 1, {"fileSelector": "C:/smock-level2-copilot/**/CAP-*.json", "options": {}}, [-240, -120], alwaysOutputData=True),
           node("Đọc JSON đã gửi", "n8n-nodes-base.extractFromFile", 1, {"operation": "fromJson", "options": {}}, [-130, -120], onError="continueRegularOutput", alwaysOutputData=True),
-          code("Tạo file việc", export_js, [-240, 160], notes="Mỗi việc một file JSON có task_id duy nhất. File text group do cấp 3 lưu sẵn ở thư mục chung."),
+          code("Tạo file việc", export_js, [-240, 160], notes="Mỗi việc một file JSON có task_id duy nhất. Số việc phái sinh theo tồn kho: Đầy 3 · Vừa 10 · Ít 15 (CFG.L2_CAPTION_JOBS)."),
           node("Ghi vào inbox repo cấp 2", "n8n-nodes-base.readWriteFile", 1, {"operation": "write", "fileName": "={{ 'C:/smock-level2-copilot/' + $json.path }}", "dataPropertyName": "data", "options": {}}, [-20, 160]),
           node("git commit + push inbox", "n8n-nodes-base.executeCommand", 1, {"command": "=git -C \"C:/smock-level2-copilot\" pull --rebase && git -C \"C:/smock-level2-copilot\" add inbox data && git -C \"C:/smock-level2-copilot\" commit -m \"inbox {{ $now.toFormat('yyyy-MM-dd HH:mm') }}\" & git -C \"C:/smock-level2-copilot\" push", "executeOnce": True}, [200, 160],
                notes="Cần bật node Execute Command (xem n8n/level1/README.md) và git đã đăng nhập trên máy."),
@@ -619,7 +716,7 @@ nodes += [sched("22:15 đẩy việc sang cấp 2", "15 22 * * *", [-1340, 160])
                notes="Chỉ chuyển file đã nhận hợp lệ (ok_ids). File bị từ chối nằm lại outbox để cấp 2 sửa."),
           telegram("Báo lỗi file cấp 2", "{{ $('Kiểm + chuyển thành lệnh ghi').first().json.errors.length ? '⚠️ Cấp 2: ' + $('Kiểm + chuyển thành lệnh ghi').first().json.errors.join('; ') : '✅ Cấp 2: đã nhập kết quả' }}", [860, 440])]
 for a, b in [("22:15 đẩy việc sang cấp 2", "Đọc Lịch SM"), ("08:35 Thứ 2–7 đẩy việc (bù)", "Đọc Lịch SM"), ("Đọc Lịch SM", "Đọc Pool Content SM"), ("Đọc Pool Content SM", "Đọc content KE"),
-             ("Đọc content KE", "Đọc Group Score"), ("Đọc Group Score", "Đọc Nhật Ký SM"), ("Đọc Nhật Ký SM", "Đọc Lead Hunter"), ("Đọc Lead Hunter", "git pull (trước khi gửi)"),
+             ("Đọc content KE", "Đọc Group Score"), ("Đọc Group Score", "Đọc Nhật Ký SM"), ("Đọc Nhật Ký SM", "Đọc Lead Hunter"), ("Đọc Lead Hunter", "Đọc Tài khoản"), ("Đọc Tài khoản", "Đọc Target + Workload"), ("Đọc Target + Workload", "git pull (trước khi gửi)"),
              ("git pull (trước khi gửi)", "Đọc việc đã gửi"), ("Đọc việc đã gửi", "Đọc JSON đã gửi"), ("Đọc JSON đã gửi", "Tạo file việc"),
              ("Tạo file việc", "Ghi vào inbox repo cấp 2"), ("Ghi vào inbox repo cấp 2", "git commit + push inbox"),
              ("06:30 kéo kết quả cấp 2", "Đọc Pool Content SM (sáng)"), ("Đọc Pool Content SM (sáng)", "Đọc content KE (sáng)"), ("Đọc content KE (sáng)", "git pull"), ("git pull", "Đọc file outbox"), ("Đọc file outbox", "Đọc JSON"), ("Đọc JSON", "Kiểm + chuyển thành lệnh ghi"),

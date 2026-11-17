@@ -30,6 +30,14 @@ Agent mới đọc file này **sau** `CLAUDE.md` và `tien-do.md`. Trả lời n
 - Lượt nào đã chạy thì lượt bù tự bỏ qua (lịch đã có, bài đã "Gói sẵn", việc đã gửi).
 - Kiểm nhanh bất cứ lúc nào: gõ **`trang-thai`** trong cmd/PowerShell (`tools/trang-thai.py`, chỉ đọc): n8n, 2 tác vụ Task Scheduler, lần chạy gần nhất từng workflow, inbox/outbox cấp 2, việc người dùng cần làm theo giờ.
 
+## 0d. Kiểm tồn kho content (thêm 17/11, cần cài lại L1-02, L1-04, L1-06)
+- L1-02 đếm content **có ảnh, chưa đăng** (KE "3. CONTENT GROUP" + Pool Content SM đã duyệt) ÷ số bài cần/ngày theo tab Target + Workload → **Đầy** (> 7 ngày) / **Vừa** / **Ít** (< 2 ngày). Ghi vào cột J dòng đầu ngày: `kho Vừa 4,2 ngày (…)`; L1-04 thêm 1 dòng "Kho content".
+- **Xếp bù**: dòng lịch cũ ≥ 2 ngày mà không đăng (H ≠ Done, I trống, Nhật Ký SM không có "Đăng bài" Xong với mã đó) → content trả lại kho. Folder "Lỗi gói 0/0 ảnh" hoặc không có link ảnh → không xếp, không tính tồn.
+- Đầy: ưu tiên caption đúng mùa (Valentine/St. Patrick/Easter/Mother's Day/hè), content gốc KE trước, số nhỏ trước; L1-06 chỉ gửi 3 việc phái sinh/lượt (Vừa 10, Ít 15).
+- Chế độ **không nới trần nào**: ≤ 5 group, ≤ 3 tường/nick/ngày (cột D/G tab Target là trần chính), giãn cách 60/6 phút, 3 ngày không đăng lại group, đèn Đỏ/Vàng, "hạn chế group". Lộ trình 3→4→5: đặt `GROUP_RAMP_START` trong `CFG` (để trống = theo cột G).
+- Hằng số ở `CFG` trong `ops/build_level1.py`: `STOCK_FULL_DAYS`, `STOCK_LOW_DAYS`, `L2_CAPTION_JOBS`, `RECLAIM_AFTER_DAYS`, `SEASON`. Caption persona chưa tính (`PERSONA_IN_POOL: false`, chưa có node đọc).
+- L1-06 chỉ phái sinh từ bài **đã đăng thật** ≥ 7 ngày (trước đây tính cả bài chỉ mới xếp lịch).
+
 ## 1. Hệ thống đang chạy thế nào
 ```
 21:30  n8n L1-02 sinh Lịch SM ngày làm việc kế tiếp (tab Lịch SM, cột J ghi "luồng 1/2")
@@ -51,7 +59,7 @@ Agent mới đọc file này **sau** `CLAUDE.md` và `tien-do.md`. Trả lời n
 4. Đăng bài xong: đăng ký mã Kxxx vào Smock Radar (skill `day-du-lieu-radar`). Cảnh báo FB → ghi Radar trước, báo sau.
 
 ## 3. Sửa workflow n8n (chỉ khi người dùng yêu cầu)
-- Sửa **`ops/build_level1.py`** (không sửa tay JSON, không sửa trong giao diện n8n) → `py -I -X utf8 ops/build_level1.py` → `node ops/test_level1.js` (42 phép thử, phải 0 lỗi) → `py -I -X utf8 ops/cai_dat_n8n.py [L1-0x]` (tự gắn credential + token, import đè, tự bật lại workflow đang bật) → người dùng khởi động lại n8n.
+- Sửa **`ops/build_level1.py`** (không sửa tay JSON, không sửa trong giao diện n8n) → `py -I -X utf8 ops/build_level1.py` → `node ops/test_level1.js` (63 phép thử, phải 0 lỗi) → `py -I -X utf8 ops/cai_dat_n8n.py [L1-0x]` (tự gắn credential + token, import đè, tự bật lại workflow đang bật) → người dùng khởi động lại n8n.
 - Tab dùng: chỉ tab ĐANG CÓ, mô tả ở `ops/contract.json`. Không bắt người dùng tạo tab mới.
 - Chạy thử workflow bằng CLI khi n8n đang chạy: đặt `N8N_RUNNERS_BROKER_PORT=5689` và `N8N_PORT=5699`; CLI cần node Manual Trigger (tạo bản sao tạm, chạy xong xoá).
 - Bẫy đã gặp: `toLocaleString('sv-SE')` hỏng trong n8n → dùng `isoOf(vnNow())`; lệnh Execute Command chạy qua `cmd` → nối lệnh bằng `&`, không dùng `;`.

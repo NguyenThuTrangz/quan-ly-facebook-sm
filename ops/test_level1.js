@@ -60,7 +60,7 @@ const srcs = r.rows.map(x => (/\((CG|PC)\d+\)/.exec(x[5]) || [])[0]).filter(Bool
 ok(srcs.length === codes.length && new Set(srcs).size === srcs.length, 'mỗi bài dùng đúng 1 content, không trùng');
 ok(r.rows.every(x => /^\d{4}-\d{2}-\d{2}$/.test(x[0])), 'ngày ghi dạng yyyy-mm-dd như tab Lịch SM đang dùng');
 ok(r.data.every(d => d.range.startsWith("'Add Friend'")), 'chỉ ghi giữ chỗ vào tab có sẵn (Add Friend), không tab mới');
-const usedL = [['2026-11-11', '09:00', 'SM01', 'x', 'đăng group', 'đăng group K140 (CG1) → group 1']];
+const usedL = [['2026-11-11', '09:00', 'SM01', 'x', 'đăng group', 'đăng group K140 (CG1) → group 1', 'Có', 'Done']];
 const rU = run(g, { nodes: { ...base, 'Đọc Lịch SM': { values: usedL } } })[0].json;
 ok(!rU.rows.some(x => /\(CG1\)/.test(x[5])) && rU.rows.some(x => /K141/.test(x[5])), 'content đã có trong Lịch SM không dùng lại; mã bài nối tiếp K lớn nhất');
 const fr = r.rows.filter(x => x[4] === 'kết bạn').flatMap(x => x[5].replace('kết bạn ', '').split(', '));
@@ -92,7 +92,7 @@ ok(gapOK(r8.rows, 6, 60), 'công suất cao vẫn giữ: cả đội cách ≥ 6
 const gIds = g8.map(x => /→ group (\d+)/.exec(x[5])[1]);
 ok(new Set(gIds).size === gIds.length, 'cả đội không đăng trùng 1 group trong ngày');
 ok(r8.rows.every(x => x[1] >= '08:30' && x[1] <= '17:00' && !(x[1] >= '11:45' && x[1] < '13:15')), 'vẫn trong giờ hành chính, bỏ giờ trưa');
-ok(new Set(r8.rows.map(x => x[9])).size === 2, 'chia 2 luồng chạy song song (ghi ở cột Ghi chú)');
+ok(new Set(r8.rows.map(x => (/luồng \d/.exec(x[9]) || [''])[0])).size === 2 && r8.rows.every(x => /luồng [12]/.test(x[9])), 'chia 2 luồng chạy song song (ghi ở cột Ghi chú)');
 // Lịch sử: hôm qua SM01 đã đăng group 1..25 → hôm nay SM01 chỉ được vào group > 25
 const d0 = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
 // Ngày đích giống bộ sinh lịch: sáng → hôm nay, chiều/tối → ngày làm việc kế tiếp; lịch sử = ngày trước ngày đích
@@ -109,6 +109,67 @@ const acc8b = acc8.map(a => a[0] === 'SM04' ? [...a.slice(0, 5), 'Hoạt động
 const rN = run(g, { nodes: { ...base8, 'Đọc Tài khoản': { values: acc8b } } })[0].json;
 ok(rN.rows.filter(x => x[2] === 'SM04' && x[4] === 'đăng group').length === 0 && rN.rows.some(x => x[2] === 'SM04' && x[4] === 'đăng tường'), 'Tài khoản ghi "hạn chế group" → chỉ đăng tường, không đăng group');
 ok(rL.rows.filter(x => x[2] === 'SM02' && x[4] === 'đăng group').length === 0 && rL.rows.filter(x => x[2] === 'SM03' && x[4] === 'đăng group').length <= 2, 'đèn Đỏ → 0 bài group, đèn Vàng → tối đa 2');
+
+console.log('L1-02 kiểm tồn kho content: Đầy / Vừa / Ít');
+const isoD = x => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+const tgtMinus = n => { const x = new Date(tgt); x.setDate(x.getDate() - n); return isoD(x); };
+const keN = (n, f) => Array.from({ length: n }, (_, i) => [String(i + 1), (f && f(i + 1)) || 'cap ' + (i + 1), 'https://drive.google.com/drive/folders/k' + i]);
+const perNick = (rows, kind) => { const o = {}; rows.filter(x => x[4] === kind).forEach(x => { o[x[2]] = (o[x[2]] || 0) + 1; }); return o; };
+const srcOf = rows => rows.map(x => (/\(((?:CG|PC)\d+)\)/.exec(x[5]) || [])[1]).filter(Boolean);
+// Vừa: 120 bài / (8 nick × 7) = 2,1 ngày
+ok(/kho Vừa 2,1 ngày \(120 bài có ảnh chưa đăng, cần 56\/ngày\)/.test(r8.rows[0][9]) && /kho Vừa/.test(r8.summary) && r8.stock.mode === 'Vừa',
+   'Vừa: ghi chế độ + số ngày tồn vào cột J dòng đầu ngày và summary');
+// Đầy: 600 bài (10,7 ngày), cột G gõ 7 (vượt trần), có đèn Đỏ/Vàng, SM04 hạn chế group, SM01 vừa đăng group 1..25, có PC đã duyệt + caption Valentine ở cuối kho
+const kpi7 = acc8.map(a => [a[0], 'u', 2, 2, 2, 1, 7]);
+const keFull = keN(600, i => i === 551 ? 'Valentine smocked bishop dress' : null);
+const poolOk = [['1', 'derived caption', 'https://drive.google.com/drive/folders/pc1', 'Phái sinh từ CG1 (v1)']];
+const fullCtx = { ...base8, 'Đọc Target + Workload': { values: kpi7 }, 'Đọc content KE': { values: keFull }, 'Đọc Pool Content SM': { values: poolOk },
+  'Đọc Tài khoản': { values: acc8b }, 'Đọc Nhật Ký SM': { values: nkL }, 'Đọc Lịch SM': { values: hist } };
+const rF = run(g, { nodes: fullCtx })[0].json;
+const gF = perNick(rF.rows, 'đăng group'), wF = perNick(rF.rows, 'đăng tường');
+ok(rF.stock.mode === 'Đầy' && /kho Đầy \d+,\d ngày/.test(rF.rows[0][9]), `Đầy: tồn ${rF.stock.days.toFixed(1)} ngày > 7 → chế độ hấp thụ, ghi cột J`);
+ok(Object.values(gF).every(n => n <= 5) && Object.values(wF).every(n => n <= 2), `Đầy vẫn ≤ 5 bài group/nick dù cột G = 7, ≤ cột D bài tường (${JSON.stringify(gF)})`);
+ok(['SM05', 'SM06', 'SM07', 'SM08'].every(n => gF[n] === 5 && wF[n] === 2), 'Đầy lấp kín slot: nick đủ điều kiện đủ 5 group + 2 tường');
+ok(gapOK(rF.rows, 6, 60) && rF.overflow.length === 0, 'Đầy giữ giãn cách: cả đội ≥ 6 phút, cùng nick ≥ 60 phút, không tràn giờ');
+const gFi = rF.rows.filter(x => x[4] === 'đăng group').map(x => +/→ group (\d+)/.exec(x[5])[1]);
+ok(new Set(gFi).size === gFi.length, 'Đầy: cả đội không trùng group trong ngày');
+ok(rF.rows.filter(x => x[2] === 'SM01' && x[4] === 'đăng group').every(x => +/→ group (\d+)/.exec(x[5])[1] > 25), 'Đầy: không đăng lại group trong 3 ngày');
+ok(!gF.SM02 && (gF.SM03 || 0) <= 2 && !gF.SM04 && wF.SM04 === 2, 'Đầy: đèn Đỏ 0 group, Vàng ≤ 2, nick hạn chế group chỉ đăng tường');
+ok(rF.rows.every(x => x[1] >= '08:30' && x[1] <= '17:00' && !(x[1] >= '11:45' && x[1] < '13:15')), 'Đầy: vẫn trong 08:30–17:00, bỏ giờ trưa');
+const rV7 = run(g, { nodes: { ...fullCtx, 'Đọc content KE': { values: keN(120) }, 'Đọc Pool Content SM': { values: [] } } })[0].json;
+ok(rV7.stock.mode === 'Vừa' && JSON.stringify(perNick(rV7.rows, 'đăng group')) === JSON.stringify(gF) && JSON.stringify(perNick(rV7.rows, 'đăng tường')) === JSON.stringify(wF),
+   'Đầy không dồn bài: số bài/nick đúng bằng chế độ Vừa (chỉ đổi thứ tự content, kéo dài nhiều ngày)');
+const srcF = srcOf(rF.rows);
+ok(srcF.includes('CG551') && !srcF.some(x => /^PC/.test(x)), 'Đầy: ưu tiên caption đúng mùa (Valentine), dùng content gốc KE trước phái sinh');
+const gRamp = g.replace("GROUP_RAMP_START: ''", `GROUP_RAMP_START: '${isoD(tgt)}'`);
+const rR = run(gRamp, { nodes: fullCtx })[0].json;
+ok(gRamp !== g && rR.stock.mode === 'Đầy' && Object.values(perNick(rR.rows, 'đăng group')).every(n => n <= 3) && perNick(rR.rows, 'đăng group').SM05 === 3,
+   'lộ trình tuần 1 (3→4→5): Đầy vẫn chỉ 3 bài group/nick');
+// Ít: 30 bài / 56 = 0,5 ngày
+const rI = run(g, { nodes: { ...base8, 'Đọc content KE': { values: keN(30) } } })[0].json;
+const srcI = srcOf(rI.rows);
+ok(rI.stock.mode === 'Ít' && /kho Ít 0,5 ngày/.test(rI.rows[0][9]) && /kho sắp hết .*phái sinh cấp 2/.test(rI.summary), 'Ít: tồn < 2 ngày → báo kho sắp hết, đẩy phái sinh');
+ok(srcI.length === 30 && new Set(srcI).size === 30 && gapOK(rI.rows, 6, 60), 'Ít: dùng hết 30 bài, không dùng lại content, vẫn giữ giãn cách');
+// Xếp bù: lịch cũ không đăng → trả lại kho; Done / Lỗi gói 0/0 / Nhật Ký đã đăng / lịch còn mới / thiếu link ảnh → không xếp
+const keR = keN(12).map(r => r[0] === '8' ? ['8', 'no image', ''] : r);
+const lichR = [[tgtMinus(5), '09:00', 'SM01', 'x', 'đăng group', 'đăng group K150 (CG3) → group 1', 'Có', 'Chờ', '', 'luồng 1'],
+  [tgtMinus(5), '09:10', 'SM01', 'x', 'đăng tường', 'đăng tường K151 (CG4)', 'Có', 'Done', '', ''],
+  [tgtMinus(5), '09:20', 'SM02', 'x', 'đăng tường', 'đăng tường K152 (CG5)', 'Có', 'Bỏ qua', '', 'luồng 2 · Lỗi gói 0/0 ảnh'],
+  [tgtMinus(5), '09:30', 'SM02', 'x', 'đăng tường', 'đăng tường K153 (CG6)', 'Có', 'Chờ', '', ''],
+  [tgtMinus(1), '09:40', 'SM03', 'x', 'đăng tường', 'đăng tường K154 (CG7)', 'Có', 'Chờ', '', '']];
+const nkR = [[tgtMinus(5), 'SM02', 'x', 'Đăng bài', 'Tường', 'đăng tường K153', 'Công khai', 'ok', 'Xong', 1]];
+const rB = run(g, { nodes: { ...base, 'Đọc content KE': { values: keR }, 'Đọc Lịch SM': { values: lichR }, 'Đọc Nhật Ký SM': { values: nkR } } })[0].json;
+const srcB = srcOf(rB.rows);
+ok(srcB.includes('CG3') && rB.stock.reclaimed === 1 && /1 bài lịch cũ xếp bù/.test(rB.summary), 'lịch cũ chưa đăng (≥ 2 ngày) → content trả lại kho, xếp bù');
+ok(!['CG4', 'CG5', 'CG6', 'CG7', 'CG8'].some(x => srcB.includes(x)), 'không xếp lại: đã Done, folder không ảnh, Nhật Ký đã đăng, lịch còn mới, thiếu link ảnh');
+ok(rB.stock.unused === 7 && rB.stock.missing === 2, `tồn kho chỉ tính bài có ảnh (${rB.stock.unused} bài, ${rB.stock.missing} thiếu ảnh)`);
+
+console.log('L1-04 / L1-06 theo tồn kho');
+const w4 = W('L1-04-bao-cao-ngay.json'), rep = codeOf(w4, 'Tính báo cáo + đèn');
+const repCtx = ke => ({ nodes: { 'Đọc Nhật Ký SM': { values: [] }, 'Đọc Target + Workload': { values: kpi8 }, 'Đọc Lịch SM': { values: [] },
+  'Đọc Tài khoản': { values: acc8 }, 'Đọc content KE': { values: ke }, 'Đọc Pool Content SM': { values: [] } } });
+const t4 = run(rep, repCtx(keN(30)))[0].json, t4b = run(rep, repCtx(keN(600)))[0].json;
+ok(/⚠️ Kho content: Ít 0,5 ngày.*Pool Content SM/.test(t4.text) && /📦 Kho content: Đầy.*hấp thụ/.test(t4b.text), 'L1-04 báo tồn kho: Ít có cảnh báo + việc cần làm, Đầy ghi chế độ hấp thụ');
 
 console.log('L1-03 gói bài: thay mã bài vào caption');
 const w3 = W('L1-03-chuan-bi-goi-bai.json'), p3 = codeOf(w3, 'Chọn bài cần gói');
@@ -157,7 +218,7 @@ const b = ex.length && ex[0].json.body;
 ok(ex.length === 1 && b.source_code === 'CG2' && b.sheet_row === 4 && b.type === 'group' && /^CAP-\d{8}-\d{3}$/.test(b.task_id),
    'việc caption gửi cấp 2 có sheet_row, type, task_id đúng schema repo cấp 2; chỉ bài đã đăng ≥ 7 ngày');
 const stamp0 = b.task_id.slice(4, 12);
-const ctx6 = { 'Đọc Lịch SM': { values: [[oldIso, '09:00', 'SM01', 'x', 'đăng group', 'đăng group K140 (CG2) → group 1'], [oldIso, '10:00', 'SM01', 'x', 'đăng group', 'đăng group K141 (CG1) → group 2']] },
+const ctx6 = { 'Đọc Lịch SM': { values: [[oldIso, '09:00', 'SM01', 'x', 'đăng group', 'đăng group K140 (CG2) → group 1', 'Có', 'Done'], [oldIso, '10:00', 'SM01', 'x', 'đăng group', 'đăng group K141 (CG1) → group 2', 'Có', 'Done']] },
   'Đọc content KE': { values: [['1', 'a'.repeat(50), 'L1'], ['2', 'b'.repeat(50), 'L2']] }, 'Đọc Pool Content SM': { values: [] }, 'Đọc Group Score': { values: [] } };
 const ex2 = run(exp, { nodes: ctx6, all: { 'Đọc JSON đã gửi': [{ json: { data: { task_id: `CAP-${stamp0}-004`, kind: 'caption', source_code: 'CG2' } } }] } });
 ok(ex2.length === 1 && ex2[0].json.body.source_code === 'CG1' && ex2[0].json.body.task_id === `CAP-${stamp0}-005`, 'lượt gửi thứ 2 trong ngày: không gửi lại bài gốc đã gửi, đánh số nối tiếp');
@@ -165,6 +226,15 @@ ok(r.appends.length === 3 && r.appends.every(a => a.length === 6 && /Phái sinh 
    '3 caption phái sinh ghi vào Pool Content SM (STT 6–8), Phân loại "… chờ duyệt"');
 ok(r.updates.some(u => u.range.includes("'Group Score'!F3:Q3") && u.values[0][11] === 'Đã chấm'), 'điểm group ghi đúng dòng, trạng thái Đã chấm');
 ok(r.errors.length === 2, 'từ chối file sai task_id và file có trường email');
+
+const posted20 = Array.from({ length: 20 }, (_, i) => [oldIso, '09:00', 'SM01', 'x', 'đăng group', `đăng group K${200 + i} (CG${i + 1}) → group 1`, 'Có', 'Done']);
+const expCtx = ke => ({ nodes: { 'Đọc Lịch SM': { values: posted20 }, 'Đọc content KE': { values: ke }, 'Đọc Pool Content SM': { values: [] }, 'Đọc Group Score': { values: [] },
+  'Đọc Tài khoản': { values: acc8 }, 'Đọc Target + Workload': { values: kpi8 }, 'Đọc Nhật Ký SM': { values: [] } } });
+const nCap = out => out.filter(x => x.json.body && x.json.body.kind === 'caption').length;
+const eLow = nCap(run(exp, expCtx(keN(20)))), eFull = nCap(run(exp, expCtx(keN(600))));
+ok(eLow === 15 && eFull === 3, `L1-06 phái sinh theo kho: Ít gửi ${eLow} việc, Đầy gửi ${eFull} việc`);
+const notPosted = posted20.map(r => [...r.slice(0, 7), 'Chờ']);
+ok(nCap(run(exp, { nodes: { ...expCtx(keN(20)).nodes, 'Đọc Lịch SM': { values: notPosted } } })) === 0, 'L1-06 không phái sinh bài xếp lịch mà chưa đăng thật');
 
 console.log(`\n${pass} đạt, ${fail} lỗi`);
 process.exit(fail ? 1 : 0);

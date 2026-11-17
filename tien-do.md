@@ -1,5 +1,22 @@
 # Tiến độ chạy lịch SM
 
+## 2026-11-17 — luồng 1 (SM01, SM03; xong 14:25)
+- Bắt đầu 09:45 (trễ) → người dùng duyệt **làm bù xen kẽ**. Lịch luồng 1 dòng 193–234: **xong hết**, log webhook OK.
+- Bài: SM03 **K133** g30 (chờ duyệt, 13:38 vẫn pending), **K134** g15 (lên ngay), **K135** g29 (chờ duyệt), **K136** g12 14 ảnh (chờ duyệt), tường **K138** (= CG6 thay CG30 thiếu ảnh). SM01 **K123** g5 (chờ duyệt), **K124** g25 (chờ duyệt), **K125** g1 (đổi từ g32 resale, lên ngay), tường **K129**, **K128**. Tất cả đã đăng ký Radar.
+- Bỏ qua (Lỗi gói 0/0 ảnh): K126 (229), K127 (233), K137 (232).
+- **SM03 bị hạn chế gửi tin nhắn** ("Confirm your identity to send messages", 11:04) → Radar health `h-20261117-SM03-identity` (Đỏ). Người dùng cho đăng group tiếp, vẫn chạy được. Cần người dùng xác minh trên điện thoại. Inbox David (Trung Quốc, có vẻ xưởng/nhà cung cấp) đã ghi signal, chưa tính QI.
+- Join: SM01 g12, 15, 27; SM03 g5, 10, 17 → đã ghi Join Group SM cột D/F + Radar. Kết bạn: SM01 STT1 đã có lời mời cũ, STT2 đã là bạn; SM03 STT6 gửi, STT5 không có nút.
+- Content đã dùng ngoài lịch: CG6 (K138), CG4 (K132 luồng 2). CG2 còn chưa đăng (ảnh `anh-dang-bai\CG02`).
+- n8n: đã cài cơ chế kiểm tồn kho content (commit 1ba05ef, L1-02/04/06), lịch 18/11 (21:30) là lần đầu áp dụng → kiểm cột J dòng đầu ngày 18/11 có "kho Đầy/Vừa/Ít".
+- Người dùng cho Claude tự điều phối n8n + Copilot (memory `feedback-dieu-phoi-n8n-copilot`).
+
+## 2026-11-17 — luồng 2 (SM02, SM04; xong 12:14)
+- Done: 197 tương tác, 198 kết bạn (Một phần: STT 4 đã gửi; STT 3 Katherine Connors không có nút), 199 lướt, 201 tương tác group 3, 203 chấp nhận (0), 210 tường **K131** (CG23), 212 tường **K132** (thay CG24 lỗi gói bằng CG4, ảnh `anh-dang-bai\CG04`), 214 tim story. K131, K132 đã đăng ký Radar.
+- **SM02 lại bị "confirm your identity"** khi mở composer group (196, K130 → group 2) và khi Join group 10 (211) → Không làm được; Radar health `h-20261117-SM02-identity`. Tường + like/lướt/story/kết bạn vẫn được. SM02 **không đăng group, không join** cho tới khi người dùng xác minh trên điện thoại.
+- Content: CG2 vẫn chưa đăng (ảnh `anh-dang-bai\CG02`); CG4 đã dùng (K132).
+- SM04: 207, 208, 209, 215, 217 ghi Bỏ qua (không có trình duyệt trên máy ADMIN).
+- Group 10, 12, 15 SM02 chưa join.
+
 ## 2026-11-16 (bàn giao cấp 3 → xem `ops/BAN-GIAO-CAP-3.md`)
 - n8n 2.35.7 chạy ở máy này, tự mở khi đăng nhập (Task Scheduler "Smock n8n"). Bật L1-01…L1-07; Lead Hunter tắt (thiếu key).
 - **L1-02 đã bật → không tự lên lịch nữa.** Lịch 17/11 (dòng 193–234, 42 việc, 2 luồng) do n8n sinh. Log qua webhook (`ghi-log-webhook.ps1`), đã thử OK (dòng thử ở cuối Nhật Ký SM cần xoá).

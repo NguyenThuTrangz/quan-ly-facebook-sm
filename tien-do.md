@@ -2,7 +2,7 @@
 
 ## 2026-11-17 — SM04, SM05, SM07 mới (việc dở cho agent sau)
 - **SM07** Chrome profile "SM07", FB đang tên **Phan Thị Ngọc Anh** → đổi tên **Maily Smock** theo sheet (tab SM07 dòng 22–26), cùng cách làm như SM04/SM05.
-- **WhatsApp: người dùng chốt ghi theo sheet = +84 83 333 3061.** Bio FB thật của SM03 đang là +84 886 421 089 → sửa SM03 theo sheet luôn.
+- **WhatsApp (chốt lại 17/11): mỗi nick 1 số WA riêng, người dùng cấp sau.** Chưa có số riêng thì KHÔNG đưa WA lên bio/intro FB của SM04/05/07 (số 3061 trong sheet chỉ là tạm; ghi chú dòng 27 các tab). SM03 giữ số riêng +84 886 421 089, không sửa.
 - Nick nhận từ HR: **SM04** Chrome profile "SM04", FB **Jenny Smocking** `profile.php?id=61595904006414`; **SM05** Chrome profile "SM05", FB đang tên **Thanh Chi Lê** `profile.php?id=61595814087257`.
 - Mẫu chuẩn: sheet **SMOCK's Information** `1Y9xyKErb3sMZvdgPVXCUWyk7GOt6Y7Qp32i5F8jtV8s`, tab SM04/SM05 (dòng 1–20 = mẫu, dòng 22–26 = hiện trạng + việc đã chốt).
 - Người dùng chốt: Bio/Intro theo mẫu SM, Workplace K-Embroidery, xoá SĐT/Gmail tuyển dụng + trường ĐH + "Công ty K-Global"; **SM05 đổi tên → Olivia Smocking**; avatar/ảnh bìa để sau.

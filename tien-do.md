@@ -1,5 +1,14 @@
 # Tiến độ chạy lịch SM
 
+## 2026-11-18 — luồng 1 + 2 (bắt đầu 10:55, làm bù xen kẽ)
+- Sáng n8n bị dừng 09:21 (mã thoát Ctrl+C) → khởi động lại 10:56, healthz OK. Lượt 08:20/08:25 đã chạy trước đó.
+- Lịch 18/11 (dòng 235–266) sinh **sáng 17/11** trước khi đổi trạng thái nick → còn việc SM04 (247, 249, 250, 260, 261) và SM02 đăng/join group (235 K144, 241) → ghi Bỏ qua. K144 (PC6) chưa đăng, còn dùng được.
+- Join 238 (SM03) và 257 (SM01) đã join từ 17/11 → Bỏ qua.
+- SM01: **K139 → g20** (lên ngay; ⚠️ Radar xếp g20 là *resale*, lẽ ra không đăng — n8n L1-02 chưa lọc theo cat Radar), tường **K143**, chấp nhận 1, story 2, group 39, lướt 4, tương tác 3. **Kết bạn bị FB chặn "Can't send request"** → Radar health `h-20261118-SM01-friendreq`, dừng kết bạn SM01 hôm nay.
+- SM01 hẹn giờ (cron trong phiên): 13:19 K140 → g2 (262), 13:47 tường K142 (265), 14:23 K141 → **g27** thay g10 resale (266).
+- SM03: xong 236, 240, 243 (Tiana gửi; STT 14 đã có lời mời cũ; lỡ gửi nhầm 1 gợi ý và đã huỷ), 251 (0), 252, 253.
+- SM02: xong 237 (0), 239, 242, 254, 255, 256 (2 lời mời).
+
 ## 2026-11-17 17:55 — Máy bật 24/24 (phương án A, `ops/BAN-GIAO-CAP-3.md` mục 0c)
 - Người dùng để máy treo 24/24 từ 17/11 tối. Đã kiểm `trang-thai`: n8n chạy, L1-01…L1-07 bật, Copilot cấp 2 lần tới 05:30 18/11, Sleep = không bao giờ. Đêm nay: 18:00 L1-04 → 21:30 L1-02 lịch 18/11 → 22:00 L1-03 → 22:15 L1-06 → 05:30 Copilot → 06:30 L1-06 kéo caption. Sáng 18/11 cấp 3 chạy lịch từ 08:30.
 - **Nick mới chưa vào n8n/Copilot**: tab Tài khoản cột F của SM04, SM05, SM07 = "Chờ chuẩn hoá profile (chưa chạy lịch, chờ người dùng bảo set)" → L1-02 bỏ qua (chỉ lấy nick có chữ "Hoạt động"). SM06, SM08 để trống.

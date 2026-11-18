@@ -1,5 +1,11 @@
 # Tiến độ chạy lịch SM
 
+## ✅ 2026-11-18 13:1x — ĐÃ CÀI bản sửa caption vào n8n (agent mới)
+- Sửa test L1-06 lỗi thời; `py ops/cai_dat_n8n.py L1-02 L1-03 L1-06` OK, khởi động lại n8n (healthz OK). DB n8n xác nhận L1-02/03/06 có WA +84 855 555 490 + `USE_POOL_DERIVED: false`, 7 workflow đều bật → lịch 19/11 (21:30) dùng caption gốc KE, không mã Kxxx.
+- Test còn 1 lỗi KHÔNG liên quan: "8 nick × 5" phụ thuộc ngày (hạt giống 19/11 → 3 việc tràn giờ, ra 39/40 bài group) — chỉ kịch bản giả 8 nick, lịch thật 3 nick không ảnh hưởng. Sửa bộ xếp giờ sau khi bật SM04–SM08.
+- Tiện ích Claude lúc 12:57: chưa trình duyệt nào kết nối. GitHub 2 repo fetch/push OK (máy không có `gh`).
+- Vẫn chờ người dùng: bài K123–K143 có mã Kxxx (sửa/gỡ?), đổi WA sheet SMOCK's Information + bio FB SM01–SM03. Đăng bài vẫn DỪNG.
+
 ## ⛔ 2026-11-18 ~11:40 — DỪNG ĐĂNG BÀI + BÀN GIAO (người dùng đổi account) — agent mới đọc mục này TRƯỚC
 **Trạng thái:** người dùng ra lệnh **dừng toàn bộ hoạt động đăng bài**. Đã huỷ 3 bài SM01 hẹn giờ (K140, K142, K141 → Lịch SM 262/265/266 = Bỏ qua). **Không đăng bài nào cho tới khi người dùng cho chạy lại.**
 

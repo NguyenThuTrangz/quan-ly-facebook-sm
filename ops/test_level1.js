@@ -220,7 +220,7 @@ const stamp0 = (() => { const t = new Date(); return `${t.getFullYear()}${String
 const ctx6 = { 'Đọc Lịch SM': { values: [[oldIso, '09:00', 'SM01', 'x', 'đăng group', 'đăng group K140 (CG2) → group 1', 'Có', 'Done'], [oldIso, '10:00', 'SM01', 'x', 'đăng group', 'đăng group K141 (CG1) → group 2', 'Có', 'Done']] },
   'Đọc content KE': { values: [['1', 'a'.repeat(50), 'L1'], ['2', 'b'.repeat(50), 'L2']] }, 'Đọc Pool Content SM': { values: [] }, 'Đọc Group Score': { values: [] } };
 const ex2 = run(exp, { nodes: ctx6, all: { 'Đọc JSON đã gửi': [{ json: { data: { task_id: `CAP-${stamp0}-004`, kind: 'caption', source_code: 'CG2' } } }] } });
-ok(ex2.length === 1 && ex2[0].json.body.source_code === 'CG1' && ex2[0].json.body.task_id === `CAP-${stamp0}-005`, 'lượt gửi thứ 2 trong ngày: không gửi lại bài gốc đã gửi, đánh số nối tiếp');
+ok(!ex2.some(x => x.json.body && x.json.body.kind === 'caption'), 'lượt gửi thứ 2 trong ngày: vẫn không gửi việc phái sinh caption (tắt từ 18/11)');
 ok(r.appends.length === 3 && r.appends.every(a => a.length === 6 && /Phái sinh từ CG4.*chờ duyệt/.test(a[3])) && r.appends.map(a => a[0]).join() === '6,7,8',
    '3 caption phái sinh ghi vào Pool Content SM (STT 6–8), Phân loại "… chờ duyệt"');
 ok(r.updates.some(u => u.range.includes("'Group Score'!F3:Q3") && u.values[0][11] === 'Đã chấm'), 'điểm group ghi đúng dòng, trạng thái Đã chấm');

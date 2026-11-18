@@ -37,7 +37,10 @@ const CFG = {
   // ---- Kiểm tồn kho content (L1-02 xếp bài, L1-06 gửi việc cấp 2, L1-04 báo cáo) ----
   STOCK_FULL_DAYS: 7,           // tồn > ngần này ngày → "Đầy": lấp đủ slot, ưu tiên content gốc cũ/đúng mùa, giảm phái sinh
   STOCK_LOW_DAYS: 2,            // tồn < ngần này ngày → "Ít": vẫn bình thường, đẩy mạnh phái sinh cấp 2, báo ở L1-04
-  L2_CAPTION_JOBS: { 'Đầy': 3, 'Vừa': 10, 'Ít': 15 }, // số việc phái sinh caption L1-06 gửi mỗi lượt theo chế độ kho
+  // 18/11 người dùng chốt: CHỈ dùng caption gốc KE, không phái sinh, không ghi mã Kxxx lên caption, WhatsApp = số dưới.
+  USE_POOL_DERIVED: false,      // false = bỏ caption phái sinh (tab Pool Content SM) khỏi kho
+  WHATSAPP: '+84 855 555 490',  // số WhatsApp chung SM01–SM03: thay mọi số điện thoại trong caption gốc KE
+  L2_CAPTION_JOBS: { 'Đầy': 0, 'Vừa': 0, 'Ít': 0 },    // số việc phái sinh caption L1-06 gửi mỗi lượt (0 = tắt phái sinh)
   RECLAIM_UNPOSTED: true,       // content đã xếp lịch nhưng KHÔNG đăng (H ≠ Done, I trống, Nhật Ký không có) → trả lại kho để xếp bù
   RECLAIM_AFTER_DAYS: 2,        // chỉ lấy lại dòng lịch cũ hơn ngày đích ngần này ngày (chờ log/webhook trễ, tránh đăng trùng)
   PERSONA_IN_POOL: false,       // caption persona GRACIE/CATHIE/LILY/EMILY: chưa có node đọc → chưa tính vào kho
@@ -58,7 +61,7 @@ const buildPool = (ke, pool) => {
   const out = [];
   // row = số dòng thật trên sheet (KE đọc từ A3, Pool Content SM đọc từ A2)
   ke.forEach((r, i) => { const s = String(r[0] || '').trim(); if (/^\d+$/.test(s) && String(r[1] || '').trim()) out.push({ id: 'CG' + s, caption: r[1], media: r[2] || '', kind: 'any', row: i + 3 }); });
-  pool.forEach((r, i) => { const s = String(r[0] || '').trim(); if (/^\d+$/.test(s) && String(r[1] || '').trim() && !/chờ duyệt/i.test(r[3] || ''))
+  if (CFG.USE_POOL_DERIVED) pool.forEach((r, i) => { const s = String(r[0] || '').trim(); if (/^\d+$/.test(s) && String(r[1] || '').trim() && !/chờ duyệt/i.test(r[3] || ''))
     out.push({ id: 'PC' + s, caption: r[1], media: r[2] || '', kind: /tường|wall/i.test(r[3] || '') ? 'wall' : 'any', note: r[3] || '', row: i + 2 }); });
   return out;
 };
@@ -442,9 +445,11 @@ lich.forEach((r, i) => {
   const code = m[1], src = byId[m[2]];
   if (!src) { out.push({ json: { row: i + 2, code, note: r[9] || '', missing: m[2] } }); return; }
   const link = src.media || ''; const f = /folders\/([\w-]+)/.exec(link) || /[?&]id=([\w-]+)/.exec(link) || /\/d\/([\w-]+)/.exec(link);
-  // Thay {{MA_BAI}} (caption phái sinh từ cấp 2) bằng mã bài thật; caption gốc chưa có mã thì thêm câu mời nhắn tin
-  let cap = String(src.caption).replace(/\{\{MA_BAI\}\}/g, code);
-  if (!new RegExp('\\b' + code + '\\b').test(cap)) cap += `\n\nDM or WhatsApp us code ${code} for the catalog.`;
+  // Caption = nguyên văn caption gốc KE. KHÔNG ghi mã bài Kxxx (mã chỉ dùng nội bộ: Lịch SM, Radar).
+  // Chỉ đổi số điện thoại/WhatsApp trong caption sang CFG.WHATSAPP; bỏ câu chứa {{MA_BAI}} nếu còn sót.
+  let cap = String(src.caption)
+    .replace(/[^\n]*\{\{MA_BAI\}\}[^\n]*\n?/g, '')
+    .replace(/(?:\+\s?84|\b84|\b0)(?:[ .\-]?\d){8,10}\b/g, CFG.WHATSAPP).trim();
   out.push({ json: { row: i + 2, code, src: m[2], note: r[9] || '', caption: cap, folderId: f ? f[1] : null, dir: `${CFG.PACK_DIR}/${code}` } });
 });
 return out.length ? out : [{ json: { empty: true } }];"""

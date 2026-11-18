@@ -178,12 +178,13 @@ const lich3 = [[tmrIso, '09:00', 'SM01', 'x', 'đăng group', 'đăng group K130
                [tmrIso, '10:00', 'SM01', 'x', 'đăng tường', 'đăng tường K131 (CG2)', 'Có', 'Chờ', '', ''],
                [tmrIso, '11:00', 'SM02', 'x', 'đăng tường', 'đăng tường K132 (CG3)', 'Có', 'Chờ', '', 'Gói sẵn 3/3 ảnh'],
                ['2026-01-02', '11:00', 'SM02', 'x', 'đăng tường', 'đăng tường K100 (CG4)', 'Có', 'Done', '', '']];
-const ctx3 = { nodes: { 'Đọc Lịch SM': { values: lich3 }, 'Đọc content KE': { values: [['2', 'Lovely dress', 'https://drive.google.com/drive/folders/Q'], ['3', 'x', 'y']] },
+const ctx3 = { nodes: { 'Đọc Lịch SM': { values: lich3 }, 'Đọc content KE': { values: [['2', 'Lovely dress\nWhatsApp: +84 83 333 3061', 'https://drive.google.com/drive/folders/Q'], ['3', 'x', 'y']] },
   'Đọc Pool Content SM': { values: [['1', 'Hello. DM or WhatsApp us code {{MA_BAI}} for the catalog', 'https://drive.google.com/drive/folders/XYZ', 'Phái sinh từ CG1 (v1)']] } } };
 r = run(p3, ctx3);
 ok(r.length === 2, 'chỉ gói bài chưa "Gói sẵn" và chưa Done, từ hôm nay trở đi');
-ok(r[0].json.caption.includes('K130') && !r[0].json.caption.includes('{{MA_BAI}}') && r[0].json.folderId === 'XYZ' && r[0].json.row === 2, 'caption có K130, lấy đúng folder id và dòng Lịch SM');
-ok(/code K131/.test(r[1].json.caption), 'caption gốc chưa có mã → tự thêm lời mời nhắn tin kèm mã');
+ok(r[0].json.missing === 'PC1' && r[0].json.row === 2, 'caption phái sinh (PC) không còn trong kho → báo thiếu, không gói');
+ok(r[1].json.caption === 'Lovely dress\nWhatsApp: +84 855 555 490' && !/K13\d/.test(r[1].json.caption) && r[1].json.folderId === 'Q',
+  'caption gốc KE giữ nguyên, KHÔNG thêm mã Kxxx, đổi số WhatsApp sang +84 855 555 490');
 
 console.log('L1-05 kiểm tiêu đề theo tab đang có');
 const w5 = W('L1-05-kiem-hop-dong.json'), k5 = codeOf(w5, 'Kiểm tiêu đề');
@@ -214,10 +215,8 @@ const exp = codeOf(w6, 'Tạo file việc');
 const old = new Date(d0); old.setDate(old.getDate() - 10); const oldIso = `${old.getFullYear()}-${String(old.getMonth() + 1).padStart(2, '0')}-${String(old.getDate()).padStart(2, '0')}`;
 const ex = run(exp, { nodes: { 'Đọc Lịch SM': { values: [[oldIso, '09:00', 'SM01', 'x', 'đăng group', 'đăng group K140 (CG2) → group 1', 'Có', 'Done']] },
   'Đọc content KE': { values: [['1', 'a'.repeat(50), 'L1'], ['2', 'b'.repeat(50), 'L2']] }, 'Đọc Pool Content SM': { values: [] }, 'Đọc Group Score': { values: [] } } });
-const b = ex.length && ex[0].json.body;
-ok(ex.length === 1 && b.source_code === 'CG2' && b.sheet_row === 4 && b.type === 'group' && /^CAP-\d{8}-\d{3}$/.test(b.task_id),
-   'việc caption gửi cấp 2 có sheet_row, type, task_id đúng schema repo cấp 2; chỉ bài đã đăng ≥ 7 ngày');
-const stamp0 = b.task_id.slice(4, 12);
+ok(!ex.some(x => x.json.body && x.json.body.kind === 'caption'), 'L1-06 không gửi việc phái sinh caption (tắt từ 18/11, CFG.L2_CAPTION_JOBS = 0)');
+const stamp0 = (() => { const t = new Date(); return `${t.getFullYear()}${String(t.getMonth() + 1).padStart(2, '0')}${String(t.getDate()).padStart(2, '0')}`; })();
 const ctx6 = { 'Đọc Lịch SM': { values: [[oldIso, '09:00', 'SM01', 'x', 'đăng group', 'đăng group K140 (CG2) → group 1', 'Có', 'Done'], [oldIso, '10:00', 'SM01', 'x', 'đăng group', 'đăng group K141 (CG1) → group 2', 'Có', 'Done']] },
   'Đọc content KE': { values: [['1', 'a'.repeat(50), 'L1'], ['2', 'b'.repeat(50), 'L2']] }, 'Đọc Pool Content SM': { values: [] }, 'Đọc Group Score': { values: [] } };
 const ex2 = run(exp, { nodes: ctx6, all: { 'Đọc JSON đã gửi': [{ json: { data: { task_id: `CAP-${stamp0}-004`, kind: 'caption', source_code: 'CG2' } } }] } });
@@ -232,7 +231,7 @@ const expCtx = ke => ({ nodes: { 'Đọc Lịch SM': { values: posted20 }, 'Đ�
   'Đọc Tài khoản': { values: acc8 }, 'Đọc Target + Workload': { values: kpi8 }, 'Đọc Nhật Ký SM': { values: [] } } });
 const nCap = out => out.filter(x => x.json.body && x.json.body.kind === 'caption').length;
 const eLow = nCap(run(exp, expCtx(keN(20)))), eFull = nCap(run(exp, expCtx(keN(600))));
-ok(eLow === 15 && eFull === 3, `L1-06 phái sinh theo kho: Ít gửi ${eLow} việc, Đầy gửi ${eFull} việc`);
+ok(eLow === 0 && eFull === 0, `L1-06 đã tắt phái sinh (18/11): Ít gửi ${eLow} việc, Đầy gửi ${eFull} việc`);
 const notPosted = posted20.map(r => [...r.slice(0, 7), 'Chờ']);
 ok(nCap(run(exp, { nodes: { ...expCtx(keN(20)).nodes, 'Đọc Lịch SM': { values: notPosted } } })) === 0, 'L1-06 không phái sinh bài xếp lịch mà chưa đăng thật');
 

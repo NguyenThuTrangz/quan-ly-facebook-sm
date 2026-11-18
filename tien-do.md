@@ -1,5 +1,24 @@
 # Tiến độ chạy lịch SM
 
+## ⛔ 2026-11-18 ~11:40 — DỪNG ĐĂNG BÀI + BÀN GIAO (người dùng đổi account) — agent mới đọc mục này TRƯỚC
+**Trạng thái:** người dùng ra lệnh **dừng toàn bộ hoạt động đăng bài**. Đã huỷ 3 bài SM01 hẹn giờ (K140, K142, K141 → Lịch SM 262/265/266 = Bỏ qua). **Không đăng bài nào cho tới khi người dùng cho chạy lại.**
+
+**Người dùng chỉ ra 2 lỗi nghiêm trọng (Claude gây ra):**
+1. Caption bị **lệch tuyến bài, ép điều hướng khách về inquiry**: caption phái sinh PC1–PC6 (Copilot cấp 2 viết theo prompt của Claude: bắt nhắc MOQ/mock-up/giao hàng + "DM for the catalog") thành một khối văn liền, không giống bài gốc KE.
+2. **Mã bài Kxxx bị đưa lên caption** ("DM or WhatsApp us code Kxxx for the catalog", do L1-03 tự chèn) → khách hiểu lầm. Mã chỉ được dùng nội bộ (Lịch SM, Radar). Các bài đã đăng 17–18/11 (K123–K143) đang có câu này — **chưa sửa/gỡ, chờ người dùng quyết**.
+
+**Yêu cầu mới của người dùng (18/11, phải áp dụng):**
+- **Chỉ dùng caption gốc KE** (workbook `1mY_7HeFFokARzxwS9xCeby46cYGC5QpA_ju4jl5f-UA`, tab "3. CONTENT GROUP"), **giữ nguyên văn**, không phái sinh, không thêm mã Kxxx.
+- **WhatsApp mới chung cho SM01, SM02, SM03: 0855555490 (= +84 855 555 490)**. Đổi số WA trong caption gốc sang số này.
+
+**Việc đang làm dở (chưa xong):**
+- `ops/build_level1.py` đã sửa (commit kèm bàn giao này, **CHƯA cài vào n8n**): `CFG.USE_POOL_DERIVED=false` (bỏ PC khỏi kho), `CFG.WHATSAPP='+84 855 555 490'` (L1-03 thay mọi số ĐT trong caption), `L2_CAPTION_JOBS` = 0 (tắt phái sinh), L1-03 không chèn mã Kxxx. `ops/test_level1.js` sửa theo: **62 đạt, 1 lỗi** — test "lượt gửi thứ 2 trong ngày…" (L1-06 phái sinh) đã lỗi thời → xoá/sửa test đó, chạy lại cho đạt hết, rồi `py -I -X utf8 ops/cai_dat_n8n.py L1-02 L1-03 L1-06` + khởi động lại n8n (dừng node n8n → `Start-ScheduledTask 'Smock n8n'` → healthz).
+- **n8n hiện vẫn chạy code CŨ**: tối 18/11 21:30 L1-02 sẽ sinh lịch 19/11 còn dùng PC + 22:00 L1-03 chèn mã. → Cài bản sửa trước 21:30, hoặc hỏi người dùng có tắt L1-02/L1-03/L1-06 không (đang chờ người dùng trả lời câu này). Lịch/gói 19/11 nếu đã sinh bằng code cũ thì không dùng caption trong `anh-dang-bai\K…\caption.txt`.
+- Repo cấp 2 `C:\smock-level2-copilot\.github\prompts\caption.prompt.md` vẫn bắt chèn `{{MA_BAI}}` — phái sinh đã tắt từ cấp 1 nên không chạy; nếu bật lại phải sửa prompt (không mã, không ép chào hàng).
+- Chưa đổi số WA trên sheet **SMOCK's Information** (`1Y9xyKErb3sMZvdgPVXCUWyk7GOt6Y7Qp32i5F8jtV8s`, tab SM01–SM03 dòng 6, 9) và chưa đổi bio FB SM01–SM03 → hỏi người dùng trước khi sửa bio (sửa trang cá nhân là thay đổi công khai).
+
+**Khác cần biết (18/11):** SM01 bị FB "Can't send request" khi kết bạn (Radar `h-20261118-SM01-friendreq`). K139 lỡ đăng vào group 20 (Radar cat *resale*) — n8n L1-02 chưa lọc group theo cat Radar (resale/hobby không được đăng chào hàng). Sáng 18/11 lỡ tạo 1 nhóm tab trống trên Chrome **máy khác** (`87f823ce…`) khi SM chưa kết nối → đã thêm luật vào skill `chay-lich-sm`: chọn đúng deviceId trước mọi lệnh tab; người dùng yêu cầu **không tác động/thông báo gì sang máy khác**.
+
 ## 2026-11-18 — luồng 1 + 2 (bắt đầu 10:55, làm bù xen kẽ)
 - Sáng n8n bị dừng 09:21 (mã thoát Ctrl+C) → khởi động lại 10:56, healthz OK. Lượt 08:20/08:25 đã chạy trước đó.
 - Lịch 18/11 (dòng 235–266) sinh **sáng 17/11** trước khi đổi trạng thái nick → còn việc SM04 (247, 249, 250, 260, 261) và SM02 đăng/join group (235 K144, 241) → ghi Bỏ qua. K144 (PC6) chưa đăng, còn dùng được.

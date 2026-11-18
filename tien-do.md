@@ -5,7 +5,8 @@
 - Test còn 1 lỗi KHÔNG liên quan: "8 nick × 5" phụ thuộc ngày (hạt giống 19/11 → 3 việc tràn giờ, ra 39/40 bài group) — chỉ kịch bản giả 8 nick, lịch thật 3 nick không ảnh hưởng. Sửa bộ xếp giờ sau khi bật SM04–SM08.
 - Tiện ích Claude lúc 12:57: chưa trình duyệt nào kết nối. GitHub 2 repo fetch/push OK (máy không có `gh`).
 - **Nguồn caption K123–K144 (tra 18/11):** K123–K138 = caption gốc KE (CG), K139–K144 = PC1–PC6 do Copilot cấp 2 viết theo prompt `caption.prompt.md` (commit 7bb7e5b 11/11, Claude soạn). Câu "DM or WhatsApp us code Kxxx for the catalog" có ở **tất cả**: KE gốc thì do L1-03 tự nối (build_level1.py dòng 286 bản 0ac1ddc 11/11, Claude soạn); PC thì do prompt cấp 2 bắt chèn {{MA_BAI}}. Kho content KE không tự thêm.
-- Đổi WA trên sheet SMOCK's Information: người dùng đã đồng ý, CHƯA làm vì tiện ích Claude chưa kết nối (người dùng đổi account claude.ai → cần đăng nhập lại tiện ích ở SM01/02/03).
+- **Đã đổi WA trên sheet SMOCK's Information** (14:0x, qua Chrome SM02, Find & Replace từng tab): SM01/SM02/SM03 mỗi tab 2 ô (Bio dòng 6, Intro dòng 9) → +84 855 555 490; không còn số cũ. Tab SM04+ không đụng. Intro dòng 9 vẫn còn "(message us with the post code Kxxx)" — chờ người dùng quyết bỏ. Bio FB thật chưa đổi.
+- Sau khi đổi account claude.ai: tiện ích mới kết nối SM02 (`39874c3f…`); SM01, SM03 chưa thấy trong danh sách.
 - Vẫn chờ người dùng: bài K123–K143 có mã Kxxx (sửa/gỡ?), đổi WA sheet SMOCK's Information + bio FB SM01–SM03. Đăng bài vẫn DỪNG.
 
 ## ⛔ 2026-11-18 ~11:40 — DỪNG ĐĂNG BÀI + BÀN GIAO (người dùng đổi account) — agent mới đọc mục này TRƯỚC

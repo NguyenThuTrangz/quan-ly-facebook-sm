@@ -14,6 +14,8 @@ Quy tắc nghiệp vụ nằm ở CLAUDE.md; file này chỉ là cách làm nhan
 | SM02 | `39874c3f-67cd-451f-9fc3-cc9eda87f859` | Chrome Profile 2 |
 | SM03 | `9db7ffa4-d6d0-43e1-aa29-09b57b9c7cb8` | Edge — cũng dùng để ghi Google Sheet |
 
+**Luôn `select_browser` đúng deviceId ở bảng trên TRƯỚC mọi lệnh tab** (`tabs_context_mcp`, `navigate`, `javascript_tool`…). `select_browser` báo lỗi / nick chưa kết nối → **không gọi thêm lệnh trình duyệt nào** (lệnh tab khi chưa chọn được sẽ rơi vào trình duyệt máy khác, vd `87f823ce…`, và mở tab/nhóm tab ở máy đó — đã xảy ra 18/11), chạy shortcut rồi chờ.
+
 `select_browser` → `navigate` facebook.com (tab mới tự tạo) → kiểm tra nick bằng 1 lệnh JS:
 ```js
 [...document.querySelectorAll('span')].map(s=>s.textContent).find(t=>/What's on your mind/.test(t))

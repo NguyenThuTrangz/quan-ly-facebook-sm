@@ -177,7 +177,17 @@ def link(conns, a, b, out=0):
     while len(conns[a]["main"]) <= out: conns[a]["main"].append([])
     conns[a]["main"][out].append({"node": b, "type": "main", "index": 0})
 
+CLI_FROM = {  # trigger "Chạy tay (CLI)": `n8n execute --id <id>` chạy bù khi lịch tự động bị lỡ (mất mạng, tắt máy)
+    "L1-02-sinh-lich.json": "08:20 Thứ 2–7 (bù khi máy tắt đêm)", "L1-03-chuan-bi-goi-bai.json": "08:25 Thứ 2–7 (bù)",
+    "L1-04-bao-cao-ngay.json": "18:00 Thứ 2–7", "L1-05-kiem-hop-dong.json": "06:30 và 21:50",
+    "L1-06-cau-noi-cap-2.json": "06:30 kéo kết quả cấp 2"}
+
 def save(fname, name, nodes, conns, notes):
+    src = CLI_FROM.get(fname)
+    if src and src in conns:
+        nodes = nodes + [node("Chạy tay (CLI)", "n8n-nodes-base.executeWorkflowTrigger", 1.1, {"inputSource": "passthrough"}, [-1500, 700],
+                              notes="Chạy bù: n8n execute --id <id> (đặt N8N_RUNNERS_BROKER_PORT khác 5679).")]
+        conns = dict(conns); conns["Chạy tay (CLI)"] = json.loads(json.dumps(conns[src]))
     wf = {"name": name, "nodes": nodes, "connections": conns, "active": False, "pinData": {},
           "settings": {"executionOrder": "v1", "timezone": CONTRACT["timezone"], "saveDataErrorExecution": "all",
                        "saveDataSuccessExecution": "all"},
@@ -412,7 +422,7 @@ reads = [("Đọc Tài khoản", "\"'Tài khoản'!A2:I20\""), ("Đọc Target +
          ("Đọc Lịch SM", "\"'Lịch SM'!A2:J5000\""), ("Đọc Group Score", "\"'Group Score'!A2:R500\""),
          ("Đọc Pool Content SM", POOL_RANGE), ("Đọc content KE", KE_RANGE, KE_SHEET), ("Đọc Nhật Ký SM", "\"'Nhật Ký SM'!A2:J8000\"")]
 nodes.append(sched("21:30 Chủ nhật–Thứ sáu", "30 21 * * 0-5", [-1200, 300], notes="Sinh lịch cho ngày làm việc kế tiếp (thứ 2–7)."))
-nodes.append(sched("08:20 Thứ 2–7 (bù khi máy tắt đêm)", "20 8 * * 1-6", [-1200, 480], notes="Máy tắt qua đêm thì 21:30 bị lỡ → sáng sinh lịch HÔM NAY (đã có thì bỏ qua)."))
+nodes.append(sched("08:20 Thứ 2–7 (bù khi máy tắt đêm)", "20 8-11 * * 1-6", [-1200, 480], notes="Máy tắt qua đêm thì 21:30 bị lỡ → sáng sinh lịch HÔM NAY (đã có thì bỏ qua)."))
 link(c, "08:20 Thứ 2–7 (bù khi máy tắt đêm)", reads[0][0])
 prev = "21:30 Chủ nhật–Thứ sáu"
 for i, rd in enumerate(reads):
@@ -474,7 +484,7 @@ $input.all().forEach((it, k) => {
 return out;"""
 nodes, c = [], {}
 nodes += [sched("22:00 Chủ nhật–Thứ sáu", "0 22 * * 0-5", [-1340, 300]),
-          sched("08:25 Thứ 2–7 (bù)", "25 8 * * 1-6", [-1340, 480], notes="Gói bài của lịch hôm nay nếu tối qua máy tắt (bài đã Gói sẵn thì bỏ qua)."),
+          sched("08:25 Thứ 2–7 (bù)", "25 8-11 * * 1-6", [-1340, 480], notes="Gói bài của lịch hôm nay nếu tối qua máy tắt (bài đã Gói sẵn thì bỏ qua)."),
           gget("Đọc Lịch SM", "\"'Lịch SM'!A2:J5000\"", [-1120, 300]),
           gget("Đọc Pool Content SM", POOL_RANGE, [-900, 300]),
           gget("Đọc content KE", KE_RANGE, [-680, 300], sheet=KE_SHEET),

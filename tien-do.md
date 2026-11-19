@@ -1,5 +1,13 @@
 # Tiến độ chạy lịch SM
 
+## 2026-11-19 (máy treo 24/24)
+- **Mất mạng ~16:30 18/11 → sau 08:35 19/11** (n8n lỗi ENOTFOUND): L1-04 18:00, L1-02 21:30/08:20, L1-03, L1-05, L1-06 đều lỗi. 09:2x đã chạy bù tay L1-02 (lịch 19/11 dòng 267–291) + L1-03 (gói K145–K148).
+- **Sửa n8n cho ổn định** (đã cài + khởi động lại): thêm trigger "Chạy tay (CLI)" vào L1-02…L1-06 → chạy bù: `$env:N8N_USER_FOLDER='C:\n8n'; $env:N8N_RUNNERS_BROKER_PORT='5690'; n8n execute --id <id>` (id: L1-02 iiViedWvLDx7oqdg, L1-03 FgMqcu9ihNyjNUJD, L1-04 Y4oEcO1omIGMLlXE, L1-05 J7ZIdcaAqS7N4F8Z, L1-06 TG3fdIg80T1uDFAv). Lượt bù sáng L1-02 08:20 → **08:20–11:20 mỗi giờ**, L1-03 08:25 → **08:25–11:25** (đã có lịch/gói thì tự bỏ qua).
+- **Kiểm gắt content 19/11**: K146 (CG5), K147 (CG13), K148 (CG14) caption khớp 100% KE (chỉ đổi WA +84 855 555 490), không mã, ảnh không trùng bài nào → đăng được. **K145 (CG2) Bỏ qua**: 5 ảnh trùng K143 (PC5 phái sinh từ CG2) SM01 đăng tường 18/11 — n8n chưa chặn trùng ảnh giữa CG và PC phái sinh của nó; CG2 dùng lại được từ 25/11. Kho KE: còn ~3 bài có ảnh (kho Ít 0,3 ngày).
+- **Radar không truy cập được bằng tài khoản claude.ai mới** (ArtifactData 404) → không ghi/đọc Radar cho tới khi người dùng chia sẻ lại hoặc tạo mới.
+- Luồng 2 (SM02) xong: 270 (0), 271 (2 story), 273, 274 (STT 19 Lecy K-Embroidery, 20 Joy Babeeni), 276 (4), 278 (2); 279 join Bỏ qua (SM02 còn bị confirm identity).
+- Luồng 1 (SM01, SM03) **chưa chạy**: tiện ích Claude chưa kết nối SM01 (Chrome Profile 1) và SM03 (Edge) sau khi đổi account.
+
 ## ✅ 2026-11-18 13:1x — ĐÃ CÀI bản sửa caption vào n8n (agent mới)
 - Sửa test L1-06 lỗi thời; `py ops/cai_dat_n8n.py L1-02 L1-03 L1-06` OK, khởi động lại n8n (healthz OK). DB n8n xác nhận L1-02/03/06 có WA +84 855 555 490 + `USE_POOL_DERIVED: false`, 7 workflow đều bật → lịch 19/11 (21:30) dùng caption gốc KE, không mã Kxxx.
 - Test còn 1 lỗi KHÔNG liên quan: "8 nick × 5" phụ thuộc ngày (hạt giống 19/11 → 3 việc tràn giờ, ra 39/40 bài group) — chỉ kịch bản giả 8 nick, lịch thật 3 nick không ảnh hưởng. Sửa bộ xếp giờ sau khi bật SM04–SM08.

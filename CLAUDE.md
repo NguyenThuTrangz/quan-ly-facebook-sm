@@ -8,7 +8,12 @@ Máy: ADMIN, 3 tài khoản SM01–SM03. Cập nhật ngày 2026-10-21. Thông t
 - **SM02** = Chrome `Profile 2`, shortcut `SM02 - Chrome.lnk`, Facebook **Marie Smocked** (đổi tên từ Benita Ariem ngày 2026-10-27 — người dùng dặn không cần hỏi lại; `web.facebook.com/benita.ariem.9`; từ 2026-10-21 — nick cũ Daisy Smocking bị checkpoint, người dùng đăng nhập nick khác vào profile này), deviceId `39874c3f-67cd-451f-9fc3-cc9eda87f859`.
 - **SM03** = Edge (không chỉ định profile), shortcut `SM03.lnk`, Facebook **Rosie Smocking** (`profile.php?id=100027948343334`; đã đổi tên xong, kiểm tra 2026-11-10; trước đó từng là Miller Susan / Vo Phuoc Duy — nhận theo deviceId Edge này), deviceId `9db7ffa4-d6d0-43e1-aa29-09b57b9c7cb8`.
 - **SM04** = Chrome profile `SM04`, Facebook **Jenny Smocking** (`profile.php?id=61595904006414`), deviceId `bf159760-2d98-40bf-b4ba-4e3998bd277a` (nối 20/11/2026; chưa chạy lịch n8n — tab Tài khoản cột F chưa "Hoạt động").
-- deviceId `66ee2040-2b73-446a-9ba6-5466555a84c8` (xuất hiện 20/11) chưa xác định → không dùng.
+- **SM05** = Chrome `Profile 10` (tên "SM05"), FB **Thanh Chi Lê (Olivia Smocking)** `profile.php?id=61595814087257`, deviceId `68b78dc0-f73f-4599-b5a8-ba13b9692cf9`.
+- **SM06** = Chrome `Profile 13` (tên "sm06"), FB **Nguyễn Ngọc Ánh (Ella Smocked)** `profile.php?id=61595341725531`, deviceId `3c7316d1-8a96-46ab-95aa-0fae1c5b582a`.
+- **SM07** = Chrome `Profile 12` (tên "SM07"), FB **Phan Thị Ngọc Anh (Maily Smock)** `tran.tue.nhu.190345`, deviceId `e5a2bf46-4c18-4041-aa8a-0ce12eab78fa`.
+- **CHUẨN = tên profile Chrome** (người dùng chốt 20/11): profile Chrome đặt "SMxx" nào thì nick trong đó là SMxx; sheet (Tài khoản, SMOCK's Information…) phải sửa theo Chrome, không ngược lại. Tra deviceId ↔ profile: tìm chuỗi deviceId trong `%LOCALAPPDATA%\Google\Chrome\User Data\<Profile>\Local Extension Settings\*`, tên profile ở `Local State` → `profile.info_cache`.
+- **SM05 trở đi chưa đổi được tên FB** → tên smock đặt làm **Biệt danh** (Giới thiệu → Tên → Thêm tên khác → Biệt danh, tick "Hiển thị ở đầu trang cá nhân").
+- deviceId `66ee2040-2b73-446a-9ba6-5466555a84c8` (xuất hiện 20/11) không thuộc profile Chrome nào trên máy → không dùng.
 - Edge deviceId `b1b2ac35-f408-4bca-98ea-de07cc01f413` (Facebook Nguyễn Thái) là của **máy khác** → không dùng.
 - `list_connected_browsers` hiện **cả trình duyệt của máy khác** (cùng tài khoản claude.ai; `isLocal` không đáng tin). Máy này **chỉ chọn 3 deviceId SM01–SM03 ở trên**; deviceId lạ (vd `0757246e…`, `00c25894…`) là máy khác → không chọn, không mở tab. Nếu SM chưa có trong danh sách: chạy shortcut, chờ ~45s rồi kiểm tra lại. (Ngoại lệ: người dùng chỉ định rõ deviceId trong chat.)
 - Phân biệt Chrome/Edge: chạy `navigator.userAgent`, có `Edg/` là Edge.

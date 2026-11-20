@@ -38,7 +38,7 @@ const w2 = W('L1-02-sinh-lich.json'), g = codeOf(w2, 'Sinh lịch');
 const acc = [['SM01', 'Sophie Embroidery', 'Chrome', 'SM01', 'u', 'Hoạt động'], ['SM02', 'Marie Smocked', 'Chrome', 'SM02', 'u', 'Hoạt động'], ['SM03', 'Rosie Smocking', 'Edge', 'SM03', 'u', 'Hoạt động'], ['SM05', 'Olivia', 'Chrome', 'SM05', 'u', '']];
 const kpi = [['SM01', 'u', 2, 2, 3, 2, 2], ['SM02', 'u', 2, 2, 3, 2, 2], ['SM03', 'u', 2, 2, 3, 2, 2]];
 const jg = Array.from({ length: 10 }, (_, i) => [i + 1, 'G' + (i + 1), 'url', i < 4 ? 'đã join' : 'Chưa Join', i < 2 ? 'đã join' : 'Chưa Join', 'Chưa Join']);
-const af = Array.from({ length: 20 }, (_, i) => [i + 1, 'link', 'Chưa Add']);
+const af = Array.from({ length: 20 }, (_, i) => [i + 1, i < 16 ? 'https://www.facebook.com/u' + (i + 1) : '', 'Chưa Add']);   // STT 17–20 chưa có link
 // Kho content = workbook KE '3. CONTENT GROUP' (A STT, B TEXT, C MEDIA) + tab Pool Content SM
 const ke = Array.from({ length: 12 }, (_, i) => [String(i + 1), 'cap ' + (i + 1), 'https://drive.google.com/drive/folders/abc' + i]);
 const gs = [[1, 'G1', 'u', '', '', '', '', '', '', '', '', '', '', 80, 'A', '', 'Đã chấm'], [2, 'G2', 'u', '', '', '', '', '', '', '', '', '', '', 60, 'B', '', 'Đã duyệt']];
@@ -65,6 +65,7 @@ const rU = run(g, { nodes: { ...base, 'Đọc Lịch SM': { values: usedL } } })
 ok(!rU.rows.some(x => /\(CG1\)/.test(x[5])) && rU.rows.some(x => /K141/.test(x[5])), 'content đã có trong Lịch SM không dùng lại; mã bài nối tiếp K lớn nhất');
 const fr = r.rows.filter(x => x[4] === 'kết bạn').flatMap(x => x[5].replace('kết bạn ', '').split(', '));
 ok(new Set(fr).size === fr.length, 'không giao cùng người kết bạn cho 2 nick');
+ok(fr.length > 0 && fr.every(n => +n <= 16), 'kết bạn chỉ xếp người đã có link Facebook (bỏ STT 17–20 trống link)');
 const again = run(g, { nodes: base })[0].json;
 ok(JSON.stringify(again.rows) === JSON.stringify(r.rows), 'chạy lại cùng ngày → cùng kết quả (random có hạt giống)');
 const withLich = { ...base, 'Đọc Lịch SM': { values: r.rows.map(x => [x[0]]) } };

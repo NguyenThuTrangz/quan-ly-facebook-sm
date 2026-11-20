@@ -344,7 +344,7 @@ const takeContent = (nick, kind) => {
   return { code, content: x.id };
 };
 // Người kết bạn kế tiếp (cột C = 'Chưa Add')
-let frIdx = 0; const frList = af.map((r, i) => ({ r, row: i + 2 })).filter(x => /Chưa Add/i.test(x.r[2] || ''));
+let frIdx = 0; const frList = af.map((r, i) => ({ r, row: i + 2 })).filter(x => /Chưa Add/i.test(x.r[2] || '') && /facebook\.com\/|fb\.com\//i.test(x.r[1] || ''));   // bỏ dòng chưa có link
 const frReserve = [];
 // Dựng việc theo nick
 const tasks = [];

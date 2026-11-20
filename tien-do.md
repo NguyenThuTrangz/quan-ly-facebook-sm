@@ -5,7 +5,10 @@
 - L1-06 lỗi `git pull` từ 11:30 19/11 → 11:30 20/11 do GitHub không truy cập được; 14:2x GitHub thông lại (pull/push OK, commit 1b021fb đã push). Copilot 08:33 OK, inbox 0.
 - Trình duyệt: SM01 `74dc5da7` OK (Sophie), SM02 `39874c3f` OK. Có deviceId lạ **`66ee2040-2b73-446a-9ba6-5466555a84c8`** — chưa xác nhận là Edge SM03 máy này → chưa dùng; nếu người dùng xác nhận thì cập nhật CLAUDE.md "Máy này".
 - Kho KE: 0 bài mới có ảnh. K146 (CG5), K147 (CG13), K148 (CG14) xếp 19/11 chưa đăng → n8n trả lại kho cho lịch 21/11 (RECLAIM_AFTER_DAYS=2). CG2 dùng lại từ 25/11. CG18/19/22/29 thiếu ảnh, CG30 không link ảnh.
-- Lịch 19/11 luồng 1 (dòng 276–291) còn Chờ (chưa chạy); lịch 20/11 (292–312) chưa chạy.
+- Lịch 19/11 luồng 1 (dòng 276–291) còn Chờ (không chạy bù; K146–K148 n8n xếp lại 21/11).
+- **15:00–15:12 chạy bù lịch 20/11: 18/21 Done** (SM03 đã nối lại đúng `9db7ffa4`). Join: SM03 g20, 25, 32; SM01 g29, 30 (đã join), g43 chờ duyệt → đã ghi Join Group SM (F21, F26, F33, D30, D31, D44). SM02 join 304 Bỏ qua (identity).
+- **Lỗi 292, 301, 306 (kết bạn)**: tab Add Friend **STT 21 trở đi chưa có link** nhưng n8n L1-02 vẫn xếp ("Đã xếp SMxx") → cần người dùng thêm link; nên sửa L1-02 bỏ qua dòng Add Friend không có link.
+- deviceId lạ `66ee2040…` không dùng.
 
 ## 2026-11-19 (máy treo 24/24)
 - **Mất mạng ~16:30 18/11 → sau 08:35 19/11** (n8n lỗi ENOTFOUND): L1-04 18:00, L1-02 21:30/08:20, L1-03, L1-05, L1-06 đều lỗi. 09:2x đã chạy bù tay L1-02 (lịch 19/11 dòng 267–291) + L1-03 (gói K145–K148).

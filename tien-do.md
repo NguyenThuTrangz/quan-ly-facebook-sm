@@ -1,5 +1,12 @@
 # Tiến độ chạy lịch SM
 
+## 2026-11-20 14:3x — kiểm điều kiện (người dùng đổi account claude.ai lần nữa)
+- n8n tắt từ sau 18:00 19/11 tới ~08:35 20/11 (lỡ L1-02 21:30, L1-05, L1-06 22:15); lượt bù sáng mới đã cứu: L1-02 10:20 sinh lịch 20/11 (dòng 292–312, 21 việc, **0 bài đăng** — kho 0), L1-03 OK. n8n bị Ctrl+C 14:15, đã chạy lại 14:23.
+- L1-06 lỗi `git pull` từ 11:30 19/11 → 11:30 20/11 do GitHub không truy cập được; 14:2x GitHub thông lại (pull/push OK, commit 1b021fb đã push). Copilot 08:33 OK, inbox 0.
+- Trình duyệt: SM01 `74dc5da7` OK (Sophie), SM02 `39874c3f` OK. Có deviceId lạ **`66ee2040-2b73-446a-9ba6-5466555a84c8`** — chưa xác nhận là Edge SM03 máy này → chưa dùng; nếu người dùng xác nhận thì cập nhật CLAUDE.md "Máy này".
+- Kho KE: 0 bài mới có ảnh. K146 (CG5), K147 (CG13), K148 (CG14) xếp 19/11 chưa đăng → n8n trả lại kho cho lịch 21/11 (RECLAIM_AFTER_DAYS=2). CG2 dùng lại từ 25/11. CG18/19/22/29 thiếu ảnh, CG30 không link ảnh.
+- Lịch 19/11 luồng 1 (dòng 276–291) còn Chờ (chưa chạy); lịch 20/11 (292–312) chưa chạy.
+
 ## 2026-11-19 (máy treo 24/24)
 - **Mất mạng ~16:30 18/11 → sau 08:35 19/11** (n8n lỗi ENOTFOUND): L1-04 18:00, L1-02 21:30/08:20, L1-03, L1-05, L1-06 đều lỗi. 09:2x đã chạy bù tay L1-02 (lịch 19/11 dòng 267–291) + L1-03 (gói K145–K148).
 - **Sửa n8n cho ổn định** (đã cài + khởi động lại): thêm trigger "Chạy tay (CLI)" vào L1-02…L1-06 → chạy bù: `$env:N8N_USER_FOLDER='C:\n8n'; $env:N8N_RUNNERS_BROKER_PORT='5690'; n8n execute --id <id>` (id: L1-02 iiViedWvLDx7oqdg, L1-03 FgMqcu9ihNyjNUJD, L1-04 Y4oEcO1omIGMLlXE, L1-05 J7ZIdcaAqS7N4F8Z, L1-06 TG3fdIg80T1uDFAv). Lượt bù sáng L1-02 08:20 → **08:20–11:20 mỗi giờ**, L1-03 08:25 → **08:25–11:25** (đã có lịch/gói thì tự bỏ qua).

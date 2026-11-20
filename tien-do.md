@@ -9,6 +9,8 @@
 - **15:00–15:12 chạy bù lịch 20/11: 18/21 Done** (SM03 đã nối lại đúng `9db7ffa4`). Join: SM03 g20, 25, 32; SM01 g29, 30 (đã join), g43 chờ duyệt → đã ghi Join Group SM (F21, F26, F33, D30, D31, D44). SM02 join 304 Bỏ qua (identity).
 - **Lỗi 292, 301, 306 (kết bạn)**: tab Add Friend **STT 21 trở đi chưa có link** nhưng n8n L1-02 vẫn xếp ("Đã xếp SMxx") → cần người dùng thêm link; nên sửa L1-02 bỏ qua dòng Add Friend không có link.
 - deviceId lạ `66ee2040…` không dùng.
+- **n8n L1-02 sửa (đã cài 15:3x)**: không xếp kết bạn cho dòng Add Friend chưa có link Facebook (test 64/64). Add Friend STT 21+ vẫn cần người dùng thêm link.
+- **SM04 Jenny Smocking** (deviceId `bf159760…`, đã ghi CLAUDE.md): sửa **Bio** → "Sales at K-Embroidery | Smocked dresses & sets 🧵 / WhatsApp: +84 855 555 490 | k-embroidery.com" (Công khai; rút gọn vì giới hạn 101 ký tự; dùng số 0855555490 vì ảnh bìa người dùng vừa đổi ghi số này). **Rời 5 group việc làm/HR** (Việc Làm Tiếng Tây Ban Nha; Việc làm Cầu Giấy…; Việc Làm Hành Chính Nhân Sự (Tuyển Dụng, HR…); VIỆC LÀM HÀNH CHÍNH - NHÂN SỰ; Tuyển Dụng HR - Việc Làm Hành Chính Nhân Sự). Trang "nhóm đã tham gia" còn đếm (1) nhưng không hiện group nào. **Chưa sửa** (chờ người dùng): Intro còn "Công ty K-Global / HR Specialist", "Đại học Kinh tế Quốc dân - NEU"; avatar. Không ghi Nhật Ký SM (không có loại việc "sửa profile").
 
 ## 2026-11-19 (máy treo 24/24)
 - **Mất mạng ~16:30 18/11 → sau 08:35 19/11** (n8n lỗi ENOTFOUND): L1-04 18:00, L1-02 21:30/08:20, L1-03, L1-05, L1-06 đều lỗi. 09:2x đã chạy bù tay L1-02 (lịch 19/11 dòng 267–291) + L1-03 (gói K145–K148).

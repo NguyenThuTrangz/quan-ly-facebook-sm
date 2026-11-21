@@ -11,6 +11,7 @@ Máy: ADMIN, 3 tài khoản SM01–SM03. Cập nhật ngày 2026-10-21. Thông t
 - **SM05** = Chrome `Profile 10` (tên "SM05"), FB **Thanh Chi Lê (Olivia Smocking)** `profile.php?id=61595814087257`, deviceId `68b78dc0-f73f-4599-b5a8-ba13b9692cf9`.
 - **SM06** = Chrome `Profile 13` (tên "sm06"), FB **Nguyễn Ngọc Ánh (Ella Smocked)** `profile.php?id=61595341725531`, deviceId `3c7316d1-8a96-46ab-95aa-0fae1c5b582a`.
 - **SM07** = Chrome `Profile 12` (tên "SM07"), FB **Phan Thị Ngọc Anh (Maily Smock)** `tran.tue.nhu.190345`, deviceId `e5a2bf46-4c18-4041-aa8a-0ce12eab78fa`.
+- **SM08** = Chrome `Profile 4` (tên "sm08"), FB **Nguyễn Thương (Sarah Smock)** `profile.php?id=61595837981623`, deviceId `f969d375-0948-40ec-9614-67da5609a8b8` (giao diện "Giới thiệu" kiểu cũ: Tổng quan / Công việc và học vấn / Thông tin liên hệ… ; mục Công việc bắt buộc chọn trang có sẵn).
 - **CHUẨN = tên profile Chrome** (người dùng chốt 20/11): profile Chrome đặt "SMxx" nào thì nick trong đó là SMxx; sheet (Tài khoản, SMOCK's Information…) phải sửa theo Chrome, không ngược lại. Tra deviceId ↔ profile: tìm chuỗi deviceId trong `%LOCALAPPDATA%\Google\Chrome\User Data\<Profile>\Local Extension Settings\*`, tên profile ở `Local State` → `profile.info_cache`.
 - **SM05 trở đi chưa đổi được tên FB** → tên smock đặt làm **Biệt danh** (Giới thiệu → Tên → Thêm tên khác → Biệt danh, tick "Hiển thị ở đầu trang cá nhân").
 - deviceId `66ee2040-2b73-446a-9ba6-5466555a84c8` (xuất hiện 20/11) không thuộc profile Chrome nào trên máy → không dùng.

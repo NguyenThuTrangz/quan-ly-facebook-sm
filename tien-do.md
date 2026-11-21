@@ -1,5 +1,11 @@
 # Tiến độ chạy lịch SM
 
+## 2026-11-21 10:3x — kiểm 3 cấp + chuẩn bị thay bài cũ SM04–07
+- **n8n cấp 1 lỗi từ 18:00 20/11**: credential "Google Sheets account" bị Google thu hồi/hết hạn refresh token → mọi workflow đọc sheet lỗi (lịch 21/11 KHÔNG sinh). Cần người dùng mở http://localhost:5678 → Credentials → Google Sheets account (và Google Drive account 2 nếu báo) → Reconnect/đăng nhập Google. Xong thì chạy bù: `n8n execute --id iiViedWvLDx7oqdg` (L1-02) rồi FgMqcu9ihNyjNUJD (L1-03) với N8N_USER_FOLDER=C:
+8n, N8N_RUNNERS_BROKER_PORT=5690. Copilot 05:30 OK (0 việc).
+- Kho KE vẫn 30 bài (CG1–CG30), chưa bổ sung.
+- Thống kê bài thường trên tường (không tính đổi ảnh bìa/đại diện): SM04 3 bài (30/10 chuyện công ty + ảnh cà phê, 31/10 nhạc "Hoa sữa", 2/11 nhạc "good mood"); SM05 3 bài (30/10, 31/10 nhạc, 2/11); SM06 9 bài (22/10–3/11, nội dung HR/tuyển dụng, nhạc, 1 bài "Nội dung do AI tạo"); SM07 0 bài. Tổng 15 bài cần thay. Tab "The old posts" (SMOCK's Information) chỉ có link 4 nick nguồn: Lily.kembroidery, emily.nguyen.smock, gracie.smock.2024, cathie.smocks (cột Content trống).
+
 ## 2026-11-20 14:3x — kiểm điều kiện (người dùng đổi account claude.ai lần nữa)
 - n8n tắt từ sau 18:00 19/11 tới ~08:35 20/11 (lỡ L1-02 21:30, L1-05, L1-06 22:15); lượt bù sáng mới đã cứu: L1-02 10:20 sinh lịch 20/11 (dòng 292–312, 21 việc, **0 bài đăng** — kho 0), L1-03 OK. n8n bị Ctrl+C 14:15, đã chạy lại 14:23.
 - L1-06 lỗi `git pull` từ 11:30 19/11 → 11:30 20/11 do GitHub không truy cập được; 14:2x GitHub thông lại (pull/push OK, commit 1b021fb đã push). Copilot 08:33 OK, inbox 0.

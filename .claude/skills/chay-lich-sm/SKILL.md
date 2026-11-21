@@ -1,6 +1,6 @@
 ---
 name: chay-lich-sm
-description: Quy trình rút gọn để chạy từng dòng Lịch SM (tim story, lướt, tương tác, chấp nhận, join, kết bạn, đăng tường/group) trên SM01–SM03 và ghi log. Dùng khi hẹn giờ một dòng Lịch SM nổ hoặc người dùng bảo làm một việc trong lịch.
+description: Quy trình rút gọn để chạy từng dòng Lịch SM (tim story, lướt, tương tác, chấp nhận, join, kết bạn, đăng tường/group) trên SM01–SM07 và ghi log. Dùng khi hẹn giờ một dòng Lịch SM nổ hoặc người dùng bảo làm một việc trong lịch.
 ---
 
 # Chạy 1 dòng Lịch SM — làm đúng các bước, hạn chế screenshot
@@ -13,14 +13,20 @@ Quy tắc nghiệp vụ nằm ở CLAUDE.md; file này chỉ là cách làm nhan
 | SM01 | `74dc5da7-2665-421e-b6f4-1ad4614b2045` | Chrome Profile 1 |
 | SM02 | `39874c3f-67cd-451f-9fc3-cc9eda87f859` | Chrome Profile 2 |
 | SM03 | `9db7ffa4-d6d0-43e1-aa29-09b57b9c7cb8` | Edge — cũng dùng để ghi Google Sheet |
+| SM04 | `bf159760-2d98-40bf-b4ba-4e3998bd277a` | Chrome Profile 9 (Jenny Smocking) |
+| SM05 | `68b78dc0-f73f-4599-b5a8-ba13b9692cf9` | Chrome Profile 10 (Thanh Chi Lê / Olivia Smocking) — giao diện tiếng Việt |
+| SM06 | `3c7316d1-8a96-46ab-95aa-0fae1c5b582a` | Chrome Profile 13 (Nguyễn Ngọc Ánh / Ella Smocked) — giao diện tiếng Việt |
+| SM07 | `e5a2bf46-4c18-4041-aa8a-0ce12eab78fa` | Chrome Profile 12 (Phan Thị Ngọc Anh / Maily Smock) |
+
+Nick chưa có trong `list_connected_browsers` → `Start-Process "C:\claude remote\SMxx - Chrome.lnk"` (SM03: `SM03.lnk`), chờ ~45 giây rồi kiểm lại. SM04–SM07 giao diện có thể là tiếng Việt: nút/nhãn tiếng Việt ("Thích", "Bày tỏ cảm xúc", "Xác nhận", "Tham gia nhóm", "Thêm bạn bè", "Bạn đang nghĩ gì?") — `find` theo nghĩa, không cứng tiếng Anh.
 
 **Luôn `select_browser` đúng deviceId ở bảng trên TRƯỚC mọi lệnh tab** (`tabs_context_mcp`, `navigate`, `javascript_tool`…). `select_browser` báo lỗi / nick chưa kết nối → **không gọi thêm lệnh trình duyệt nào** (lệnh tab khi chưa chọn được sẽ rơi vào trình duyệt máy khác, vd `87f823ce…`, và mở tab/nhóm tab ở máy đó — đã xảy ra 18/11), chạy shortcut rồi chờ.
 
 `select_browser` → `navigate` facebook.com (tab mới tự tạo) → kiểm tra nick bằng 1 lệnh JS:
 ```js
-[...document.querySelectorAll('span')].map(s=>s.textContent).find(t=>/What's on your mind/.test(t))
+[...document.querySelectorAll('span')].map(s=>s.textContent).find(t=>/What's on your mind|bạn đang nghĩ gì/i.test(t))
 ```
-(SM01 "Sophie", SM02 "Benita", SM03 "Rosie"). Sai nick / checkpoint / "confirm your identity" → dừng, ghi log Không làm được, báo người dùng.
+(SM01 "Sophie", SM02 "Benita"/"Marie", SM03 "Rosie", SM04 "Jenny", SM05 "Chi", SM06 "Ánh", SM07 "Anh"). Sai nick / checkpoint / "confirm your identity" → dừng, ghi log Không làm được, báo người dùng.
 
 **Screenshot hoặc click bị timeout** = cửa sổ đang thu nhỏ → chạy `& "C:\claude remote\tools\cuaso.ps1" -Mo "<một phần tiêu đề, vd Facebook - Google Chrome>"` (mở lại không chiếm focus) rồi thử lại.
 

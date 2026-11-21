@@ -46,7 +46,8 @@ const base = { 'Đọc Tài khoản': { values: acc }, 'Đọc Target + Workload
   'Đọc Lịch SM': { values: [] }, 'Đọc content KE': { values: ke }, 'Đọc Pool Content SM': { values: [['', '', '', '', '', '', 'link', 'Lấy trong đây']] }, 'Đọc Group Score': { values: gs }, 'Đọc Nhật Ký SM': { values: [] } };
 r = run(g, { nodes: base })[0].json;
 ok(!r.skip && r.rows.length > 20, `sinh ${r.rows.length} việc cho 3 nick (bỏ nick không Hoạt động)`);
-ok(r.rows.every(x => x[1] >= '08:30' && x[1] <= '17:00'), 'mọi việc trong 08:30–17:00');
+const inWin = x => { const m = +x[1].slice(0, 2) * 60 + +x[1].slice(3); return [[360, 585], [840, 1050], [1140, 1410]].some(([a, b]) => m >= a && m <= b); }; // khung giờ VN: US tối / UK sáng / US sáng (mùa đông + mùa hè)
+ok(r.rows.every(inWin) && r.rows.some(x => x[1] < '12:00') && r.rows.some(x => x[1] >= '19:00'), 'mọi việc trong khung giờ thị trường, rải cả US tối (sáng VN) lẫn US sáng (tối VN)');
 ok(r.rows.every(x => !(x[1] >= '11:45' && x[1] < '13:15')), 'không có việc giờ nghỉ trưa');
 const mins = x => +x[1].slice(0, 2) * 60 + +x[1].slice(3);
 const gapOK = (rows, teamGap, nickGap) => { const g = rows.filter(x => x[4] === 'đăng group').sort((a, b) => mins(a) - mins(b));
@@ -77,6 +78,7 @@ const rT = run(g, { nodes: { ...base, 'Đọc Group Score': { values: [] }, 'Đ�
 ok(rT.rows.some(x => x[4] === 'đăng group') && rT.rows.filter(x => x[4] === 'đăng group').every(x => /group 3$/.test(x[5])), 'Group Score trống → dùng Tier cột G tab Join Group SM');
 
 
+// (inWin định nghĩa ở đầu file) mùa đông US tối 07:00–09:45, UK sáng 15:00–17:30, US sáng 20:00–23:30; mùa hè sớm hơn 1 giờ (Anh/Mỹ đổi giờ lệch nhau vài tuần)
 console.log('L1-02 công suất 8 nick × 5 bài group/ngày (target 1,75× Sale)');
 const acc8 = Array.from({ length: 8 }, (_, i) => ['SM0' + (i + 1), 'Nick ' + (i + 1), 'Chrome', 'SM0' + (i + 1), 'u', 'Hoạt động']);
 const kpi8 = acc8.map(a => [a[0], 'u', 2, 2, 2, 1, 5]);
@@ -92,12 +94,12 @@ ok(g8.length === 40 && r8.overflow.length === 0, `8 nick × 5 = ${g8.length} bà
 ok(gapOK(r8.rows, 6, 60), 'công suất cao vẫn giữ: cả đội cách ≥ 6 phút, cùng nick ≥ 60 phút');
 const gIds = g8.map(x => /→ group (\d+)/.exec(x[5])[1]);
 ok(new Set(gIds).size === gIds.length, 'cả đội không đăng trùng 1 group trong ngày');
-ok(r8.rows.every(x => x[1] >= '08:30' && x[1] <= '17:00' && !(x[1] >= '11:45' && x[1] < '13:15')), 'vẫn trong giờ hành chính, bỏ giờ trưa');
+ok(r8.rows.every(inWin), 'chỉ xếp trong khung giờ thị trường (US tối / UK sáng / US sáng, quy giờ VN)');
 ok(new Set(r8.rows.map(x => (/luồng \d/.exec(x[9]) || [''])[0])).size === 2 && r8.rows.every(x => /luồng [12]/.test(x[9])), 'chia 2 luồng chạy song song (ghi ở cột Ghi chú)');
 // Lịch sử: hôm qua SM01 đã đăng group 1..25 → hôm nay SM01 chỉ được vào group > 25
 const d0 = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
 // Ngày đích giống bộ sinh lịch: sáng → hôm nay, chiều/tối → ngày làm việc kế tiếp; lịch sử = ngày trước ngày đích
-const tgt = new Date(d0); if (d0.getHours() >= 12 || d0.getDay() === 0) tgt.setDate(tgt.getDate() + 1); if (tgt.getDay() === 0) tgt.setDate(tgt.getDate() + 1);
+const tgt = new Date(d0); if (d0.getHours() >= 12) tgt.setDate(tgt.getDate() + 1);
 const hd = new Date(tgt); hd.setDate(hd.getDate() - 1); const yest = `${hd.getDate()}/${hd.getMonth() + 1}/${hd.getFullYear()}`;
 const hist = Array.from({ length: 25 }, (_, i) => [yest, '09:00', 'SM01', 'Nick 1', 'đăng group', `đăng group K1 (CG1) → group ${i + 1}`]);
 const rH = run(g, { nodes: { ...base8, 'Đọc Lịch SM': { values: hist } } })[0].json;
@@ -136,7 +138,7 @@ const gFi = rF.rows.filter(x => x[4] === 'đăng group').map(x => +/→ group (\
 ok(new Set(gFi).size === gFi.length, 'Đầy: cả đội không trùng group trong ngày');
 ok(rF.rows.filter(x => x[2] === 'SM01' && x[4] === 'đăng group').every(x => +/→ group (\d+)/.exec(x[5])[1] > 25), 'Đầy: không đăng lại group trong 3 ngày');
 ok(!gF.SM02 && (gF.SM03 || 0) <= 2 && !gF.SM04 && wF.SM04 === 2, 'Đầy: đèn Đỏ 0 group, Vàng ≤ 2, nick hạn chế group chỉ đăng tường');
-ok(rF.rows.every(x => x[1] >= '08:30' && x[1] <= '17:00' && !(x[1] >= '11:45' && x[1] < '13:15')), 'Đầy: vẫn trong 08:30–17:00, bỏ giờ trưa');
+ok(rF.rows.every(inWin), 'Đầy: vẫn trong khung giờ thị trường');
 const rV7 = run(g, { nodes: { ...fullCtx, 'Đọc content KE': { values: keN(120) }, 'Đọc Pool Content SM': { values: [] } } })[0].json;
 ok(rV7.stock.mode === 'Vừa' && JSON.stringify(perNick(rV7.rows, 'đăng group')) === JSON.stringify(gF) && JSON.stringify(perNick(rV7.rows, 'đăng tường')) === JSON.stringify(wF),
    'Đầy không dồn bài: số bài/nick đúng bằng chế độ Vừa (chỉ đổi thứ tự content, kéo dài nhiều ngày)');
@@ -238,3 +240,4 @@ ok(nCap(run(exp, { nodes: { ...expCtx(keN(20)).nodes, 'Đọc Lịch SM': { valu
 
 console.log(`\n${pass} đạt, ${fail} lỗi`);
 process.exit(fail ? 1 : 0);
+

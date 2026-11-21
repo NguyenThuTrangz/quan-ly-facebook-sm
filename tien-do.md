@@ -1,5 +1,13 @@
 # Tiến độ chạy lịch SM
 
+## 2026-11-22 01:xx — vận hành 7 nick, 24/7 theo giờ thị trường
+- Tab Tài khoản: SM04–SM07 cột F = "Hoạt động"; SM02 tên = Marie Smocked (F giữ "hạn chế group"). SM08 chưa chạy (chờ avatar/bìa).
+- n8n L1-02: khung giờ thị trường `MARKET_WINDOWS` (US tối 19:00–21:45 NY, UK sáng 08:00–10:30 London, US sáng 08:00–11:30 NY → quy giờ VN theo ngày, tự đổi giờ mùa hè); chạy 7 ngày; mỗi nick 2+ cụm rải qua khung (cụm 1 US tối, cụm 2 US sáng, cụm 3 UK sáng); kho ít thì chia bài theo vòng giữa các nick; ô Join Group SM trống = chưa join; các nick không cùng xin vào 1 group trong ngày. Cron: L1-02 21:30 + bù 05:20–11:20; L1-03 22:00 + bù 05:25–11:25; L1-04 23:50; L1-05 05:40/21:50; L1-06 08:35 bù hằng ngày. Test 64/64.
+- Lịch 22/11 đã sinh (dòng 334–371, 38 việc, 0 bài đăng). **Kho KE hết: CG1–CG30 đều đã xếp** → không có bài đăng cho tới khi team thêm CG31+ (n8n tự nhận khi kho có bài).
+- Cấp 3: tác vụ hẹn giờ `smock-luong-1` / `smock-luong-2` (Auto mode), mỗi 30 phút 06–09h, 14–17h, 19–23h; quy trình `ops/CAP3-TU-CHAY-LUONG.md`; khoá `.lock-luong-n`. Shortcut mới `SM04…SM07 - Chrome.lnk` (Profile 9/10/13/12). `tools/tuong-tac.js` nhận nhãn tiếng Việt.
+- Copilot (05:30 hằng ngày) không cần đổi: phái sinh tắt từ 18/11, không có cấu hình theo nick.
+- Ý tưởng hoãn: extension thay bài/bio (bộ nhớ `project-extension-chuan-hoa`).
+
 ## 2026-11-21 10:3x — kiểm 3 cấp + chuẩn bị thay bài cũ SM04–07
 - **n8n cấp 1 lỗi từ 18:00 20/11**: credential "Google Sheets account" bị Google thu hồi/hết hạn refresh token → mọi workflow đọc sheet lỗi (lịch 21/11 KHÔNG sinh). Cần người dùng mở http://localhost:5678 → Credentials → Google Sheets account (và Google Drive account 2 nếu báo) → Reconnect/đăng nhập Google. Xong thì chạy bù: `n8n execute --id iiViedWvLDx7oqdg` (L1-02) rồi FgMqcu9ihNyjNUJD (L1-03) với N8N_USER_FOLDER=C:
 8n, N8N_RUNNERS_BROKER_PORT=5690. Copilot 05:30 OK (0 việc).

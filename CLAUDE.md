@@ -3,7 +3,7 @@
 Trả lời người dùng bằng tiếng Việt. File này dùng chung cho mọi máy; chỉ mục "Máy này" là khác nhau giữa các máy.
 
 ## Máy này (sửa riêng cho từng PC)
-Máy: ADMIN, 3 tài khoản SM01–SM03. Cập nhật ngày 2026-10-21. Thông tin nick lấy theo sheet **Tài khoản** trên Google Sheet (người dùng cập nhật ở đó khi đổi nick).
+Máy: ADMIN, **7 nick vận hành SM01–SM07** (SM08 chờ avatar/bìa, chưa chạy). Cập nhật 2026-11-22. Thông tin nick lấy theo sheet **Tài khoản** trên Google Sheet (người dùng cập nhật ở đó khi đổi nick).
 - **SM01** = Chrome `Profile 1`, shortcut `SM01 - Chrome.lnk`, Facebook **Sophie Embroidery**, deviceId `74dc5da7-2665-421e-b6f4-1ad4614b2045`.
 - **SM02** = Chrome `Profile 2`, shortcut `SM02 - Chrome.lnk`, Facebook **Marie Smocked** (đổi tên từ Benita Ariem ngày 2026-10-27 — người dùng dặn không cần hỏi lại; `web.facebook.com/benita.ariem.9`; từ 2026-10-21 — nick cũ Daisy Smocking bị checkpoint, người dùng đăng nhập nick khác vào profile này), deviceId `39874c3f-67cd-451f-9fc3-cc9eda87f859`.
 - **SM03** = Edge (không chỉ định profile), shortcut `SM03.lnk`, Facebook **Rosie Smocking** (`profile.php?id=100027948343334`; đã đổi tên xong, kiểm tra 2026-11-10; trước đó từng là Miller Susan / Vo Phuoc Duy — nhận theo deviceId Edge này), deviceId `9db7ffa4-d6d0-43e1-aa29-09b57b9c7cb8`.
@@ -16,7 +16,7 @@ Máy: ADMIN, 3 tài khoản SM01–SM03. Cập nhật ngày 2026-10-21. Thông t
 - **SM05 trở đi chưa đổi được tên FB** → tên smock đặt làm **Biệt danh** (Giới thiệu → Tên → Thêm tên khác → Biệt danh, tick "Hiển thị ở đầu trang cá nhân").
 - deviceId `66ee2040-2b73-446a-9ba6-5466555a84c8` (xuất hiện 20/11) không thuộc profile Chrome nào trên máy → không dùng.
 - Edge deviceId `b1b2ac35-f408-4bca-98ea-de07cc01f413` (Facebook Nguyễn Thái) là của **máy khác** → không dùng.
-- `list_connected_browsers` hiện **cả trình duyệt của máy khác** (cùng tài khoản claude.ai; `isLocal` không đáng tin). Máy này **chỉ chọn 3 deviceId SM01–SM03 ở trên**; deviceId lạ (vd `0757246e…`, `00c25894…`) là máy khác → không chọn, không mở tab. Nếu SM chưa có trong danh sách: chạy shortcut, chờ ~45s rồi kiểm tra lại. (Ngoại lệ: người dùng chỉ định rõ deviceId trong chat.)
+- `list_connected_browsers` hiện **cả trình duyệt của máy khác** (cùng tài khoản claude.ai; `isLocal` không đáng tin). Máy này **chỉ chọn deviceId SM01–SM08 ở trên**; deviceId lạ (vd `0757246e…`, `00c25894…`) là máy khác → không chọn, không mở tab. Nếu SM chưa có trong danh sách: chạy shortcut, chờ ~45s rồi kiểm tra lại. (Ngoại lệ: người dùng chỉ định rõ deviceId trong chat.)
 - Phân biệt Chrome/Edge: chạy `navigator.userAgent`, có `Edg/` là Edge.
 - File nhật ký của máy này: `Quan-ly-Facebook-hang-ngay.xlsx`.
 - Ghi nhật ký bằng **`ghi-nhat-ky.ps1`** (qua Excel 2016): `& "C:\claude remote\ghi-nhat-ky.ps1" <Mã TK> "<Loại việc>" "<Nơi thực hiện>" "<Nội dung>" "<Kết quả>" ["<Chế độ hiển thị>"]`. Máy đã có Python 3.15 (gọi bằng `py`, lệnh `python` không chạy) + openpyxl, nhưng **không dùng `ghi-nhat-ky.py`**: openpyxl xóa 2 dropdown (data validation mở rộng) ở sheet 2–3 mỗi lần lưu. `py` vẫn dùng được để đọc Excel.
@@ -32,7 +32,7 @@ Mọi kết quả đo (comment, inbox, số đọc bài, kiểm tra hiển thị
 ## Kiến trúc 3 cấp (đọc `ops/KIEN-TRUC-3-CAP.md`; bật dần theo `n8n/level1/README.md`)
 - **Máy công ty sau khi `git pull`: làm theo `ops/DONG-BO-MAY-CONG-TY.md`** (từng bước, báo 1 dòng mỗi bước, ghi tiến độ vào `tien-do.md`). Trước khi n8n cài xong, mọi thứ chạy như cũ (ghi log tự rơi về DỰ PHÒNG).
 - Skill `lay-text-group` đang TẠM DỪNG; nick persona chờ người dùng quyết (xem cuối `ops/DONG-BO-MAY-CONG-TY.md`).
-- **Cấp 1 n8n (24/24)** sinh Lịch SM (L1-02, 21:30 tối hôm trước), chuẩn bị gói bài (L1-03, 22:00), báo cáo (L1-04, 18:00), kiểm hợp đồng (L1-05, 06:30/21:50), cầu nối cấp 2 (L1-06), ghi log qua webhook (L1-01). **Cấp 2 Copilot** (repo `smock-level2-copilot`) phái sinh caption, chấm group, viết báo cáo tuần. **Cấp 3 là Claude: chỉ giờ hành chính (08:30–17:00, thứ 2–7)**.
+- **Cấp 1 n8n (24/24)** sinh Lịch SM (L1-02, 21:30 tối hôm trước), chuẩn bị gói bài (L1-03, 22:00), báo cáo (L1-04, 18:00), kiểm hợp đồng (L1-05, 06:30/21:50), cầu nối cấp 2 (L1-06), ghi log qua webhook (L1-01). **Cấp 2 Copilot** (repo `smock-level2-copilot`) phái sinh caption, chấm group, viết báo cáo tuần. **Cấp 3 là Claude, từ 22/11/2026 tự chạy 24/7 theo giờ thị trường**: 2 tác vụ hẹn giờ `smock-luong-1` (SM01, SM03, SM05, SM07) và `smock-luong-2` (SM02, SM04, SM06) nổ mỗi 30 phút trong khung US tối / UK sáng / US sáng (giờ VN mùa đông 07:00–09:45, 15:00–17:30, 20:00–23:30; tự đổi theo giờ mùa hè) — quy trình `ops/CAP3-TU-CHAY-LUONG.md`. Người dùng chốt: đăng bài theo giờ thị trường quốc tế (US/UK), không theo giờ VN; chạy cả 7 ngày.
 - Khi L1-02 đã bật: **không tự "lên lịch hôm nay"**; chỉ chạy lịch n8n đã sinh. Khi L1-01 đã bật: ghi log bằng `tools\ghi-log-webhook.ps1` (mục 2 của `chay-lich-sm`), không gõ vào sheet.
 - Gom việc theo cụm từng nick (lịch đã xếp sẵn 2 cụm/nick/ngày): làm hết cụm của một nick rồi mới chọn trình duyệt khác.
 - Lấy text group cho cấp 2: skill `lay-text-group`. Không tự chấm group dài dòng trong phiên.

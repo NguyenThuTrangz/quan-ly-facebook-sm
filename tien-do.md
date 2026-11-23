@@ -3,7 +3,7 @@
 ## 2026-11-23 17:xx — SM08 vào vận hành (luồng 2)
 - Tab Tài khoản F9 = "Hoạt động" → n8n L1-02 tối nay 21:30 sinh lịch 24/11 có SM08 (nick thứ 8 → luồng 2; mỗi luồng 4 nick).
 - Cấp 3: `smock-luong-2` = SM02, SM04, SM06, SM08; skill chay-lich-sm thêm SM08 (`f969d375…`, Profile 4, giao diện tiếng Việt); shortcut `SM08 - Chrome.lnk`.
-- Ảnh bìa SM08 "SARAH SMOCKS": `thiet-ke/anh-bia/moi/SM08_sarah_1640x624.png`, avatar gốc `thiet-ke/anh-bia/goc/SM08_avatar_sarah.jpg` — CHƯA tải lên FB.
+- Ảnh bìa SM08 "SARAH SMOCKS": `thiet-ke/anh-bia/moi/SM08_sarah_1640x624.png`, avatar gốc `thiet-ke/anh-bia/goc/SM08_avatar_sarah.jpg` — người dùng đã tự tải lên FB (23/11).
 - SM08 chưa join group KE nào (Join Group SM cột M trống) → n8n sẽ xếp join dần; chỉ đăng group khi đã join ≥ 15 group A/B.
 - Kho KE: sau K152/K153 tối 23/11 là hết (CG1–CG30); chờ team thêm CG31+ (không lấy tab persona).
 

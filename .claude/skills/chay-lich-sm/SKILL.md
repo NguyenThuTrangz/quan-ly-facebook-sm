@@ -15,9 +15,9 @@ Quy tắc nghiệp vụ nằm ở CLAUDE.md; file này chỉ là cách làm nhan
 | SM03 | `9db7ffa4-d6d0-43e1-aa29-09b57b9c7cb8` | Edge — cũng dùng để ghi Google Sheet |
 | SM04 | `bf159760-2d98-40bf-b4ba-4e3998bd277a` | Chrome Profile 9 (Jenny Smocking) |
 | SM05 | `68b78dc0-f73f-4599-b5a8-ba13b9692cf9` | Chrome Profile 10 (Thanh Chi Lê / Olivia Smocking) — giao diện tiếng Việt |
-| SM06 | `3c7316d1-8a96-46ab-95aa-0fae1c5b582a` | Chrome Profile 13 (Nguyễn Ngọc Ánh / Ella Smocked) — giao diện tiếng Việt |
+| SM06 | `3c7316d1-8a96-46ab-95aa-0fae1c5b582a` | Chrome Profile 13 (FB tên **Ella Smocked** từ 23/11; trước là Nguyễn Ngọc Ánh) — giao diện tiếng Việt |
 | SM07 | `e5a2bf46-4c18-4041-aa8a-0ce12eab78fa` | Chrome Profile 12 (Phan Thị Ngọc Anh / Maily Smock) |
-| SM08 | `f969d375-0948-40ec-9614-67da5609a8b8` | Chrome Profile 4 (Nguyễn Thương / Sarah Smock) — giao diện tiếng Việt |
+| SM08 | `f969d375-0948-40ec-9614-67da5609a8b8` | Chrome Profile 4 (FB tên **Sarah Smock** từ 23/11; trước là Nguyễn Thương) — giao diện tiếng Việt |
 
 Nick chưa có trong `list_connected_browsers` → `Start-Process "C:\claude remote\SMxx - Chrome.lnk"` (SM03: `SM03.lnk`), chờ ~45 giây rồi kiểm lại. SM04–SM08 giao diện có thể là tiếng Việt: nút/nhãn tiếng Việt ("Thích", "Bày tỏ cảm xúc", "Xác nhận", "Tham gia nhóm", "Thêm bạn bè", "Bạn đang nghĩ gì?") — `find` theo nghĩa, không cứng tiếng Anh.
 
@@ -27,7 +27,7 @@ Nick chưa có trong `list_connected_browsers` → `Start-Process "C:\claude rem
 ```js
 [...document.querySelectorAll('span')].map(s=>s.textContent).find(t=>/What's on your mind|bạn đang nghĩ gì/i.test(t))
 ```
-(SM01 "Sophie", SM02 "Benita"/"Marie", SM03 "Rosie", SM04 "Jenny", SM05 "Chi", SM06 "Ánh", SM07 "Anh", SM08 "Thương"/"Sarah"). Sai nick / checkpoint / "confirm your identity" → dừng, ghi log Không làm được, báo người dùng.
+(SM01 "Sophie", SM02 "Benita"/"Marie", SM03 "Rosie", SM04 "Jenny", SM05 "Chi", SM06 "Ella"/"Ánh", SM07 "Anh"/"Maily", SM08 "Sarah"/"Thương"). Sai nick / checkpoint / "confirm your identity" → dừng, ghi log Không làm được, báo người dùng.
 
 **Screenshot hoặc click bị timeout** = cửa sổ đang thu nhỏ → chạy `& "C:\claude remote\tools\cuaso.ps1" -Mo "<một phần tiêu đề, vd Facebook - Google Chrome>"` (mở lại không chiếm focus) rồi thử lại.
 

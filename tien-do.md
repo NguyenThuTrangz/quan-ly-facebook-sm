@@ -1,5 +1,12 @@
 # Tiến độ chạy lịch SM
 
+## 2026-11-23 18:xx — đổi tên FB sang tên smock (trừ SM04)
+- **SM06 → Ella Smocked**, **SM08 → Sarah Smock**: đổi xong qua Accounts Center (không đòi mật khẩu); khoá đổi lại 60 ngày.
+- **SM05** (Thanh Chi Lê): FB khoá — đã đổi tên 29/10/2026 → đổi được từ **28/12/2026** (Olivia Smocking).
+- **SM07** (Phan Thị Ngọc Anh): FB chặn "Bạn không thể thực hiện thay đổi này ngay bây giờ… thiết bị không hay dùng" — không phải checkpoint; thử lại sau khi nick dùng máy này lâu hơn (Maily Smock). Tên cũ giữ nguyên.
+- SM01 Sophie Embroidery, SM02 Marie Smocked, SM03 Rosie Smocking đã là tên smock → không đổi.
+- Skill chay-lich-sm đã cập nhật tên nhận diện SM06/SM08. Biệt danh "Ella Smocked"/"Sarah Smock" cũ vẫn còn (hiện trùng sau tên) — chờ người dùng quyết có xoá không.
+
 ## 2026-11-23 17:xx — SM08 vào vận hành (luồng 2)
 - Tab Tài khoản F9 = "Hoạt động" → n8n L1-02 tối nay 21:30 sinh lịch 24/11 có SM08 (nick thứ 8 → luồng 2; mỗi luồng 4 nick).
 - Cấp 3: `smock-luong-2` = SM02, SM04, SM06, SM08; skill chay-lich-sm thêm SM08 (`f969d375…`, Profile 4, giao diện tiếng Việt); shortcut `SM08 - Chrome.lnk`.

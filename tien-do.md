@@ -1,5 +1,12 @@
 # Tiến độ chạy lịch SM
 
+## 2026-11-23 17:xx — SM08 vào vận hành (luồng 2)
+- Tab Tài khoản F9 = "Hoạt động" → n8n L1-02 tối nay 21:30 sinh lịch 24/11 có SM08 (nick thứ 8 → luồng 2; mỗi luồng 4 nick).
+- Cấp 3: `smock-luong-2` = SM02, SM04, SM06, SM08; skill chay-lich-sm thêm SM08 (`f969d375…`, Profile 4, giao diện tiếng Việt); shortcut `SM08 - Chrome.lnk`.
+- Ảnh bìa SM08 "SARAH SMOCKS": `thiet-ke/anh-bia/moi/SM08_sarah_1640x624.png`, avatar gốc `thiet-ke/anh-bia/goc/SM08_avatar_sarah.jpg` — CHƯA tải lên FB.
+- SM08 chưa join group KE nào (Join Group SM cột M trống) → n8n sẽ xếp join dần; chỉ đăng group khi đã join ≥ 15 group A/B.
+- Kho KE: sau K152/K153 tối 23/11 là hết (CG1–CG30); chờ team thêm CG31+ (không lấy tab persona).
+
 ## 2026-11-22 01:xx — vận hành 7 nick, 24/7 theo giờ thị trường
 - Tab Tài khoản: SM04–SM07 cột F = "Hoạt động"; SM02 tên = Marie Smocked (F giữ "hạn chế group"). SM08 chưa chạy (chờ avatar/bìa).
 - n8n L1-02: khung giờ thị trường `MARKET_WINDOWS` (US tối 19:00–21:45 NY, UK sáng 08:00–10:30 London, US sáng 08:00–11:30 NY → quy giờ VN theo ngày, tự đổi giờ mùa hè); chạy 7 ngày; mỗi nick 2+ cụm rải qua khung (cụm 1 US tối, cụm 2 US sáng, cụm 3 UK sáng); kho ít thì chia bài theo vòng giữa các nick; ô Join Group SM trống = chưa join; các nick không cùng xin vào 1 group trong ngày. Cron: L1-02 21:30 + bù 05:20–11:20; L1-03 22:00 + bù 05:25–11:25; L1-04 23:50; L1-05 05:40/21:50; L1-06 08:35 bù hằng ngày. Test 64/64.

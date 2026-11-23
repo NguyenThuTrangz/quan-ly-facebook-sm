@@ -11,7 +11,7 @@ Khung giờ thị trường (ops/build_level1.py → `MARKET_WINDOWS`, giờ đ�
 | UK/EU sáng (= tối ở Úc) | 08:00–10:30 London | 15:00–17:30 | 14:00–16:30 |
 | US sáng (giờ vàng) | 08:00–11:30 New York | 20:00–23:30 | 19:00–22:30 |
 
-Luồng: nick theo thứ tự tab Tài khoản, xen kẽ → luồng 1 = SM01, SM03, SM05, SM07; luồng 2 = SM02, SM04, SM06 (cột J Lịch SM ghi "luồng n · <khung>").
+Luồng: nick theo thứ tự tab Tài khoản, xen kẽ → luồng 1 = SM01, SM03, SM05, SM07; luồng 2 = SM02, SM04, SM06, SM08 (cột J Lịch SM ghi "luồng n · <khung>").
 
 ## Mỗi lần chạy (phiên cấp 3 làm đúng thứ tự)
 1. **Khoá luồng**: file `C:\claude remote\.lock-luong-<n>`. Có file và sửa đổi < 50 phút trước → trả lời 1 dòng "luồng n đang chạy ở phiên khác" rồi dừng. Không thì ghi giờ hiện tại vào file.

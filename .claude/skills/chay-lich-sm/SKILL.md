@@ -1,6 +1,6 @@
 ---
 name: chay-lich-sm
-description: Quy trình rút gọn để chạy từng dòng Lịch SM (tim story, lướt, tương tác, chấp nhận, join, kết bạn, đăng tường/group) trên SM01–SM07 và ghi log. Dùng khi hẹn giờ một dòng Lịch SM nổ hoặc người dùng bảo làm một việc trong lịch.
+description: Quy trình rút gọn để chạy từng dòng Lịch SM (tim story, lướt, tương tác, chấp nhận, join, kết bạn, đăng tường/group) trên SM01–SM08 và ghi log. Dùng khi hẹn giờ một dòng Lịch SM nổ hoặc người dùng bảo làm một việc trong lịch.
 ---
 
 # Chạy 1 dòng Lịch SM — làm đúng các bước, hạn chế screenshot
@@ -17,8 +17,9 @@ Quy tắc nghiệp vụ nằm ở CLAUDE.md; file này chỉ là cách làm nhan
 | SM05 | `68b78dc0-f73f-4599-b5a8-ba13b9692cf9` | Chrome Profile 10 (Thanh Chi Lê / Olivia Smocking) — giao diện tiếng Việt |
 | SM06 | `3c7316d1-8a96-46ab-95aa-0fae1c5b582a` | Chrome Profile 13 (Nguyễn Ngọc Ánh / Ella Smocked) — giao diện tiếng Việt |
 | SM07 | `e5a2bf46-4c18-4041-aa8a-0ce12eab78fa` | Chrome Profile 12 (Phan Thị Ngọc Anh / Maily Smock) |
+| SM08 | `f969d375-0948-40ec-9614-67da5609a8b8` | Chrome Profile 4 (Nguyễn Thương / Sarah Smock) — giao diện tiếng Việt |
 
-Nick chưa có trong `list_connected_browsers` → `Start-Process "C:\claude remote\SMxx - Chrome.lnk"` (SM03: `SM03.lnk`), chờ ~45 giây rồi kiểm lại. SM04–SM07 giao diện có thể là tiếng Việt: nút/nhãn tiếng Việt ("Thích", "Bày tỏ cảm xúc", "Xác nhận", "Tham gia nhóm", "Thêm bạn bè", "Bạn đang nghĩ gì?") — `find` theo nghĩa, không cứng tiếng Anh.
+Nick chưa có trong `list_connected_browsers` → `Start-Process "C:\claude remote\SMxx - Chrome.lnk"` (SM03: `SM03.lnk`), chờ ~45 giây rồi kiểm lại. SM04–SM08 giao diện có thể là tiếng Việt: nút/nhãn tiếng Việt ("Thích", "Bày tỏ cảm xúc", "Xác nhận", "Tham gia nhóm", "Thêm bạn bè", "Bạn đang nghĩ gì?") — `find` theo nghĩa, không cứng tiếng Anh.
 
 **Luôn `select_browser` đúng deviceId ở bảng trên TRƯỚC mọi lệnh tab** (`tabs_context_mcp`, `navigate`, `javascript_tool`…). `select_browser` báo lỗi / nick chưa kết nối → **không gọi thêm lệnh trình duyệt nào** (lệnh tab khi chưa chọn được sẽ rơi vào trình duyệt máy khác, vd `87f823ce…`, và mở tab/nhóm tab ở máy đó — đã xảy ra 18/11), chạy shortcut rồi chờ.
 
@@ -26,7 +27,7 @@ Nick chưa có trong `list_connected_browsers` → `Start-Process "C:\claude rem
 ```js
 [...document.querySelectorAll('span')].map(s=>s.textContent).find(t=>/What's on your mind|bạn đang nghĩ gì/i.test(t))
 ```
-(SM01 "Sophie", SM02 "Benita"/"Marie", SM03 "Rosie", SM04 "Jenny", SM05 "Chi", SM06 "Ánh", SM07 "Anh"). Sai nick / checkpoint / "confirm your identity" → dừng, ghi log Không làm được, báo người dùng.
+(SM01 "Sophie", SM02 "Benita"/"Marie", SM03 "Rosie", SM04 "Jenny", SM05 "Chi", SM06 "Ánh", SM07 "Anh", SM08 "Thương"/"Sarah"). Sai nick / checkpoint / "confirm your identity" → dừng, ghi log Không làm được, báo người dùng.
 
 **Screenshot hoặc click bị timeout** = cửa sổ đang thu nhỏ → chạy `& "C:\claude remote\tools\cuaso.ps1" -Mo "<một phần tiêu đề, vd Facebook - Google Chrome>"` (mở lại không chiếm focus) rồi thử lại.
 

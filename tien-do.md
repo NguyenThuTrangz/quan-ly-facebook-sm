@@ -1,5 +1,11 @@
 # Tiến độ chạy lịch SM
 
+## 2026-11-27 11:xx — kiểm 24–27/11, sửa độ bền
+- Lịch: 22/11 38/38 Done; 23/11 40 Done + 1 Lỗi; **24/11, 25/11 43 việc còn "Chờ"** (cấp 3 không chạy); **26/11 không có lịch**; 27/11 18 Done (12 dòng ca sáng 07:06–08:07 luồng 1 "Bỏ qua" vì trễ > 90 phút), 25 Chờ cho các khung sau.
+- Nguyên nhân 1: **tài khoản Claude chạm giới hạn tuần** (lượt cấp 3 báo "You've hit your weekly limit · resets Nov 27, 9am") → giảm nhịp cấp 3 từ 30 phút xuống **mỗi giờ (phút :05)**, lượt không có việc thoát ngay sau khi đọc lịch (không đọc file khác), khoá 55 phút, tối đa 50 phút/lượt.
+- Nguyên nhân 2: **n8n chết sau khi máy ngủ 25/11 14:02 → 26/11 11:40** (lỡ L1-02 21:30 và lượt bù sáng 26/11). Thêm tác vụ Windows **`Smock n8n watchdog`** mỗi 10 phút (`tools\n8n-watchdog.ps1`, file phải có BOM vì PowerShell 5): n8n không phản hồi → tự chạy lại; nhật ký `logs\n8n-watchdog.log`.
+- Kho KE vẫn 30 caption (CG1–CG30 đã dùng hết) → từ 24/11 lịch không có bài đăng.
+
 ## 2026-11-23 18:xx — đổi tên FB sang tên smock (trừ SM04)
 - **SM06 → Ella Smocked**, **SM08 → Sarah Smock**: đổi xong qua Accounts Center (không đòi mật khẩu); khoá đổi lại 60 ngày.
 - **SM05** (Thanh Chi Lê): FB khoá — đã đổi tên 29/10/2026 → đổi được từ **28/12/2026** (Olivia Smocking).

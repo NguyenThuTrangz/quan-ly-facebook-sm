@@ -8,3 +8,4 @@
 test.txt
 tools/hang-doi-log.tsv
 .lock-luong-*
+logs/

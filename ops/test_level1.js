@@ -25,6 +25,8 @@ r = run(v1, { input: { ...good, body: { ...good.body, phone: '0912' } }, nodes: 
 ok(!r.ok, 'gửi kèm trường phone → từ chối');
 r = run(v1, { input: { ...good, body: { ...good.body, trang_thai: 'Không làm được' } }, nodes: {} })[0].json;
 ok(r.ok && r.lich_values[0] === 'Lỗi', 'Không làm được → Lịch = Lỗi');
+r = run(v1, { input: { ...good, body: { ...good.body, trang_thai: 'Bỏ qua', so_luong: 0 } }, nodes: {} })[0].json;
+ok(r.ok && r.lich_values[0] === 'Bỏ qua', 'Bỏ qua → Lịch = Bỏ qua (không ghi Done)');
 r = run(v1, { input: { headers: good.headers, body: { type: 'status', tab: 'Lead Hunter', row: 5, status: 'Đã trả lời' } }, nodes: {} })[0].json;
 ok(r.ok, 'cập nhật trạng thái hợp lệ');
 r = run(v1, { input: { headers: good.headers, body: { type: 'status', tab: 'Lead Hunter', row: 5, status: 'Gửi rồi' } }, nodes: {} })[0].json;

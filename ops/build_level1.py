@@ -241,7 +241,7 @@ if (type === 'log') {
   out.row = [today, body.ma_tk, '', body.loai_viec, body.noi || '', String(body.noi_dung || '').slice(0, 500), body.che_do || '',
              body.ket_qua || body.trang_thai, body.trang_thai, sl, out.ma_log];
   out.lich_row = body.lich_row ?? null;
-  out.lich_values = body.trang_thai === 'Không làm được' ? ['Lỗi', body.url || ''] : ['Done', body.url || ''];
+  out.lich_values = body.trang_thai === 'Không làm được' ? ['Lỗi', body.url || ''] : body.trang_thai === 'Bỏ qua' ? ['Bỏ qua', ''] : ['Done', body.url || ''];   // Bỏ qua ≠ Done: bài bỏ qua được trả lại kho
 } else if (type === 'status') {
   const tab = body.tab, st = body.status;
   if (!STATUS[tab] || !STATUS[tab].length) errors.push('tab không có cột trạng thái: ' + tab);

@@ -11,12 +11,16 @@ param(
   [int]$LichRow = 0,
   [string]$Url = '',
   [string]$CheDo = '',
-  [string]$KetQua = ''
+  [string]$KetQua = '',
+  [string]$DaJoin = '',     # Join group: STT group đã join, vd "49,50" → webhook điền 'đã join' vào Join Group SM
+  [string]$ChoDuyet = ''    # Join group: STT group đang chờ duyệt
 )
 $token = $env:SMOCK_LOG_TOKEN
 $body = @{ type = 'log'; ma_tk = $MaTk; loai_viec = $LoaiViec; noi = $Noi; noi_dung = $NoiDung; trang_thai = $TrangThai;
            so_luong = $SoLuong; ket_qua = $(if ($KetQua) { $KetQua } else { $TrangThai }); che_do = $CheDo; url = $Url }
 if ($LichRow -ge 2) { $body.lich_row = $LichRow }
+if ($DaJoin) { $body.join_da = @($DaJoin -split '[,; ]+' | ? { $_ } | % { [int]$_ }) }
+if ($ChoDuyet) { $body.join_cho = @($ChoDuyet -split '[,; ]+' | ? { $_ } | % { [int]$_ }) }
 try {
   $r = Invoke-RestMethod -Method Post -Uri 'http://localhost:5678/webhook/smock-log' -TimeoutSec 20 `
        -Headers @{ 'X-Smock-Token' = $token } -ContentType 'application/json; charset=utf-8' `

@@ -1,5 +1,11 @@
 # Tiến độ chạy lịch SM
 
+## 2026-11-28 12:xx — kiểm luồng + kho
+- Cấp 3 chạy đều mỗi giờ từ tối 27/11: 27/11 khung US sáng 19/19 Xong; 28/11 khung US tối 23 Xong + 1 Một phần (SM05 chấp nhận 17/~544 lời mời, dừng tránh giới hạn FB). 19 việc khung 20:00 tối nay đang chờ.
+- Lỗi: cấp 3 join xong nhưng không ai điền Join Group SM → n8n xếp lại cùng group nhiều ngày. Sửa: webhook nhận `join_da` / `join_cho` (`ghi-log-webhook.ps1 -DaJoin "49,50" -ChoDuyet "43"`) → tự điền cột nick (dòng = STT + 1); skill chay-lich-sm đã ghi cách dùng. Test 67/67. Đã điền bù 22 ô theo Nhật Ký: SM01 49/50/53; SM03 49/50/54 (+43 chờ); SM04 2/25/29; SM05 2/30/32; SM06 2; SM07 2/5/10; SM08 12/15; SM04–SM07 group 1 chờ duyệt.
+- SM02 23/11: FB báo "confirm your identity / certain actions restricted" khi join group 17 → vẫn chỉ tương tác, không join/đăng group.
+- Kho KE vẫn 30 caption (CG1–CG30 đã dùng) → lịch không có bài đăng.
+
 ## 2026-11-27 11:xx — kiểm 24–27/11, sửa độ bền
 - Lịch: 22/11 38/38 Done; 23/11 40 Done + 1 Lỗi; **24/11, 25/11 43 việc còn "Chờ"** (cấp 3 không chạy); **26/11 không có lịch**; 27/11 18 Done (12 dòng ca sáng 07:06–08:07 luồng 1 "Bỏ qua" vì trễ > 90 phút), 25 Chờ cho các khung sau.
 - Nguyên nhân 1: **tài khoản Claude chạm giới hạn tuần** (lượt cấp 3 báo "You've hit your weekly limit · resets Nov 27, 9am") → giảm nhịp cấp 3 từ 30 phút xuống **mỗi giờ (phút :05)**, lượt không có việc thoát ngay sau khi đọc lịch (không đọc file khác), khoá 55 phút, tối đa 50 phút/lượt.

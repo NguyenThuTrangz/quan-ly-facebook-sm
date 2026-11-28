@@ -48,7 +48,7 @@ Có thể gửi 2–3 lệnh JS song song trong cùng 1 message (chạy tuần t
 
 **Chấp nhận All**: mở `facebook.com/friends/requests`, `find` các nút "Confirm", click lần lượt; không có thì J = 0.
 
-**Join group …**: link lấy cột C tab Join Group SM; bấm Join, nội quy → tick đồng ý, câu hỏi → "Oke" rồi Submit. Điền "đã join"/"đang chờ duyệt" vào cột của nick (D=SM01, E=SM02, F=SM03, I–M=SM04–SM08).
+**Join group …**: link lấy cột C tab Join Group SM; bấm Join, nội quy → tick đồng ý, câu hỏi → "Oke" rồi Submit. **Ghi log kèm STT group** để webhook tự điền tab Join Group SM (không gõ sheet): `-DaJoin "49,50"` (đã join, kể cả đã là thành viên từ trước) và `-ChoDuyet "43"` (đang chờ duyệt). Vd: `& "C:\claude remote\tools\ghi-log-webhook.ps1" SM05 "Join group" "Group 30, 32" "join group 30, 32: đã tham gia" "Xong" 2 -LichRow 540 -DaJoin "30,32"`. Thiếu bước này thì n8n cứ xếp lại cùng group (đã xảy ra 22–28/11).
 
 **Kết bạn …**: link cột B tab Add Friend; Add friend (không có thì Follow). Báo "can't use this feature" → dừng kết bạn nick đó hôm nay.
 

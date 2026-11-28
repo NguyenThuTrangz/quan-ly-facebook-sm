@@ -27,6 +27,11 @@ r = run(v1, { input: { ...good, body: { ...good.body, trang_thai: 'Không làm �
 ok(r.ok && r.lich_values[0] === 'Lỗi', 'Không làm được → Lịch = Lỗi');
 r = run(v1, { input: { ...good, body: { ...good.body, trang_thai: 'Bỏ qua', so_luong: 0 } }, nodes: {} })[0].json;
 ok(r.ok && r.lich_values[0] === 'Bỏ qua', 'Bỏ qua → Lịch = Bỏ qua (không ghi Done)');
+r = run(v1, { input: { ...good, body: { ...good.body, ma_tk: 'SM05', loai_viec: 'Join group', lich_row: 120, join_da: [30, 32], join_cho: [43] } }, nodes: {} })[0].json;
+ok(r.ok && r.batch.length === 4 && r.batch.some(x => x.range === "'Join Group SM'!J31" && x.values[0][0] === 'đã join') && r.batch.some(x => x.range === "'Join Group SM'!J44" && x.values[0][0] === 'đang chờ duyệt'),
+   'Join group kèm STT → điền cột nick trong Join Group SM (SM05 = cột J, dòng = STT + 1)');
+r = run(v1, { input: { ...good, body: { ...good.body, join_da: [5] } }, nodes: {} })[0].json;
+ok(!r.ok, 'join_da chỉ nhận khi loai_viec = Join group');
 r = run(v1, { input: { headers: good.headers, body: { type: 'status', tab: 'Lead Hunter', row: 5, status: 'Đã trả lời' } }, nodes: {} })[0].json;
 ok(r.ok, 'cập nhật trạng thái hợp lệ');
 r = run(v1, { input: { headers: good.headers, body: { type: 'status', tab: 'Lead Hunter', row: 5, status: 'Gửi rồi' } }, nodes: {} })[0].json;

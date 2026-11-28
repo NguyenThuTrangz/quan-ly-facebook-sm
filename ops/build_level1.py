@@ -242,6 +242,15 @@ if (type === 'log') {
              body.ket_qua || body.trang_thai, body.trang_thai, sl, out.ma_log];
   out.lich_row = body.lich_row ?? null;
   out.lich_values = body.trang_thai === 'Không làm được' ? ['Lỗi', body.url || ''] : body.trang_thai === 'Bỏ qua' ? ['Bỏ qua', ''] : ['Done', body.url || ''];   // Bỏ qua ≠ Done: bài bỏ qua được trả lại kho
+  out.batch = out.lich_row ? [{ range: `'Lịch SM'!H${out.lich_row}:I${out.lich_row}`, values: [out.lich_values] }] : [];
+  // Join group: cấp 3 gửi kèm STT group đã join / đang chờ duyệt → điền cột của nick trong tab Join Group SM (dòng = STT + 1)
+  const jcol = CFG.JG_COL[body.ma_tk];
+  for (const [key, val] of [['join_da', 'đã join'], ['join_cho', 'đang chờ duyệt']]) {
+    const arr = body[key] == null ? [] : body[key];
+    if (!Array.isArray(arr) || !arr.every(x => Number.isInteger(x) && x >= 1 && x <= 999)) { errors.push(key + ' phải là danh sách STT group'); continue; }
+    if (arr.length && body.loai_viec !== 'Join group') errors.push(key + ' chỉ dùng với loai_viec Join group');
+    for (const g of arr) if (jcol !== undefined) out.batch.push({ range: `'Join Group SM'!${String.fromCharCode(65 + jcol)}${g + 1}`, values: [[val]] });
+  }
 } else if (type === 'status') {
   const tab = body.tab, st = body.status;
   if (!STATUS[tab] || !STATUS[tab].length) errors.push('tab không có cột trạng thái: ' + tab);
@@ -281,9 +290,9 @@ nodes += [
   iff("Mới?", "{{ !$json.duplicate }}", [420, 120]),
   gpost("Ghi Nhật Ký SM", "/values/{{ encodeURIComponent(\"'Nhật Ký SM'!A:K\") }}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
         "{ values: [$('Đã ghi chưa?').first().json.row] }", [640, 40]),
-  iff("Có dòng lịch?", "{{ $('Đã ghi chưa?').first().json.lich_row !== null }}", [860, 40]),
+  iff("Có dòng lịch?", "{{ ($('Đã ghi chưa?').first().json.batch || []).length > 0 }}", [860, 40]),
   gpost("Ghi Done vào Lịch SM", ":batchUpdate" if False else "/values:batchUpdate",
-        "{ valueInputOption: 'USER_ENTERED', data: [{ range: \"'Lịch SM'!H\" + $('Đã ghi chưa?').first().json.lich_row + ':I' + $('Đã ghi chưa?').first().json.lich_row, values: [$('Đã ghi chưa?').first().json.lich_values] }] }",
+        "{ valueInputOption: 'USER_ENTERED', data: $('Đã ghi chưa?').first().json.batch }",
         [1080, -40]),
   node("Trả OK", "n8n-nodes-base.respondToWebhook", 1.1, {"respondWith": "json", "responseBody": "={{ JSON.stringify({ ok: true, ma_log: $('Đã ghi chưa?').first().json.ma_log, duplicate: $('Đã ghi chưa?').first().json.duplicate }) }}", "options": {"responseCode": 200}}, [1300, 120]),
   code("Tạo lệnh cập nhật trạng thái", status_body_js, [-20, 360]),

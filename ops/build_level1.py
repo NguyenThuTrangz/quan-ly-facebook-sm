@@ -48,7 +48,9 @@ const CFG = {
   L2_CAPTION_JOBS: { 'Đầy': 0, 'Vừa': 0, 'Ít': 0 },    // số việc phái sinh caption L1-06 gửi mỗi lượt (0 = tắt phái sinh)
   RECLAIM_UNPOSTED: true,       // content đã xếp lịch nhưng KHÔNG đăng (H ≠ Done, I trống, Nhật Ký không có) → trả lại kho để xếp bù
   RECLAIM_AFTER_DAYS: 2,        // chỉ lấy lại dòng lịch cũ hơn ngày đích ngần này ngày (chờ log/webhook trễ, tránh đăng trùng)
-  PERSONA_IN_POOL: false,       // caption persona GRACIE/CATHIE/LILY/EMILY: chưa có node đọc → chưa tính vào kho
+  PERSONA_IN_POOL: false,       // caption persona GRACIE/LILY/EMILY: chưa có node đọc → chưa tính vào kho
+  // 28/11 người dùng cho dùng tab persona CATHIE (workbook KE) làm bài TƯỜNG khi kho CG hết → mã CT<STT>, chỉ đăng tường
+  CT_SKIP: [17],                // STT CATHIE không dùng: 17 = Halloween (hết mùa)
   // Chế độ "Đầy": ưu tiên caption có từ khoá đúng mùa theo THÁNG của ngày đích (cuối năm khách làm collection đầu năm + hè)
   SEASON: {
     11: "valentine|st\\.? ?patrick|easter|mother'?s day|summer|spring",
@@ -62,16 +64,25 @@ const CFG = {
 //  - workbook KE, tab '3. CONTENT GROUP' (A STT, B TEXT, C MEDIA) → mã CG<STT>
 //  - tab 'Pool Content SM' (A STT, B Content, C Ảnh/Video, D Phân loại) → mã PC<STT>; Phân loại có "chờ duyệt" thì chưa dùng
 //  - content đã dùng / mã bài Kxxx: đọc từ cột F, J tab 'Lịch SM' (vd "đăng group K123 (CG13) → group 5")
+// Tab CATHIE (KE): cột C ảnh là chip link Drive → đọc bằng spreadsheets.get (node 'Đọc content CATHIE'), không qua /values
+const ctRows = () => { let j; try { j = $('Đọc content CATHIE').first().json || {}; } catch (e) { return []; }
+  const rd = (((((j.sheets || [])[0] || {}).data) || [])[0] || {}).rowData || []; const out = [];
+  rd.forEach((r, i) => { const v = r.values || []; const t = k => String((v[k] || {}).formattedValue || '');
+    const s = t(0).trim(); if (!/^\d+$/.test(s) || !t(1).trim() || CFG.CT_SKIP.includes(+s)) return;
+    const m = v[2] || {}; const uri = m.hyperlink || (m.chipRuns || []).map(c => ((c.chip || {}).richLinkProperties || {}).uri).find(Boolean) || t(2);
+    out.push({ id: 'CT' + s, caption: t(1), media: uri || '', kind: 'wall', row: i + 2 }); });
+  return out; };
 const buildPool = (ke, pool) => {
   const out = [];
   // row = số dòng thật trên sheet (KE đọc từ A3, Pool Content SM đọc từ A2)
   ke.forEach((r, i) => { const s = String(r[0] || '').trim(); if (/^\d+$/.test(s) && String(r[1] || '').trim()) out.push({ id: 'CG' + s, caption: r[1], media: r[2] || '', kind: 'any', row: i + 3 }); });
+  out.push(...ctRows());
   if (CFG.USE_POOL_DERIVED) pool.forEach((r, i) => { const s = String(r[0] || '').trim(); if (/^\d+$/.test(s) && String(r[1] || '').trim() && !/chờ duyệt/i.test(r[3] || ''))
     out.push({ id: 'PC' + s, caption: r[1], media: r[2] || '', kind: /tường|wall/i.test(r[3] || '') ? 'wall' : 'any', note: r[3] || '', row: i + 2 }); });
   return out;
 };
 const lichText = r => (r[5] || '') + ' ' + (r[9] || '');
-const usedContent = lich => { const s = new Set(); for (const r of lich) for (const m of lichText(r).matchAll(/\b(CG|PC)(\d+)\b/g)) s.add(m[1] + m[2]); return s; };
+const usedContent = lich => { const s = new Set(); for (const r of lich) for (const m of lichText(r).matchAll(/\b(CG|PC|CT)(\d+)\b/g)) s.add(m[1] + m[2]); return s; };
 const maxKOf = (lich, start) => { let k = start; for (const r of lich) for (const m of lichText(r).matchAll(/\bK(\d{3,})\b/g)) k = Math.max(k, +m[1]); return k; };
 const vnNow = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
 const isoOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -111,10 +122,10 @@ const stockOf = ({ ke, pool, lich, nk, acc, kpi, d }) => {
   const day0 = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const postedNk = new Set();
   for (const r of nk || []) if (r[3] === 'Đăng bài' && /^(Xong|Một phần)$/.test(r[8] || ''))
-    for (const m of ((r[4] || '') + ' ' + (r[5] || '')).matchAll(/\b(K\d{3,}|CG\d+|PC\d+)\b/g)) postedNk.add(m[1]);
+    for (const m of ((r[4] || '') + ' ' + (r[5] || '')).matchAll(/\b(K\d{3,}|CG\d+|PC\d+|CT\d+)\b/g)) postedNk.add(m[1]);
   const posted = new Set(), pending = new Set(), noImg = new Set(), seen = new Set();
   for (const r of lich || []) {
-    const ids = [...lichText(r).matchAll(/\b(CG|PC)(\d+)\b/g)].map(m => m[1] + m[2]); if (!ids.length) continue;
+    const ids = [...lichText(r).matchAll(/\b(CG|PC|CT)(\d+)\b/g)].map(m => m[1] + m[2]); if (!ids.length) continue;
     const k = (/\bK\d{3,}\b/.exec(r[5] || '') || [])[0]; const dd = pDay(r[0]); const st = String(r[7] || '').trim();
     const done = /^(Done|Đang làm|Đã đăng)$/i.test(st) || !!String(r[8] || '').trim() || (k && postedNk.has(k)) || ids.some(i => postedNk.has(i));
     const old = CFG.RECLAIM_UNPOSTED && dd && (day0 - dd) / 864e5 >= CFG.RECLAIM_AFTER_DAYS;
@@ -160,6 +171,16 @@ def gget(name, rng_expr, pos, notes="Credential Google Sheets OAuth2 được g�
         "authentication": "predefinedCredentialType", "nodeCredentialType": "googleSheetsOAuth2Api",
         "options": {"response": {"response": {"responseFormat": "json"}}}}, pos,
         retryOnFail=True, maxTries=3, waitBetweenTries=3000, notes=notes, alwaysOutputData=True)
+
+def gget_ct(name, pos):
+    rng = "\"'CATHIE'!A2:C300\""
+    fields = "\"sheets.data.rowData.values(formattedValue,hyperlink,chipRuns.chip.richLinkProperties.uri)\""
+    return node(name, "n8n-nodes-base.httpRequest", 4.2, {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/" + KE_SHEET + "?ranges={{ encodeURIComponent(" + rng + ") }}&fields={{ encodeURIComponent(" + fields + ") }}",
+        "authentication": "predefinedCredentialType", "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {"response": {"response": {"responseFormat": "json"}}}}, pos,
+        retryOnFail=True, maxTries=3, waitBetweenTries=3000, alwaysOutputData=True, onError="continueRegularOutput",
+        notes="Tab persona CATHIE (KE) = kho bài tường CT<STT>. Lỗi đọc → bỏ qua, kho chỉ còn CG.")
 
 def gpost(name, path_expr, body_expr, pos, notes="Credential Google Sheets OAuth2 được gắn tự động bởi ops/cai_dat_n8n.py.", **extra):
     return node(name, "n8n-nodes-base.httpRequest", 4.2, {
@@ -474,6 +495,7 @@ link(c, "05:20 bù (đến 11:20)", reads[0][0])
 prev = "21:30 hằng ngày"
 for i, rd in enumerate(reads):
     nodes.append(gget(rd[0], rd[1], [-980 + i * 160, 300], sheet=rd[2] if len(rd) > 2 else None)); link(c, prev, rd[0]); prev = rd[0]
+nodes.append(gget_ct("Đọc content CATHIE", [300, 480])); link(c, prev, "Đọc content CATHIE"); prev = "Đọc content CATHIE"
 nodes += [code("Sinh lịch", gen_js, [420, 300], notes="Luật: khung giờ thị trường US tối / UK sáng / US sáng (quy giờ VN theo ngày, tự đổi giờ mùa hè), 2 luồng song song, kho ít thì chia bài theo vòng giữa các nick, bài group chỉ vào group A/B đã join; cùng nick cách ≥60 phút, cả đội cách ≥6 phút; không đăng lại 1 group trong 3 ngày; đèn Đỏ → 0 bài group, Vàng → ≤2; mỗi content 1 lần. Kiểm tồn kho trước khi xếp: Đầy (>7 ngày) hấp thụ/xếp bù, Vừa bình thường, Ít (<2 ngày) báo + đẩy phái sinh; trần cứng ≤5 group, ≤3 tường/nick/ngày."),
           iff("Có việc mới?", "{{ !$json.skip && $json.rows.length > 0 }}", [640, 300]),
           gpost("Ghi Lịch SM", "/values/{{ encodeURIComponent(\"'Lịch SM'!A:J\") }}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS", "{ values: $json.rows }", [860, 220]),
@@ -498,7 +520,7 @@ const parseDay = s => { s = String(s || ''); let m = /^(\d{4})-(\d{2})-(\d{2})/.
 const out = [];
 lich.forEach((r, i) => {
   const dd = parseDay(r[0]); if (!dd || dd < today || r[7] === 'Done') return;
-  const m = /\b(K\d{3,})\b.*?\b((?:CG|PC)\d+)\b/.exec(r[5] || ''); if (!m || /Gói sẵn/.test(r[9] || '')) return;
+  const m = /\b(K\d{3,})\b.*?\b((?:CG|PC|CT)\d+)\b/.exec(r[5] || ''); if (!m || /Gói sẵn/.test(r[9] || '')) return;
   const code = m[1], src = byId[m[2]];
   if (!src) { out.push({ json: { row: i + 2, code, note: r[9] || '', missing: m[2] } }); return; }
   const link = src.media || ''; const f = /folders\/([\w-]+)/.exec(link) || /[?&]id=([\w-]+)/.exec(link) || /\/d\/([\w-]+)/.exec(link);
@@ -506,7 +528,9 @@ lich.forEach((r, i) => {
   // Chỉ đổi số điện thoại/WhatsApp trong caption sang CFG.WHATSAPP; bỏ câu chứa {{MA_BAI}} nếu còn sót.
   let cap = String(src.caption)
     .replace(/[^\n]*\{\{MA_BAI\}\}[^\n]*\n?/g, '')
-    .replace(/(?:\+\s?84|\b84|\b0)(?:[ .\-]?\d){8,10}\b/g, CFG.WHATSAPP).trim();
+    .replace(/wa\.me\/\+?\d{8,15}/g, '@@WA@@')
+    .replace(/(?:\+\s?84|\b84|\b0)(?:[ .\-]?\d){8,10}\b/g, CFG.WHATSAPP)
+    .replace(/@@WA@@/g, 'wa.me/' + CFG.WHATSAPP.replace(/\D/g, '')).trim();
   out.push({ json: { row: i + 2, code, src: m[2], note: r[9] || '', caption: cap, folderId: f ? f[1] : null, dir: `${CFG.PACK_DIR}/${code}` } });
 });
 return out.length ? out : [{ json: { empty: true } }];"""
@@ -535,6 +559,7 @@ nodes += [sched("22:00 hằng ngày", "0 22 * * *", [-1340, 300]),
           gget("Đọc Lịch SM", "\"'Lịch SM'!A2:J5000\"", [-1120, 300]),
           gget("Đọc Pool Content SM", POOL_RANGE, [-900, 300]),
           gget("Đọc content KE", KE_RANGE, [-680, 300], sheet=KE_SHEET),
+          gget_ct("Đọc content CATHIE", [-570, 460]),
           code("Chọn bài cần gói", pick_js, [-460, 300]),
           iff("Có bài?", "{{ !$json.empty && !!$json.folderId }}", [-240, 300]),
           node("Tạo thư mục gói", "n8n-nodes-base.executeCommand", 1, {
@@ -565,7 +590,7 @@ const data = Object.values(by).map(b => ({ range: `'Lịch SM'!J${b.row}`, value
 return [{ json: { data, n: Object.keys(by).length } }];""", [860, 380]),
           gpost("Ghi trạng thái gói", "/values:batchUpdate", "{ valueInputOption: 'USER_ENTERED', data: $json.data }", [1080, 380])]
 for a, b, o in [("22:00 hằng ngày", "Đọc Lịch SM", 0), ("05:25 bù (đến 11:25)", "Đọc Lịch SM", 0), ("Đọc Lịch SM", "Đọc Pool Content SM", 0), ("Đọc Pool Content SM", "Đọc content KE", 0),
-                ("Đọc content KE", "Chọn bài cần gói", 0), ("Chọn bài cần gói", "Có bài?", 0),
+                ("Đọc content KE", "Đọc content CATHIE", 0), ("Đọc content CATHIE", "Chọn bài cần gói", 0), ("Chọn bài cần gói", "Có bài?", 0),
                 ("Có bài?", "Tạo thư mục gói", 0), ("Có bài?", "Liệt kê ảnh trong folder Drive", 0), ("Tạo thư mục gói", "Tạo caption.txt", 0), ("Tạo caption.txt", "Ghi caption.txt", 0),
                 ("Liệt kê ảnh trong folder Drive", "Tách từng ảnh", 0), ("Tách từng ảnh", "Tải ảnh JPG 2048px", 0), ("Tải ảnh JPG 2048px", "Lưu ảnh vào gói", 0),
                 ("Lưu ảnh vào gói", "Gom kết quả theo bài", 0), ("Gom kết quả theo bài", "Ghi trạng thái gói", 0)]:
@@ -614,11 +639,12 @@ nodes += [sched("23:50 hằng ngày", "50 23 * * *", [-900, 300]),
           gget("Đọc Tài khoản", "\"'Tài khoản'!A2:I20\"", [-240, 460]),
           gget("Đọc Pool Content SM", POOL_RANGE, [-130, 460]),
           gget("Đọc content KE", KE_RANGE, [-20, 460], sheet=KE_SHEET),
+          gget_ct("Đọc content CATHIE", [90, 460]),
           code("Tính báo cáo + đèn", report_js, [-20, 300], notes="Đèn: Đỏ nếu có cảnh báo FB trong log; Vàng nếu lỗi nhiều hơn xong hoặc thiếu bài so với KPI ngày. Thêm dòng tồn kho content (Đầy/Vừa/Ít). Không ghi tab riêng: tab Báo cáo SM đã tự tính từ Nhật Ký SM; L1-02 tự tính đèn từ Nhật Ký SM."),
           telegram("Gửi nhóm", "{{ $('Tính báo cáo + đèn').first().json.text }}", [200, 300])]
 for a, b in [("23:50 hằng ngày", "Đọc Nhật Ký SM"), ("Đọc Nhật Ký SM", "Đọc Target + Workload"), ("Đọc Target + Workload", "Đọc Lịch SM"),
              ("Đọc Lịch SM", "Đọc Tài khoản"), ("Đọc Tài khoản", "Đọc Pool Content SM"), ("Đọc Pool Content SM", "Đọc content KE"),
-             ("Đọc content KE", "Tính báo cáo + đèn"), ("Tính báo cáo + đèn", "Gửi nhóm")]:
+             ("Đọc content KE", "Đọc content CATHIE"), ("Đọc content CATHIE", "Tính báo cáo + đèn"), ("Tính báo cáo + đèn", "Gửi nhóm")]:
     link(c, a, b)
 save("L1-04-bao-cao-ngay.json", "L1-04 Báo cáo ngày + đèn sức khỏe", nodes, c, "Tóm tắt cuối ngày gửi nhóm (bật node Telegram nếu dùng). Số liệu chi tiết xem tab Báo cáo SM.")
 
@@ -685,8 +711,8 @@ const parseDay = s => { s = String(s || ''); let m = /^(\d{4})-(\d{2})-(\d{2})/.
   m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; };
 // Chỉ tính ngày ĐÃ ĐĂNG thật (H Done / có URL): bài xếp lịch mà không đăng thì chưa "dùng" bộ ảnh
 const lastUse = {}; for (const r of lich) { const dd = parseDay(r[0]); if (!dd || !(/^(Done|Đã đăng)$/i.test(String(r[7] || '').trim()) || String(r[8] || '').trim())) continue;
-  for (const m of lichText(r).matchAll(/\b((?:CG|PC)\d+)\b/g)) if (!lastUse[m[1]] || lastUse[m[1]] < dd) lastUse[m[1]] = dd; }
-const derived = new Set(); for (const r of poolRaw) { const m = /Phái sinh từ ((?:CG|PC)\d+)/i.exec(r[3] || ''); if (m) derived.add(m[1]); }
+  for (const m of lichText(r).matchAll(/\b((?:CG|PC|CT)\d+)\b/g)) if (!lastUse[m[1]] || lastUse[m[1]] < dd) lastUse[m[1]] = dd; }
+const derived = new Set(); for (const r of poolRaw) { const m = /Phái sinh từ ((?:CG|PC|CT)\d+)/i.exec(r[3] || ''); if (m) derived.add(m[1]); }
 const now = vnNow();
 // Kiểm tồn kho → số việc phái sinh lượt này: Đầy gửi ít (đang dư content gốc), Ít gửi nhiều
 const stock = stockOf({ ke: V('Đọc content KE'), pool: poolRaw, lich, nk: V('Đọc Nhật Ký SM'), acc: V('Đọc Tài khoản'), kpi: V('Đọc Target + Workload'), d: targetDayOf(now) });

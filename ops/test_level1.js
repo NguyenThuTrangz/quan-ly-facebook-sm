@@ -196,6 +196,18 @@ ok(r[0].json.missing === 'PC1' && r[0].json.row === 2, 'caption phái sinh (PC) 
 ok(r[1].json.caption === 'Lovely dress\nWhatsApp: +84 855 555 490' && !/K13\d/.test(r[1].json.caption) && r[1].json.folderId === 'Q',
   'caption gốc KE giữ nguyên, KHÔNG thêm mã Kxxx, đổi số WhatsApp sang +84 855 555 490');
 
+console.log('Kho CATHIE (CT): chỉ bài tường');
+const ctCell = (s, cap, uri) => ({ values: [{ formattedValue: s }, { formattedValue: cap }, uri ? { formattedValue: 'ca_content ' + s, chipRuns: [{ chip: { richLinkProperties: { uri } } }] } : {}] });
+const ctJson = { sheets: [{ data: [{ rowData: [ctCell('1', 'Cathie 1\nWhatsApp / Phone: +84 855 555 229\n👉 https://wa.me/84855555229', 'https://drive.google.com/drive/folders/CT1'),
+  ctCell('2', 'Cathie 2', 'https://drive.google.com/drive/folders/CT2'), ctCell('17', 'Halloween 🎃', 'https://drive.google.com/drive/folders/CT17'), ctCell('3', 'Cathie 3', '')] }] }] };
+const rCT = run(g, { nodes: { ...base, 'Đọc content KE': { values: [] }, 'Đọc content CATHIE': ctJson } })[0].json;
+const ctUse = rCT.rows.filter(x => /\(CT\d+\)/.test(x[5]));
+ok(ctUse.length === 2 && ctUse.every(x => x[4] === 'đăng tường') && !rCT.rows.some(x => x[4] === 'đăng group' && /\(CT/.test(x[5])), 'kho CG trống → dùng CATHIE, chỉ xếp đăng tường (CT1, CT2)');
+ok(!rCT.rows.some(x => /\(CT(17|3)\)/.test(x[5])), 'bỏ CT17 (Halloween) và bài CATHIE không có ảnh');
+const r3c = run(p3, { nodes: { 'Đọc Lịch SM': { values: [[tmrIso, '10:00', 'SM01', 'x', 'đăng tường', 'đăng tường K131 (CT1)', 'Có', 'Chờ', '', '']] }, 'Đọc content KE': { values: [] }, 'Đọc Pool Content SM': { values: [] }, 'Đọc content CATHIE': ctJson } });
+ok(r3c[0].json.folderId === 'CT1' && /Phone: \+84 855 555 490/.test(r3c[0].json.caption) && /wa\.me\/84855555490/.test(r3c[0].json.caption) && !/229/.test(r3c[0].json.caption),
+  'gói bài CT: lấy folder từ chip, đổi số + link wa.me sang 490');
+
 console.log('L1-05 kiểm tiêu đề theo tab đang có');
 const w5 = W('L1-05-kiem-hop-dong.json'), k5 = codeOf(w5, 'Kiểm tiêu đề');
 const contract = JSON.parse(fs.readFileSync(path.join(__dirname, 'contract.json'), 'utf8'));

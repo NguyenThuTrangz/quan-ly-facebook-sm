@@ -189,3 +189,7 @@ Cập nhật mỗi khi dừng ca. Ngày mới "lên lịch hôm nay" thì **ưu 
 - Kết bạn: #1–15 đã gửi (26/10); kế tiếp #16.
 
 - 20/11 (nhánh ảnh bìa): SM01/SM02/SM03 đã thay ảnh bìa mới số +84 855 555 490 trên FB (file thiet-ke/anh-bia/moi/*_1640x624.png). **Bio FB của SM01 (+84 83 333 3061), SM02 (+84 83 333 3061), SM03 (+84 886 421 089) vẫn số cũ** — chờ người dùng cho sửa.
+
+## 28/11 tối — kho CATHIE + sự cố credential
+- Thêm tab persona **CATHIE** (KE, gid 822855483) vào kho n8n làm **bài tường**, mã **CT<STT>** (người dùng đồng ý). 19 bài (bỏ CT17 Halloween), ảnh là chip Drive → node mới "Đọc content CATHIE" (spreadsheets.get) ở L1-02/03/04. L1-03 đổi số Cathie 229 + link wa.me sang 490. Test 70/70, đã cài L1-02/03/04.
+- **Sự cố:** credential n8n "Google Sheets account" báo *needs to be reconnected* từ 28/11 19:14 → webhook L1-01 lỗi (cấp 3 tự ghi DỰ PHÒNG, Lịch SM tối nay 18 Done / 1 Chờ). Chưa kiểm được kho CATHIE trên n8n thật. Người dùng phải Reconnect trong n8n (http://localhost:5678 → Credentials). Không reconnect trước 21:30 thì L1-02 không sinh lịch 29/11.
